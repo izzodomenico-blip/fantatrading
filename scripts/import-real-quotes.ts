@@ -15,7 +15,7 @@ function rowsToCsv(rows: NormalizedQuoteRow[]): string {
   const headers: Array<keyof NormalizedQuoteRow> = [
     'season', 'seasonStatus', 'playerId', 'role', 'roleExtended',
     'playerName', 'club', 'initialQuote', 'currentOrFinalQuote',
-    'quoteDiff', 'quoteReturnPct', 'initialQuoteMantra',
+    'quoteDiff', 'quoteRawReturnPct', 'quoteTradingReturnPct', 'initialQuoteMantra',
     'currentOrFinalQuoteMantra', 'quoteDiffMantra', 'fvm', 'fvmMantra', 'sourceFile',
   ];
   const escape = (v: unknown): string => {

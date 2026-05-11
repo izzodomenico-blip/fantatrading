@@ -20,8 +20,10 @@ export interface NormalizedQuoteRow {
   /** Qt.A — quotazione attuale / fine stagione */
   currentOrFinalQuote: number;
   quoteDiff: number;
-  /** (currentOrFinalQuote - initialQuote) / initialQuote * 100 */
-  quoteReturnPct: number;
+  /** Rendimento % statistico classico: (Qt.A − Qt.I) / Qt.I × 100 */
+  quoteRawReturnPct: number;
+  /** Rendimento % FantaTrading: (Qt.A − Qt.I) × 5 — ogni punto quotazione = 5% */
+  quoteTradingReturnPct: number;
   initialQuoteMantra: number;
   currentOrFinalQuoteMantra: number;
   quoteDiffMantra: number;
@@ -108,9 +110,10 @@ export function normalizeRow(
   const initialQuote = toNum(raw['Qt.I']);
   const currentOrFinalQuote = toNum(raw['Qt.A']);
   const quoteDiff = toNum(raw['Diff.']);
-  const quoteReturnPct = initialQuote > 0
+  const quoteRawReturnPct = initialQuote > 0
     ? ((currentOrFinalQuote - initialQuote) / initialQuote) * 100
     : 0;
+  const quoteTradingReturnPct = (currentOrFinalQuote - initialQuote) * 5;
 
   return {
     season,
@@ -123,7 +126,8 @@ export function normalizeRow(
     initialQuote,
     currentOrFinalQuote,
     quoteDiff,
-    quoteReturnPct,
+    quoteRawReturnPct,
+    quoteTradingReturnPct,
     initialQuoteMantra: toNum(raw['Qt.I M']),
     currentOrFinalQuoteMantra: toNum(raw['Qt.A M']),
     quoteDiffMantra: toNum(raw['Diff.M']),

@@ -134,19 +134,54 @@ describe('normalizeRow', () => {
     expect(row.sourceFile).toBe(sourceFile);
   });
 
-  test('quoteReturnPct = (Qt.A - Qt.I) / Qt.I * 100', () => {
+  test('quoteRawReturnPct = (Qt.A - Qt.I) / Qt.I * 100', () => {
     const row = normalizeRow(makeRaw({ 'Qt.I': '20', 'Qt.A': '25' }), season, sourceFile);
-    expect(row.quoteReturnPct).toBeCloseTo(25.0, 5);
+    expect(row.quoteRawReturnPct).toBeCloseTo(25.0, 5);
   });
 
-  test('quoteReturnPct negativo quando Qt.A < Qt.I', () => {
+  test('quoteRawReturnPct negativo quando Qt.A < Qt.I', () => {
     const row = normalizeRow(makeRaw({ 'Qt.I': '40', 'Qt.A': '30' }), season, sourceFile);
-    expect(row.quoteReturnPct).toBeCloseTo(-25.0, 5);
+    expect(row.quoteRawReturnPct).toBeCloseTo(-25.0, 5);
   });
 
-  test('quoteReturnPct = 0 quando Qt.I = 0 (evita divisione per zero)', () => {
+  test('quoteRawReturnPct = 0 quando Qt.I = 0 (evita divisione per zero)', () => {
     const row = normalizeRow(makeRaw({ 'Qt.I': '0', 'Qt.A': '15' }), season, sourceFile);
-    expect(row.quoteReturnPct).toBe(0);
+    expect(row.quoteRawReturnPct).toBe(0);
+  });
+
+  // ── Rendimento FantaTrading: ogni punto quotazione = 5% ────────────────────
+
+  test('quoteTradingReturnPct: Qt.I 34 → Qt.A 35 = +5%', () => {
+    const row = normalizeRow(makeRaw({ 'Qt.I': '34', 'Qt.A': '35' }), season, sourceFile);
+    expect(row.quoteTradingReturnPct).toBeCloseTo(5, 5);
+  });
+
+  test('quoteTradingReturnPct: Qt.I 34 → Qt.A 33 = −5%', () => {
+    const row = normalizeRow(makeRaw({ 'Qt.I': '34', 'Qt.A': '33' }), season, sourceFile);
+    expect(row.quoteTradingReturnPct).toBeCloseTo(-5, 5);
+  });
+
+  test('quoteTradingReturnPct: Qt.I 1 → Qt.A 2 = +5% (non +100%)', () => {
+    const row = normalizeRow(makeRaw({ 'Qt.I': '1', 'Qt.A': '2' }), season, sourceFile);
+    expect(row.quoteTradingReturnPct).toBeCloseTo(5, 5);
+    // Verifica che NON sia il valore classico +100%
+    expect(row.quoteTradingReturnPct).not.toBeCloseTo(100, 1);
+  });
+
+  test('quoteTradingReturnPct: Qt.I 1 → Qt.A 3 = +10% (non +200%)', () => {
+    const row = normalizeRow(makeRaw({ 'Qt.I': '1', 'Qt.A': '3' }), season, sourceFile);
+    expect(row.quoteTradingReturnPct).toBeCloseTo(10, 5);
+    expect(row.quoteTradingReturnPct).not.toBeCloseTo(200, 1);
+  });
+
+  test('quoteTradingReturnPct: Qt.I 20 → Qt.A 25 = +25%', () => {
+    const row = normalizeRow(makeRaw({ 'Qt.I': '20', 'Qt.A': '25' }), season, sourceFile);
+    expect(row.quoteTradingReturnPct).toBeCloseTo(25, 5);
+  });
+
+  test('quoteTradingReturnPct = 0 quando Qt.A = Qt.I (nessuna variazione)', () => {
+    const row = normalizeRow(makeRaw({ 'Qt.I': '20', 'Qt.A': '20' }), season, sourceFile);
+    expect(row.quoteTradingReturnPct).toBe(0);
   });
 
   test('normalizza tutti i ruoli P/D/C/A', () => {
@@ -187,7 +222,7 @@ describe('normalizeRow — invarianti', () => {
 
   test('tipo ritorno è NormalizedQuoteRow con tutti i campi', () => {
     const row: NormalizedQuoteRow = normalizeRow({ Id: 5, R: 'C', RM: 'T', Nome: 'X', Squadra: 'Y', 'Qt.I': 8, 'Qt.A': 8, 'Diff.': 0, 'Qt.I M': 8, 'Qt.A M': 8, 'Diff.M': 0, FVM: 8, 'FVM M': 8 }, '2023/24', 'f.xlsx');
-    const keys: Array<keyof NormalizedQuoteRow> = ['season', 'seasonStatus', 'playerId', 'role', 'roleExtended', 'playerName', 'club', 'initialQuote', 'currentOrFinalQuote', 'quoteDiff', 'quoteReturnPct', 'initialQuoteMantra', 'currentOrFinalQuoteMantra', 'quoteDiffMantra', 'fvm', 'fvmMantra', 'sourceFile'];
+    const keys: Array<keyof NormalizedQuoteRow> = ['season', 'seasonStatus', 'playerId', 'role', 'roleExtended', 'playerName', 'club', 'initialQuote', 'currentOrFinalQuote', 'quoteDiff', 'quoteRawReturnPct', 'quoteTradingReturnPct', 'initialQuoteMantra', 'currentOrFinalQuoteMantra', 'quoteDiffMantra', 'fvm', 'fvmMantra', 'sourceFile'];
     for (const key of keys) {
       expect(row).toHaveProperty(key);
     }

@@ -18,6 +18,7 @@
     "master": "ts-node --project tsconfig.scripts.json scripts/run-master-report.ts",
     "import:real-quotes": "ts-node --project tsconfig.scripts.json scripts/import-real-quotes.ts",
     "analyze:real-quotes": "ts-node --project tsconfig.scripts.json scripts/analyze-real-quotes.ts",
+    "historical:backtest": "ts-node --project tsconfig.scripts.json scripts/run-historical-backtest.ts",
     "web:install": "npm install --prefix app/web",
     "web:dev": "npm run dev --prefix app/web",
     "web:build": "npm run build --prefix app/web"

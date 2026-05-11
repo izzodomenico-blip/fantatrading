@@ -19,7 +19,8 @@ function makeRow(overrides: Partial<NormalizedQuoteRow> = {}): NormalizedQuoteRo
     initialQuote: 20,
     currentOrFinalQuote: 25,
     quoteDiff: 5,
-    quoteReturnPct: 25,
+    quoteRawReturnPct: 25,
+    quoteTradingReturnPct: 25,
     initialQuoteMantra: 20,
     currentOrFinalQuoteMantra: 25,
     quoteDiffMantra: 5,
@@ -64,10 +65,10 @@ describe('median', () => {
 
 describe('computeSeasonStats', () => {
   const rows = [
-    makeRow({ playerId: 1, role: 'A', initialQuote: 10, currentOrFinalQuote: 15, quoteReturnPct: 50 }),
-    makeRow({ playerId: 2, role: 'D', initialQuote: 20, currentOrFinalQuote: 18, quoteReturnPct: -10 }),
-    makeRow({ playerId: 3, role: 'C', initialQuote: 30, currentOrFinalQuote: 30, quoteReturnPct: 0 }),
-    makeRow({ playerId: 4, role: 'P', initialQuote: 8, currentOrFinalQuote: 10, quoteReturnPct: 25 }),
+    makeRow({ playerId: 1, role: 'A', initialQuote: 10, currentOrFinalQuote: 15, quoteRawReturnPct: 50 }),
+    makeRow({ playerId: 2, role: 'D', initialQuote: 20, currentOrFinalQuote: 18, quoteRawReturnPct: -10 }),
+    makeRow({ playerId: 3, role: 'C', initialQuote: 30, currentOrFinalQuote: 30, quoteRawReturnPct: 0 }),
+    makeRow({ playerId: 4, role: 'P', initialQuote: 8, currentOrFinalQuote: 10, quoteRawReturnPct: 25 }),
   ];
 
   let stats: ReturnType<typeof computeSeasonStats>;
@@ -103,11 +104,11 @@ describe('computeSeasonStats', () => {
   });
 
   test('topGainer ha il rendimento più alto', () => {
-    expect(stats.topGainer?.quoteReturnPct).toBe(50);
+    expect(stats.topGainer?.quoteRawReturnPct).toBe(50);
   });
 
   test('topLoser ha il rendimento più basso', () => {
-    expect(stats.topLoser?.quoteReturnPct).toBe(-10);
+    expect(stats.topLoser?.quoteRawReturnPct).toBe(-10);
   });
 
   test('avgReturnByRole calcolato per ogni ruolo', () => {
@@ -127,7 +128,7 @@ describe('computeSeasonStats', () => {
 
 describe('computeSeasonStats — stagione in_progress', () => {
   test('status in_progress riportato correttamente', () => {
-    const rows = [makeRow({ season: '2025/26', seasonStatus: 'in_progress', quoteReturnPct: 10 })];
+    const rows = [makeRow({ season: '2025/26', seasonStatus: 'in_progress', quoteRawReturnPct: 10 })];
     const stats = computeSeasonStats(rows);
     expect(stats.status).toBe('in_progress');
     expect(stats.season).toBe('2025/26');
@@ -138,12 +139,12 @@ describe('computeSeasonStats — stagione in_progress', () => {
 
 describe('computeRoleStats', () => {
   const rows = [
-    makeRow({ playerId: 1, role: 'P', quoteReturnPct: 10, initialQuote: 10, currentOrFinalQuote: 11 }),
-    makeRow({ playerId: 2, role: 'D', quoteReturnPct: 20, initialQuote: 20, currentOrFinalQuote: 24 }),
-    makeRow({ playerId: 3, role: 'D', quoteReturnPct: -5, initialQuote: 20, currentOrFinalQuote: 19 }),
-    makeRow({ playerId: 4, role: 'C', quoteReturnPct: 0 }),
-    makeRow({ playerId: 5, role: 'A', quoteReturnPct: 30 }),
-    makeRow({ playerId: 6, role: 'A', quoteReturnPct: -15 }),
+    makeRow({ playerId: 1, role: 'P', quoteRawReturnPct: 10, initialQuote: 10, currentOrFinalQuote: 11 }),
+    makeRow({ playerId: 2, role: 'D', quoteRawReturnPct: 20, initialQuote: 20, currentOrFinalQuote: 24 }),
+    makeRow({ playerId: 3, role: 'D', quoteRawReturnPct: -5, initialQuote: 20, currentOrFinalQuote: 19 }),
+    makeRow({ playerId: 4, role: 'C', quoteRawReturnPct: 0 }),
+    makeRow({ playerId: 5, role: 'A', quoteRawReturnPct: 30 }),
+    makeRow({ playerId: 6, role: 'A', quoteRawReturnPct: -15 }),
   ];
 
   let roleStats: ReturnType<typeof computeRoleStats>;
@@ -176,13 +177,13 @@ describe('computeRoleStats', () => {
 
 describe('analyzeHistory', () => {
   const rows2122 = [
-    makeRow({ season: '2021/22', seasonStatus: 'completed', playerId: 1, quoteReturnPct: 10 }),
-    makeRow({ season: '2021/22', seasonStatus: 'completed', playerId: 2, quoteReturnPct: -5 }),
+    makeRow({ season: '2021/22', seasonStatus: 'completed', playerId: 1, quoteRawReturnPct: 10 }),
+    makeRow({ season: '2021/22', seasonStatus: 'completed', playerId: 2, quoteRawReturnPct: -5 }),
   ];
   const rows2223 = [
-    makeRow({ season: '2022/23', seasonStatus: 'completed', playerId: 3, quoteReturnPct: 20 }),
-    makeRow({ season: '2022/23', seasonStatus: 'completed', playerId: 4, quoteReturnPct: 0 }),
-    makeRow({ season: '2022/23', seasonStatus: 'completed', playerId: 5, quoteReturnPct: 8 }),
+    makeRow({ season: '2022/23', seasonStatus: 'completed', playerId: 3, quoteRawReturnPct: 20 }),
+    makeRow({ season: '2022/23', seasonStatus: 'completed', playerId: 4, quoteRawReturnPct: 0 }),
+    makeRow({ season: '2022/23', seasonStatus: 'completed', playerId: 5, quoteRawReturnPct: 8 }),
   ];
   const allRows = [...rows2122, ...rows2223];
 
@@ -217,11 +218,11 @@ describe('analyzeHistory', () => {
   });
 
   test('topGainers[0] ha il rendimento massimo', () => {
-    expect(analysis.topGainers[0].quoteReturnPct).toBe(20);
+    expect(analysis.topGainers[0].quoteRawReturnPct).toBe(20);
   });
 
   test('topLosers[0] ha il rendimento minimo', () => {
-    expect(analysis.topLosers[0].quoteReturnPct).toBe(-5);
+    expect(analysis.topLosers[0].quoteRawReturnPct).toBe(-5);
   });
 
   test('topGainers ha al massimo 20 elementi', () => {

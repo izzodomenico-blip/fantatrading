@@ -50,7 +50,7 @@ export function validateRows(rows: NormalizedQuoteRow[]): ValidationResult {
     }
 
     // Valori numerici validi
-    const numericFields: Array<keyof NormalizedQuoteRow> = ['playerId', 'initialQuote', 'currentOrFinalQuote', 'quoteReturnPct'];
+    const numericFields: Array<keyof NormalizedQuoteRow> = ['playerId', 'initialQuote', 'currentOrFinalQuote', 'quoteRawReturnPct', 'quoteTradingReturnPct'];
     for (const field of numericFields) {
       const val = row[field];
       if (typeof val !== 'number' || !isFinite(val)) {

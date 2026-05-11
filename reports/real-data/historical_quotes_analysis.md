@@ -1,6 +1,6 @@
 # Analisi Storica Quotazioni Fantacalcio
 
-*Generato: 2026-05-11T19:59:30.831Z*
+*Generato: 2026-05-11T20:17:38.066Z*
 *Stagioni: 2019/20, 2020/21, 2021/22, 2022/23, 2023/24, 2024/25, 2025/26*
 *Giocatori-stagione totali: 3818*
 

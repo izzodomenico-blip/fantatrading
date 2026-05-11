@@ -1,9 +1,11 @@
 # FantaTrading — Report Master
 ## Validazione Matematica del Regolamento
 
-*Generato il 11/05/2026, 22:05:54 · Fasi 1–4 completate · 199 test verdi*
+*Generato il 11/05/2026, 22:18:28 · Fasi 1–4 completate · 351 test verdi*
 
 ---
+
+> **Nota di lettura:** questo Master Report consolida anche scenari ottimizzati alternativi prodotti nelle Fasi 3-4. Il regolamento originale puro resta quello in `DEFAULT_RULES`: commissione acquisto 2%, commissione vendita 1.25%, margine piattaforma 0%, rosa 25 giocatori (3P+8D+8C+6A). Le configurazioni raccomandate sotto sono varianti di analisi, non il default del gioco originale.
 
 ## 1. Executive Summary
 
@@ -173,4 +175,4 @@ Il `platformFeeRate` ha l'impatto diretto maggiore sul margine organizzatore. Il
 ---
 
 *Report generato automaticamente dal motore FantaTrading v0.1.0*
-*11/05/2026, 22:05:54 · 199 test unitari · 13 suite · Fasi 1-4 complete*
+*11/05/2026, 22:18:28 · 351 test unitari · 17 suite · Fasi 1-4 complete*

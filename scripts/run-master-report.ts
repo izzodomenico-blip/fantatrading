@@ -60,9 +60,11 @@ function buildMasterReport(
   lines.push('# FantaTrading — Report Master');
   lines.push('## Validazione Matematica del Regolamento');
   lines.push('');
-  lines.push(`*Generato il ${now} · Fasi 1–4 completate · ${199} test verdi*`);
+  lines.push(`*Generato il ${now} · Fasi 1–4 completate · ${351} test verdi*`);
   lines.push('');
   lines.push('---');
+  lines.push('');
+  lines.push('> **Nota di lettura:** questo Master Report consolida anche scenari ottimizzati alternativi prodotti nelle Fasi 3-4. Il regolamento originale puro resta quello in `DEFAULT_RULES`: commissione acquisto 2%, commissione vendita 1.25%, margine piattaforma 0%, rosa 25 giocatori (3P+8D+8C+6A). Le configurazioni raccomandate sotto sono varianti di analisi, non il default del gioco originale.');
   lines.push('');
 
   // ── 1. Executive Summary ────────────────────────────────────────────────────
@@ -270,7 +272,7 @@ function buildMasterReport(
   lines.push('---');
   lines.push('');
   lines.push('*Report generato automaticamente dal motore FantaTrading v0.1.0*');
-  lines.push(`*${now} · 199 test unitari · 13 suite · Fasi 1-4 complete*`);
+  lines.push(`*${now} · 351 test unitari · 17 suite · Fasi 1-4 complete*`);
   lines.push('');
 
   return lines.join('\n');

@@ -60,6 +60,10 @@ function buildMarkdown(report: BacktestReport): string {
   lines.push('usando le quotazioni Fantacalcio reali (Qt.I e Qt.A). La rosa è selezionata casualmente');
   lines.push('rispettando la composizione 3P+8D+8C+6A.');
   lines.push('');
+  lines.push('La variazione quotazione usa la regola FantaTrading: ogni punto quotazione vale 5% del valore dell\'azione.');
+  lines.push('Il rendimento applicato al valore di vendita ha floor a -100%, quindi `sellValue` non puo essere negativo.');
+  lines.push('Il rendimento statistico grezzo `(Qt.A - Qt.I) / Qt.I` non e usato per ROI, soglie o ranking del backtest.');
+  lines.push('');
   lines.push('I portfolio sono costruiti **una sola volta per stagione** e applicati a tutti e 5 i modelli');
   lines.push('di regolamento, che differiscono solo nella distribuzione del montepremi e nella quota d\'iscrizione.');
   lines.push('');

@@ -147,6 +147,14 @@ function pct(values: number[], pred: (v: number) => boolean): number {
   return values.length === 0 ? 0 : (values.filter(pred).length / values.length) * 100;
 }
 
+export function calculateEffectiveTradingReturnPct(
+  currentOrFinalQuote: number,
+  initialQuote: number,
+): { raw: number; effective: number } {
+  const raw = (currentOrFinalQuote - initialQuote) * 5;
+  return { raw, effective: Math.max(-100, raw) };
+}
+
 // ─── Costruzione portfolio ────────────────────────────────────────────────────
 
 /**
@@ -183,8 +191,12 @@ export function buildPortfolio(
   let buyCost = 0, buyComms = 0, sellProceeds = 0, sellComms = 0;
   for (const p of selected) {
     // Regola FantaTrading: ogni punto quotazione = 5% del valore dell'azione
-    const tradingRetPct = (p.currentOrFinalQuote - p.initialQuote) * 5;
-    const sellValue = p.initialQuote * (1 + tradingRetPct / 100);
+    // Il rendimento applicato non puo scendere sotto -100%, quindi sellValue >= 0.
+    const { effective: quoteTradingReturnPctEffective } = calculateEffectiveTradingReturnPct(
+      p.currentOrFinalQuote,
+      p.initialQuote,
+    );
+    const sellValue = Math.max(0, p.initialQuote * (1 + quoteTradingReturnPctEffective / 100));
     const bc = p.initialQuote * BUY_RATE;
     const sc = sellValue * SELL_RATE;
     buyCost += p.initialQuote + bc;

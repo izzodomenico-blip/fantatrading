@@ -86,17 +86,32 @@ npm run simulate       # esegui simulazione di default da CLI
 
 ## Parametri Chiave del Regolamento
 
+Il default del motore rappresenta il **regolamento originale puro**. I modelli con margine piattaforma o commissioni ottimizzate sono scenari alternativi separati e non sostituiscono il default.
+
 | Parametro                   | Valore di default | Descrizione                                      |
 |-----------------------------|-------------------|--------------------------------------------------|
-| `buyCommissionRate`         | 10%               | Commissione trattenuta sull'acquisto             |
-| `sellCommissionRate`        | 10%               | Commissione trattenuta sulla vendita             |
-| `prizePoolContributionRate` | 80%               | Quota delle commissioni che va al montepremi     |
-| `platformFeeRate`           | 20%               | Quota delle commissioni che va alla piattaforma  |
+| `buyCommissionRate`         | 2%                | Commissione trattenuta sull'acquisto             |
+| `sellCommissionRate`        | 1,25%             | Commissione trattenuta sulla vendita             |
+| `prizePoolContributionRate` | 100%              | Quota delle commissioni che va al montepremi nel modello originale |
+| `platformFeeRate`           | 0%                | Margine piattaforma nel modello originale puro   |
 | `initialBudget`             | 500 crediti       | Budget iniziale per ogni squadra                 |
 | `maxPlayersPerPortfolio`    | 25 calciatori     | Numero massimo di calciatori nel portfolio       |
 | `roundsPerSeason`           | 38 giornate       | Durata della stagione                            |
+| `rosterComposition`         | 3P, 8D, 8C, 6A    | Composizione della rosa da 25 calciatori         |
 
 Tutti i parametri sono modificabili in `src/config/defaultRules.ts`.
+
+### Variazione quotazione nel gioco
+
+Nel gioco FantaTrading ogni variazione di 1 punto quotazione vale 5% del valore dell'azione:
+
+```text
+quoteTradingReturnPctRaw = (Qt.A - Qt.I) * 5
+quoteTradingReturnPctEffective = max(-100, quoteTradingReturnPctRaw)
+sellValue = Qt.I * (1 + quoteTradingReturnPctEffective / 100)
+```
+
+Il rendimento grezzo classico `(Qt.A - Qt.I) / Qt.I` resta disponibile solo per analisi statistica e non deve essere usato per ROI, soglie o valore della rosa.
 
 ---
 

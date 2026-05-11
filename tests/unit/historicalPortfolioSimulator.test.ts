@@ -1,5 +1,6 @@
 import {
   buildPortfolio,
+  calculateEffectiveTradingReturnPct,
   runSeasonBacktest,
   runHistoricalBacktest,
   BACKTEST_MODELS,
@@ -168,6 +169,45 @@ describe('buildPortfolio', () => {
 // ─── buildPortfolio — commissioni esatte ─────────────────────────────────────
 
 describe('buildPortfolio — commissioni esatte con un solo calciatore per ruolo', () => {
+  test.each([
+    [1, 2, 5],
+    [1, 3, 10],
+    [34, 35, 5],
+    [34, 33, -5],
+    [20, 25, 25],
+  ])('rendimento FantaTrading effettivo: %s -> %s = %s%%', (initialQuote, finalQuote, expected) => {
+    expect(calculateEffectiveTradingReturnPct(finalQuote, initialQuote)).toEqual({
+      raw: expected,
+      effective: expected,
+    });
+  });
+
+  test('26 -> 1: rendimento teorico -125%, rendimento applicato -100%, sellValue = 0', () => {
+    const result = calculateEffectiveTradingReturnPct(1, 26);
+    expect(result.raw).toBe(-125);
+    expect(result.effective).toBe(-100);
+
+    const pool: Record<string, NormalizedQuoteRow[]> = {
+      A: [makeRow({ playerId: 1, role: 'A', initialQuote: 26, currentOrFinalQuote: 1 })],
+    };
+    const p = buildPortfolio(pool, { A: 1 }, createSeededRng(1));
+    expect(p.sellProceeds).toBe(0);
+    expect(p.sellCommissions).toBe(0);
+  });
+
+  test.each([
+    [26, 1],
+    [50, 1],
+    [100, 0],
+  ])('nessun caso produce sellValue negativo: %s -> %s', (initialQuote, finalQuote) => {
+    const pool: Record<string, NormalizedQuoteRow[]> = {
+      A: [makeRow({ playerId: 1, role: 'A', initialQuote, currentOrFinalQuote: finalQuote })],
+    };
+    const p = buildPortfolio(pool, { A: 1 }, createSeededRng(1));
+    expect(p.sellProceeds).toBeGreaterThanOrEqual(0);
+    expect(p.sellCommissions).toBeGreaterThanOrEqual(0);
+  });
+
   test('commissioni calcolate correttamente con formula FantaTrading (1 punto = 5%)', () => {
     // P:  Qt.I=100, Qt.A=120 → tradingRetPct=(120-100)*5=100% → sellValue=100*(1+1.00)=200
     // D:  Qt.I=50,  Qt.A=60  → tradingRetPct=(60-50)*5=50%   → sellValue=50*(1+0.50)=75

@@ -1,7 +1,7 @@
 # FantaTrading — Report Master
 ## Validazione Matematica del Regolamento
 
-*Generato il 11/05/2026, 16:44:09 · Fasi 1–4 completate · 199 test verdi*
+*Generato il 11/05/2026, 22:05:54 · Fasi 1–4 completate · 199 test verdi*
 
 ---
 
@@ -173,4 +173,4 @@ Il `platformFeeRate` ha l'impatto diretto maggiore sul margine organizzatore. Il
 ---
 
 *Report generato automaticamente dal motore FantaTrading v0.1.0*
-*11/05/2026, 16:44:09 · 199 test unitari · 13 suite · Fasi 1-4 complete*
+*11/05/2026, 22:05:54 · 199 test unitari · 13 suite · Fasi 1-4 complete*

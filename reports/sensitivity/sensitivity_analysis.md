@@ -1,6 +1,6 @@
 # FantaTrading — Analisi di Sensibilità
 
-**Generato il:** 11/05/2026, 16:43:26
+**Generato il:** 11/05/2026, 22:04:11
 **Baseline:** N=50, buy=2.00%, sell=1.250%, platform=10%, ops/round=3, fee=50, rounds=38
 
 ## Risultati chiave

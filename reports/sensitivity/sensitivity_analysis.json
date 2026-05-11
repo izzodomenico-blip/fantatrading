@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-11T14:43:26.082Z",
+  "generatedAt": "2026-05-11T20:04:11.753Z",
   "baselineDescription": "N=50, buy=2.00%, sell=1.250%, platform=10%, ops/round=3, fee=50, rounds=38",
   "numParticipants": 50,
   "numSimulations": 100,

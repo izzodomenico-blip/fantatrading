@@ -1,6 +1,6 @@
 # FantaTrading — Ottimizzazione Prize Table
 
-**Generato il:** 11/05/2026, 16:43:56
+**Generato il:** 11/05/2026, 22:05:31
 **Config:** N=50, quota=50, 80 run/candidato
 **Candidati valutati:** 42
 

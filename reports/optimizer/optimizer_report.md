@@ -1,6 +1,6 @@
 # FantaTrading — Ottimizzazione Parametri
 
-**Generato il:** 11/05/2026, 16:43:45
+**Generato il:** 11/05/2026, 22:04:41
 **Candidati valutati:** 150 (50 run/candidato, N=50)
 
 ## Spazio di ricerca

@@ -1,6 +1,6 @@
 # FantaTrading — Analisi Modello di Prezzo Calciatori
 
-**Generato il:** 11/05/2026, 16:44:03
+**Generato il:** 11/05/2026, 22:05:43
 **Config:** N=50, 100 run/punto, 38 giornate
 
 ## Confronto Random Walk vs Mean-Reverting

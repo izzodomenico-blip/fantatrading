@@ -1,6 +1,6 @@
 # FantaTrading — Backtest Storico Buy-and-Hold
 
-**Generato il:** 11/05/2026, 17:29:05
+**Generato il:** 11/05/2026, 21:59:42
 **Config:** N=20 partecipanti, 200 simulazioni/stagione, seed=42
 **Composizione rosa:** P=3, D=8, C=8, A=6
 **Modelli:** M1, M2, M3, M4, M5

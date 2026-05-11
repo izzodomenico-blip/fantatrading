@@ -1,6 +1,6 @@
 # FantaTrading — Confronto Modelli di Regolamento
 
-**Generato il:** 11/05/2026, 16:43:11
+**Generato il:** 11/05/2026, 22:03:47
 
 ## Modelli analizzati
 

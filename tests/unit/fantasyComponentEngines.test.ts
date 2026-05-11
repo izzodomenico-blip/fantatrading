@@ -1,5 +1,5 @@
 import { analyzeRealVotes, buildVotesQualityMarkdown } from '../../src/analysis/realVotesAnalysis';
-import { getBonusMalusPct } from '../../src/engine/fantaTradingBonusTableEngine';
+import { getBonusMalusPct, getNoVoteBonusMalusPct } from '../../src/engine/fantaTradingBonusTableEngine';
 import { calculateTeamVoteBand, getTeamVoteBand, TeamVoteInput } from '../../src/engine/teamVoteBandEngine';
 
 function makeVotes(vote: number, count = 25): TeamVoteInput[] {
@@ -35,6 +35,41 @@ describe('teamVoteBandEngine', () => {
     expect(result.totalVoteSum).toBe(144);
     expect(result.playedCount).toBe(24);
   });
+
+  test('SV con policy ZERO vale 0 nella somma squadra', () => {
+    const votes = makeVotes(6);
+    votes[0] = { playerId: 1, vote: null, played: false };
+    const result = calculateTeamVoteBand(votes, { policy: 'ZERO' });
+    expect(result.totalVoteSum).toBe(144);
+    expect(result.averageVote).toBeCloseTo(144 / 25, 5);
+    expect(result.notEvaluatedCount).toBe(1);
+  });
+
+  test('SV con policy FIVE vale 5 nella somma squadra', () => {
+    const votes = makeVotes(6);
+    votes[0] = { playerId: 1, vote: null, played: false };
+    const result = calculateTeamVoteBand(votes, { policy: 'FIVE' });
+    expect(result.totalVoteSum).toBe(149);
+    expect(result.averageVote).toBeCloseTo(149 / 25, 5);
+  });
+
+  test('SV con policy EXCLUDE escluso dalla media', () => {
+    const votes = makeVotes(6);
+    votes[0] = { playerId: 1, vote: null, played: false };
+    const result = calculateTeamVoteBand(votes, { policy: 'EXCLUDE' });
+    expect(result.totalVoteSum).toBe(144);
+    expect(result.evaluatedCount).toBe(24);
+    expect(result.averageVote).toBe(6);
+  });
+
+  test('SV con policy FIXED_MALUS non contribuisce alla somma ma conserva malus configurabile', () => {
+    const votes = makeVotes(6);
+    votes[0] = { playerId: 1, vote: null, played: false };
+    const result = calculateTeamVoteBand(votes, { policy: 'FIXED_MALUS', fixedMalusPct: -7 });
+    expect(result.totalVoteSum).toBe(144);
+    expect(result.fixedNoVoteMalusPct).toBe(-7);
+    expect(getNoVoteBonusMalusPct({ policy: 'FIXED_MALUS', fixedMalusPct: -7 })).toBe(-7);
+  });
 });
 
 describe('fantaTradingBonusTableEngine', () => {
@@ -44,10 +79,37 @@ describe('fantaTradingBonusTableEngine', () => {
     expect(result.usedFallback).toBe(false);
   });
 
+  test('bonus/malus voto 7 in fascia 3', () => {
+    const result = getBonusMalusPct('FASCIA_3', 7);
+    expect(result.bonusMalusPct).toBe(4);
+    expect(result.handling).toBe('EXACT');
+  });
+
+  test('bonus/malus voto 5 in fascia 2', () => {
+    const result = getBonusMalusPct('FASCIA_2', 5);
+    expect(result.bonusMalusPct).toBe(-4);
+  });
+
+  test.each(['FASCIA_0', 'FASCIA_1', 'FASCIA_2', 'FASCIA_3', 'FASCIA_4'] as const)(
+    'voto 6 sempre neutro in %s',
+    (band) => {
+      expect(getBonusMalusPct(band, 6).bonusMalusPct).toBe(0);
+    },
+  );
+
   test('usa fallback se il voto non e presente esattamente in tabella', () => {
     const result = getBonusMalusPct('FASCIA_3', 6.25);
     expect(result.usedFallback).toBe(true);
     expect(result.matchedIndividualVote).toBe(6);
+  });
+
+  test('voti fuori range sono gestiti con clamp controllato', () => {
+    const low = getBonusMalusPct('FASCIA_3', 2);
+    const high = getBonusMalusPct('FASCIA_3', 10);
+    expect(low.outOfRange).toBe(true);
+    expect(low.matchedIndividualVote).toBe(3);
+    expect(high.outOfRange).toBe(true);
+    expect(high.matchedIndividualVote).toBe(9);
   });
 });
 

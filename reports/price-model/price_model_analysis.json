@@ -1,0 +1,93 @@
+{
+  "generatedAt": "2026-05-11T14:44:03.805Z",
+  "numParticipants": 50,
+  "numSimulations": 100,
+  "roundsPerSeason": 38,
+  "randomWalkBaseline": {
+    "meanReversionRate": 0,
+    "avgPriceDriftAbs": 48.88,
+    "avgPriceDriftRel": 338.93164389623547,
+    "avgPriceStdDev": 33.254359112753924,
+    "avgPrizePool": 5249.503732499996,
+    "avgPlatformRevenue": 583.2781924999999,
+    "pctAbove0": 12,
+    "avgWinnerROIPct": 4099.602985999998,
+    "avgSquadCapitalAtEnd": 717.0991615000004
+  },
+  "points": [
+    {
+      "meanReversionRate": 0,
+      "avgPriceDriftAbs": 48.88,
+      "avgPriceDriftRel": 338.93164389623547,
+      "avgPriceStdDev": 33.254359112753924,
+      "avgPrizePool": 5249.503732499996,
+      "avgPlatformRevenue": 583.2781924999999,
+      "pctAbove0": 12,
+      "avgWinnerROIPct": 4099.602985999998,
+      "avgSquadCapitalAtEnd": 717.0991615000004
+    },
+    {
+      "meanReversionRate": 0.02,
+      "avgPriceDriftAbs": 34.27952362820727,
+      "avgPriceDriftRel": 236.14019144820998,
+      "avgPriceStdDev": 24.610524069634703,
+      "avgPrizePool": 4940.498413230898,
+      "avgPlatformRevenue": 548.9442681367664,
+      "pctAbove0": 12,
+      "avgWinnerROIPct": 3852.3987305847186,
+      "avgSquadCapitalAtEnd": 626.2790086896903
+    },
+    {
+      "meanReversionRate": 0.05,
+      "avgPriceDriftAbs": 22.315880090270593,
+      "avgPriceDriftRel": 151.732857861713,
+      "avgPriceStdDev": 18.717383932199372,
+      "avgPrizePool": 4615.974709143928,
+      "avgPlatformRevenue": 512.8860787937698,
+      "pctAbove0": 12,
+      "avgWinnerROIPct": 3592.779767315144,
+      "avgSquadCapitalAtEnd": 549.2722725847397
+    },
+    {
+      "meanReversionRate": 0.1,
+      "avgPriceDriftAbs": 13.581889085298057,
+      "avgPriceDriftRel": 90.15242463862637,
+      "avgPriceStdDev": 15.085747090820231,
+      "avgPrizePool": 4322.008044769,
+      "avgPlatformRevenue": 480.22311608544425,
+      "pctAbove0": 12,
+      "avgWinnerROIPct": 3357.606435815198,
+      "avgSquadCapitalAtEnd": 496.05026111450894
+    },
+    {
+      "meanReversionRate": 0.15,
+      "avgPriceDriftAbs": 9.830340011081766,
+      "avgPriceDriftRel": 62.67326088725158,
+      "avgPriceStdDev": 13.515487585842237,
+      "avgPrizePool": 4161.796498819086,
+      "avgPlatformRevenue": 462.4218332021209,
+      "pctAbove0": 12,
+      "avgWinnerROIPct": 3229.4371990552704,
+      "avgSquadCapitalAtEnd": 478.6736840095497
+    },
+    {
+      "meanReversionRate": 0.2,
+      "avgPriceDriftAbs": 7.687275304878937,
+      "avgPriceDriftRel": 47.06625223204403,
+      "avgPriceStdDev": 12.571778708159517,
+      "avgPrizePool": 4067.533490171565,
+      "avgPlatformRevenue": 451.9481655746185,
+      "pctAbove0": 12,
+      "avgWinnerROIPct": 3154.0267921372533,
+      "avgSquadCapitalAtEnd": 470.5006500022014
+    }
+  ],
+  "keyFindings": [
+    "DRIFT PREZZI: Con random walk (rate=0) i prezzi deviano in media di 48.9 crediti dal valore base a fine stagione (338.9%). Con rate=0.2 il drift scende a 7.7 crediti (47.1%).",
+    "DISPERSIONE PREZZI: La deviazione standard dei valori a fine stagione va da 33.3 crediti (rate=0) a 12.6 crediti (rate=0.2). La mean reversion comprime la dispersione, rendendo i valori più prevedibili.",
+    "INVARIANZA ECONOMICA: Il montepremi varia al massimo del 22.5% tra tutti i modelli di prezzo testati. La scelta del meanReversionRate non altera le conclusioni economiche della Fase 3.",
+    "CAPITALE FINALE: Il capitale medio delle squadre a fine stagione cambia del 34.4% tra rate=0 e rate=0.2. La mean reversion riduce le posizioni \"estrema fortuna/sfortuna\" nel portafoglio."
+  ],
+  "recommendedRate": 0.05,
+  "recommendedRationale": "Riduce il drift prezzi del 54% (da 48.9 a 22.3 crediti) con variazione montepremi di -12.1% — rapporto ottimale realismo/invarianza economica."
+}

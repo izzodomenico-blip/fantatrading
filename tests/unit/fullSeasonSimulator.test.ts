@@ -29,6 +29,12 @@ const SMALL_CONFIG: FullSeasonConfig = {
   randomSeed: 42,
 };
 
+// Config con margine esplicito per testare la sostenibilità economica dell'organizzatore
+const SMALL_CONFIG_WITH_MARGIN: FullSeasonConfig = {
+  ...SMALL_CONFIG,
+  rules: { ...DEFAULT_RULES, platformFeeRate: 0.20, prizePoolContributionRate: 0.80, roundsPerSeason: 5 },
+};
+
 describe('runScenarioMonteCarlo — struttura risultati', () => {
   let stats: ReturnType<typeof runScenarioMonteCarlo>;
   beforeAll(() => {
@@ -49,12 +55,14 @@ describe('runScenarioMonteCarlo — struttura risultati', () => {
     expect(stats.avgPrizePool).toBeGreaterThan(0);
   });
 
-  test('avgPlatformRevenue è positivo', () => {
-    expect(stats.avgPlatformRevenue).toBeGreaterThan(0);
+  test('avgPlatformRevenue è zero con regolamento originale (platform=0%)', () => {
+    // M1: tutto al montepremi, nessun margine piattaforma
+    expect(stats.avgPlatformRevenue).toBe(0);
   });
 
-  test('isSustainableForOrganizer è true con commissioni positive', () => {
-    expect(stats.isSustainableForOrganizer).toBe(true);
+  test('isSustainableForOrganizer è true con margine esplicito', () => {
+    const s = runScenarioMonteCarlo(SMALL_CONFIG_WITH_MARGIN, makePlayers(20));
+    expect(s.isSustainableForOrganizer).toBe(true);
   });
 
   test('minPrizePool <= avgPrizePool <= maxPrizePool', () => {
@@ -80,10 +88,10 @@ describe('runScenarioMonteCarlo — struttura risultati', () => {
     expect(stats.avgOperationsPerTeamSeason).toBeGreaterThan(0);
   });
 
-  test('avgOrganizerMarginPct ≈ platformFeeRate * 100', () => {
-    // Con prizePoolContributionRate=0.80 e platformFeeRate=0.20, il margine
-    // organizzatore è il 20% del totale incassato
-    expect(stats.avgOrganizerMarginPct).toBeCloseTo(20, 0);
+  test('avgOrganizerMarginPct ≈ platformFeeRate * 100 con margine esplicito', () => {
+    const s = runScenarioMonteCarlo(SMALL_CONFIG_WITH_MARGIN, makePlayers(20));
+    // Con platformFeeRate=0.20, il margine organizzatore è ~20% del lordo incassato
+    expect(s.avgOrganizerMarginPct).toBeCloseTo(20, 0);
   });
 });
 
@@ -143,12 +151,19 @@ describe('runScenarioMonteCarlo — economics', () => {
 });
 
 describe('runScenarioMonteCarlo — split corretto prizePool/platform', () => {
-  test('prizePool + platformRevenue ≈ totalCommissions + registrationFees (entrambi splittati 80/20)', () => {
-    // In questa configurazione semplificata controlliamo la conservazione del valore
-    const config: FullSeasonConfig = { ...SMALL_CONFIG, numSimulations: 1, randomSeed: 42 };
+  test('con split 80/20 il rapporto prizePool/platformRevenue ≈ 4', () => {
+    // Verifica che lo split sia applicato correttamente con margine esplicito
+    const config: FullSeasonConfig = { ...SMALL_CONFIG_WITH_MARGIN, numSimulations: 1, randomSeed: 42 };
     const stats = runScenarioMonteCarlo(config, makePlayers(20));
     // prizePool = 0.80 * (commissions + regFees) → prizePool/platformRevenue = 0.80/0.20 = 4
     const ratio = stats.avgPrizePool / stats.avgPlatformRevenue;
-    expect(ratio).toBeCloseTo(4, 0); // tolleranza per variabilità di 1 run
+    expect(ratio).toBeCloseTo(4, 0);
+  });
+
+  test('con regolamento originale (platform=0%) tutto il flusso va al montepremi', () => {
+    const config: FullSeasonConfig = { ...SMALL_CONFIG, numSimulations: 1, randomSeed: 42 };
+    const stats = runScenarioMonteCarlo(config, makePlayers(20));
+    expect(stats.avgPlatformRevenue).toBe(0);
+    expect(stats.avgPrizePool).toBeGreaterThan(0);
   });
 });

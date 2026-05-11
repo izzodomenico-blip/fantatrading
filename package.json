@@ -9,15 +9,27 @@
     "test:coverage": "jest --coverage",
     "test:watch": "jest --watch",
     "simulate": "ts-node scripts/runSimulation.ts",
-    "phase2": "ts-node --project tsconfig.scripts.json scripts/run-phase2.ts"
+    "phase2": "ts-node --project tsconfig.scripts.json scripts/run-phase2.ts",
+    "phase3": "ts-node --project tsconfig.scripts.json scripts/run-rule-comparison.ts",
+    "phase3:sensitivity": "ts-node --project tsconfig.scripts.json scripts/run-sensitivity.ts",
+    "phase3:optimize": "ts-node --project tsconfig.scripts.json scripts/run-optimizer.ts",
+    "phase3:prize-table": "ts-node --project tsconfig.scripts.json scripts/run-prize-table-optimizer.ts",
+    "phase4:price-model": "ts-node --project tsconfig.scripts.json scripts/run-price-model-analysis.ts",
+    "master": "ts-node --project tsconfig.scripts.json scripts/run-master-report.ts",
+    "import:real-quotes": "ts-node --project tsconfig.scripts.json scripts/import-real-quotes.ts",
+    "analyze:real-quotes": "ts-node --project tsconfig.scripts.json scripts/analyze-real-quotes.ts",
+    "web:install": "npm install --prefix app/web",
+    "web:dev": "npm run dev --prefix app/web",
+    "web:build": "npm run build --prefix app/web"
   },
   "devDependencies": {
     "@types/jest": "^29.5.0",
     "@types/node": "^20.0.0",
     "jest": "^29.5.0",
     "ts-jest": "^29.1.0",
+    "ts-node": "^10.9.0",
     "typescript": "^5.4.0",
-    "ts-node": "^10.9.0"
+    "xlsx": "^0.18.5"
   },
   "engines": {
     "node": ">=18.0.0"

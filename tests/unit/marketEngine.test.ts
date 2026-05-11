@@ -12,7 +12,8 @@ import { createTeam } from '../../src/domain/Team';
 import { createPortfolio, addShares } from '../../src/domain/Portfolio';
 import { createPlayer } from '../../src/domain/Player';
 
-const rules = DEFAULT_RULES; // buyCommissionRate = 0.10, sellCommissionRate = 0.10
+// Commissioni esplicite 10%/10% per mantenere i valori attesi nei test del motore
+const rules: TradingRules = { ...DEFAULT_RULES, buyCommissionRate: 0.10, sellCommissionRate: 0.10 };
 
 const player = createPlayer({
   id: 'p1',

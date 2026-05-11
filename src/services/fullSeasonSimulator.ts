@@ -18,6 +18,12 @@ export interface FullSeasonConfig {
   rules: TradingRules;
   prizeTable: PrizeDistribution[];
   randomSeed: number;
+  /**
+   * Quota della registration fee che va alla piattaforma.
+   * Se undefined, usa rules.platformFeeRate (comportamento Fase 2, retrocompatibile).
+   * Impostare a 1.0 per mandare 100% della quota iscrizione alla piattaforma (modelli 4, 5).
+   */
+  registrationFeePlatformRate?: number;
 }
 
 export const DEFAULT_FULL_SEASON_CONFIG: FullSeasonConfig = {
@@ -51,6 +57,8 @@ export interface SingleRunResult {
   teamOutcomes: TeamOutcome[];
   totalCommissionsFromTrading: number;
   totalRegistrationFees: number;
+  /** Totale flussi lordi in ingresso (commissioni + quote iscrizione) */
+  grossInflow: number;
   prizePool: number;
   platformRevenue: number;
   totalOperations: number;
@@ -72,6 +80,8 @@ export interface ScenarioStats {
 
   // ── Commissioni e montepremi ──────────────────────
   avgTotalCommissions: number;
+  /** Flusso lordo medio = commissioni + quote iscrizione (prima dello split) */
+  avgGrossInflow: number;
   avgPrizePool: number;
   minPrizePool: number;
   maxPrizePool: number;
@@ -82,8 +92,10 @@ export interface ScenarioStats {
   // ── Organizzatore ─────────────────────────────────
   avgTotalRegistrationFees: number;
   avgPlatformRevenue: number;
+  /** % run in cui la piattaforma incassa zero (piattaforma senza margine fisso) */
+  platformLossRisk: number;
   avgOrganizerMarginCredits: number;
-  /** Margine organizzatore su totale incassato (reg fees + commissioni) */
+  /** Margine organizzatore su totale lordo in ingresso (commissioni + quote) */
   avgOrganizerMarginPct: number;
 
   // ── Premi ─────────────────────────────────────────
@@ -111,6 +123,7 @@ interface InternalTeam {
   holdings: Record<string, number>; // playerId → shares
   commissionsPaid: number;
   opCount: number;
+  roleCounts: Record<string, number>; // GK/DEF/MID/FWD → numero calciatori distinti detenuti
 }
 
 // ─── Core simulation ──────────────────────────────────────────────────────────
@@ -131,6 +144,7 @@ function runOneSeason(
     holdings: {},
     commissionsPaid: 0,
     opCount: 0,
+    roleCounts: { GK: 0, DEF: 0, MID: 0, FWD: 0 },
   }));
 
   // Valori correnti dei calciatori (mutable durante la stagione)
@@ -143,9 +157,15 @@ function runOneSeason(
     for (let pi = 0; pi < players.length; pi++) {
       const stats = generatePlayerStats(players[pi].role, rng);
       const bm = calculateBonusMalus(stats, players[pi].role, DEFAULT_BONUS_MALUS_RULES);
-      playerValues[pi] = applyBonusMalusToValue(
+      let newValue = applyBonusMalusToValue(
         playerValues[pi], bm.total, rules.playerMinValue, rules.playerMaxValue,
       );
+      // Mean reversion: tira il valore verso il baseValue del calciatore
+      if (rules.meanReversionRate > 0) {
+        newValue += (players[pi].baseValue - newValue) * rules.meanReversionRate;
+        newValue = Math.max(rules.playerMinValue, Math.min(rules.playerMaxValue, newValue));
+      }
+      playerValues[pi] = newValue;
     }
 
     // ── Operazioni di mercato per ogni squadra ───────────────────────────────
@@ -160,11 +180,21 @@ function runOneSeason(
           const pi = Math.floor(rng() * players.length);
           const price = playerValues[pi];
           const { totalCost, commission } = calculateBuyCost(1, price, rules);
+          const playerId = players[pi].id;
+          const playerRole = players[pi].role;
+          const alreadyOwned = (team.holdings[playerId] ?? 0) > 0;
+          const maxForRole =
+            rules.rosterComposition[playerRole as keyof typeof rules.rosterComposition] ??
+            rules.maxPlayersPerPortfolio;
+          const canAddToRoster = alreadyOwned || (team.roleCounts[playerRole] ?? 0) < maxForRole;
 
-          if (team.budget >= totalCost + rules.minBudgetReserve) {
+          if (team.budget >= totalCost + rules.minBudgetReserve && canAddToRoster) {
             team.budget -= totalCost;
             team.commissionsPaid += commission;
-            team.holdings[players[pi].id] = (team.holdings[players[pi].id] ?? 0) + 1;
+            if (!alreadyOwned) {
+              team.roleCounts[playerRole] = (team.roleCounts[playerRole] ?? 0) + 1;
+            }
+            team.holdings[playerId] = (team.holdings[playerId] ?? 0) + 1;
             team.opCount++;
             totalCommissions += commission;
           }
@@ -180,7 +210,10 @@ function runOneSeason(
               team.budget += netProceeds;
               team.commissionsPaid += commission;
               team.holdings[sellId]--;
-              if (team.holdings[sellId] === 0) delete team.holdings[sellId];
+              if (team.holdings[sellId] === 0) {
+                delete team.holdings[sellId];
+                team.roleCounts[players[sellPi].role]--;
+              }
               team.opCount++;
               totalCommissions += commission;
             }
@@ -212,10 +245,13 @@ function runOneSeason(
 
   // ── Montepremi ────────────────────────────────────────────────────────────
   const totalRegistrationFees = numTeams * registrationFeePerTeam;
+  const regPlatformRate = config.registrationFeePlatformRate ?? rules.platformFeeRate;
+  const regToPlatform = totalRegistrationFees * regPlatformRate;
+  const regToPrizePool = totalRegistrationFees * (1 - regPlatformRate);
   const { toPrizePool: ppFromTrading, toPlatform: platFromTrading } = splitCommission(totalCommissions, rules);
-  const { toPrizePool: ppFromReg, toPlatform: platFromReg } = splitCommission(totalRegistrationFees, rules);
-  const prizePool = ppFromTrading + ppFromReg;
-  const platformRevenue = platFromTrading + platFromReg;
+  const prizePool = ppFromTrading + regToPrizePool;
+  const platformRevenue = platFromTrading + regToPlatform;
+  const grossInflow = totalCommissions + totalRegistrationFees;
 
   // ── Ranking per ricchezza totale ──────────────────────────────────────────
   const sorted = teamOutcomes
@@ -237,6 +273,7 @@ function runOneSeason(
     teamOutcomes,
     totalCommissionsFromTrading: totalCommissions,
     totalRegistrationFees,
+    grossInflow,
     prizePool,
     platformRevenue,
     totalOperations: teamOutcomes.reduce((s, t) => s + t.opCount, 0),
@@ -279,7 +316,9 @@ export function runScenarioMonteCarlo(
   const pctAbove5 = allROIs.filter(r => r >= 0.05).length / allROIs.length * 100;
 
   const avgPlatformRevenue = mean(platformRevs);
-  const totalIncassato = avgPlatformRevenue / (config.rules.platformFeeRate || 1);
+  const grossInflows = runs.map(r => r.grossInflow);
+  const avgGrossInflow = mean(grossInflows);
+  const platformLossRisk = platformRevs.filter(v => v <= 0).length / platformRevs.length * 100;
 
   return {
     config,
@@ -292,6 +331,7 @@ export function runScenarioMonteCarlo(
     avgSquadCapitalAtEnd: mean(allWealths),
 
     avgTotalCommissions: mean(runs.map(r => r.totalCommissionsFromTrading)),
+    avgGrossInflow,
     avgPrizePool: mean(pools),
     minPrizePool: Math.min(...pools),
     maxPrizePool: Math.max(...pools),
@@ -301,8 +341,9 @@ export function runScenarioMonteCarlo(
 
     avgTotalRegistrationFees: mean(runs.map(r => r.totalRegistrationFees)),
     avgPlatformRevenue,
+    platformLossRisk,
     avgOrganizerMarginCredits: avgPlatformRevenue,
-    avgOrganizerMarginPct: totalIncassato > 0 ? (avgPlatformRevenue / totalIncassato) * 100 : 0,
+    avgOrganizerMarginPct: avgGrossInflow > 0 ? (avgPlatformRevenue / avgGrossInflow) * 100 : 0,
 
     avgFirstPrize: mean(firstPrizes),
     avgSecondPrize: mean(secondPrizes),

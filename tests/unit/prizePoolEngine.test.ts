@@ -9,7 +9,8 @@ import { DEFAULT_RULES, TradingRules } from '../../src/config/defaultRules';
 import { DEFAULT_PRIZE_TABLE, SMALL_LEAGUE_PRIZE_TABLE, PrizeDistribution } from '../../src/config/prizeTables';
 import { validatePrizeTable } from '../../src/config/prizeTables';
 
-const rules = DEFAULT_RULES; // prizePoolContributionRate=0.80, platformFeeRate=0.20
+// Regole con split esplicito 80/20 per testare la distribuzione commissioni
+const rules: TradingRules = { ...DEFAULT_RULES, prizePoolContributionRate: 0.80, platformFeeRate: 0.20 };
 
 // ─── splitCommission ─────────────────────────────────────────────────────────
 

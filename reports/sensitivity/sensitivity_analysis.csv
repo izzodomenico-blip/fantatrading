@@ -1,0 +1,43 @@
+param_name,param_display_name,param_unit,baseline_value,param_value,avg_organizer_margin_pct,org_profit_per_participant,avg_platform_revenue,avg_prize_pool,avg_first_prize,avg_winner_roi_pct,pct_above_0,platform_loss_risk_pct,is_sustainable
+buyCommissionRate,Commissione Acquisto,%,0.02,0.005,10,7.7,385.18,3466.58,1386.63,2673,12,0,true
+buyCommissionRate,Commissione Acquisto,%,0.02,0.01,10,8.58,429.11,3862.01,1544.8,2990,12,0,true
+buyCommissionRate,Commissione Acquisto,%,0.02,0.02,10,10.26,512.89,4615.97,1846.39,3593,12,0,true
+buyCommissionRate,Commissione Acquisto,%,0.02,0.03,10,11.96,597.94,5381.42,2152.57,4205,12,0,true
+buyCommissionRate,Commissione Acquisto,%,0.02,0.05,10,15.35,767.65,6908.82,2763.53,5427,12,0,true
+buyCommissionRate,Commissione Acquisto,%,0.02,0.1,10,23.23,1161.59,10454.34,4181.74,8263,12,0,true
+sellCommissionRate,Commissione Vendita,%,0.0125,0.005,10,9.18,458.9,4130.12,1652.05,3204,12,0,true
+sellCommissionRate,Commissione Vendita,%,0.0125,0.0075,10,9.56,478.18,4303.66,1721.46,3343,12,0,true
+sellCommissionRate,Commissione Vendita,%,0.0125,0.0125,10,10.26,512.89,4615.97,1846.39,3593,12,0,true
+sellCommissionRate,Commissione Vendita,%,0.0125,0.02,10,11.39,569.34,5124.09,2049.64,3999,12,0,true
+sellCommissionRate,Commissione Vendita,%,0.0125,0.05,10,15.69,784.26,7058.34,2823.34,5547,12,0,true
+sellCommissionRate,Commissione Vendita,%,0.0125,0.1,10,22.84,1141.95,10277.56,4111.03,8122,12,0,true
+platformFeeRate,Margine Piattaforma,%,0.1,0,0,0,0,5128.86,2051.54,4003,12,100,false
+platformFeeRate,Margine Piattaforma,%,0.1,0.05,5,5.13,256.44,4872.42,1948.97,3798,12,0,true
+platformFeeRate,Margine Piattaforma,%,0.1,0.1,10,10.26,512.89,4615.97,1846.39,3593,12,0,true
+platformFeeRate,Margine Piattaforma,%,0.1,0.15,15,15.39,769.33,4359.53,1743.81,3388,12,0,true
+platformFeeRate,Margine Piattaforma,%,0.1,0.2,20,20.52,1025.77,4103.09,1641.24,3182,12,0,true
+platformFeeRate,Margine Piattaforma,%,0.1,0.3,30,30.77,1538.66,3590.2,1436.08,2772,12,0,true
+operationsPerTeamPerRound,Operazioni/Squadra/Giornata,ops,3,0.5,10,5.88,294.21,2647.92,1059.17,2018,12,0,true
+operationsPerTeamPerRound,Operazioni/Squadra/Giornata,ops,3,1,10,6.83,341.4,3072.6,1229.04,2358,12,0,true
+operationsPerTeamPerRound,Operazioni/Squadra/Giornata,ops,3,2,10,8.59,429.72,3867.51,1547.01,2994,12,0,true
+operationsPerTeamPerRound,Operazioni/Squadra/Giornata,ops,3,3,10,10.26,512.89,4615.97,1846.39,3593,12,0,true
+operationsPerTeamPerRound,Operazioni/Squadra/Giornata,ops,3,5,10,13.57,678.66,6107.92,2443.17,4786,12,0,true
+operationsPerTeamPerRound,Operazioni/Squadra/Giornata,ops,3,8,10,18.33,916.32,8246.87,3298.75,6497,12,0,true
+numParticipants,Numero Partecipanti,N,50,10,10,10.29,102.91,926.15,370.46,641,50,0,true
+numParticipants,Numero Partecipanti,N,50,20,10,10.29,205.83,1852.48,740.99,1382,30,0,true
+numParticipants,Numero Partecipanti,N,50,50,10,10.26,512.89,4615.97,1846.39,3593,12,0,true
+numParticipants,Numero Partecipanti,N,50,100,10,10.28,1027.55,9247.98,3699.19,7298,6,0,true
+numParticipants,Numero Partecipanti,N,50,250,10,10.27,2567.33,23105.99,9242.4,18385,2.4,0,true
+numParticipants,Numero Partecipanti,N,50,500,10,10.28,5139.21,46252.9,18501.16,36902,1.2,0,true
+registrationFeePerTeam,Quota Iscrizione,crediti,50,0,10,5.26,262.89,2365.97,946.39,94639,100,0,true
+registrationFeePerTeam,Quota Iscrizione,crediti,50,10,10,6.26,312.89,2815.97,1126.39,11164,12,0,true
+registrationFeePerTeam,Quota Iscrizione,crediti,50,25,10,7.76,387.89,3490.97,1396.39,5486,12,0,true
+registrationFeePerTeam,Quota Iscrizione,crediti,50,50,10,10.26,512.89,4615.97,1846.39,3593,12,0,true
+registrationFeePerTeam,Quota Iscrizione,crediti,50,100,10,15.26,762.89,6865.97,2746.39,2646,12,0,true
+registrationFeePerTeam,Quota Iscrizione,crediti,50,200,10,25.26,1262.89,11365.97,4546.39,2173,12,0,true
+roundsPerSeason,Giornate Stagione,giornate,38,10,10,6.11,305.58,2750.21,1100.08,2100,12,0,true
+roundsPerSeason,Giornate Stagione,giornate,38,20,10,7.54,376.96,3392.68,1357.07,2614,12,0,true
+roundsPerSeason,Giornate Stagione,giornate,38,30,10,9.04,451.97,4067.73,1627.09,3154,12,0,true
+roundsPerSeason,Giornate Stagione,giornate,38,38,10,10.26,512.89,4615.97,1846.39,3593,12,0,true
+roundsPerSeason,Giornate Stagione,giornate,38,46,10,11.53,576.48,5188.32,2075.33,4051,12,0,true
+roundsPerSeason,Giornate Stagione,giornate,38,60,10,13.7,684.79,6163.14,2465.25,4831,12,0,true

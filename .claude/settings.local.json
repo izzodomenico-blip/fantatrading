@@ -1,7 +1,24 @@
 {
   "permissions": {
     "allow": [
-      "PowerShell(cd \"C:\\\\Users\\\\domenicoizzoj\\\\Documents\\\\FantaTrading\"; Get-ChildItem reports -Recurse | Where-Object { -not $_.PSIsContainer } | Select-Object FullName, Length | Format-Table -AutoSize)"
+      "PowerShell(cd \"C:\\\\Users\\\\domenicoizzoj\\\\Documents\\\\FantaTrading\"; Get-ChildItem reports -Recurse | Where-Object { -not $_.PSIsContainer } | Select-Object FullName, Length | Format-Table -AutoSize)",
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\domenicoizzoj\\\\Documents\\\\FantaTrading\\\\reports\" -Recurse -File | Select-Object FullName, @{n='KB';e={[math]::Round\\($_.Length/1KB,1\\)}})",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\domenicoizzoj\\\\Documents\\\\FantaTrading\\\\reports\" -Recurse -File | ForEach-Object { \"$\\($_.FullName\\) — $\\([math]::Round\\($_.Length/1KB,1\\)\\) KB\" })",
+      "PowerShell(cd \"C:\\\\Users\\\\domenicoizzoj\\\\Documents\\\\FantaTrading\\\\app\\\\web\"; Start-Process powershell -ArgumentList '-NoExit', '-Command', 'cd \"C:\\\\Users\\\\domenicoizzoj\\\\Documents\\\\FantaTrading\\\\app\\\\web\"; npx vite' -WindowStyle Normal; Start-Sleep 3; Write-Host \"Dev server avviato su http://localhost:5173\")",
+      "PowerShell(Start-Sleep 2; Invoke-WebRequest -Uri \"http://localhost:5173\" -UseBasicParsing -TimeoutSec 5 | Select-Object StatusCode 2>&1)",
+      "PowerShell(Receive-Job *)",
+      "PowerShell(Invoke-WebRequest -Uri \"http://localhost:5173\" -UseBasicParsing -TimeoutSec 8 | Select-Object StatusCode, @{N='Preview';E={$_.Content.Substring\\(0,200\\)}})",
+      "PowerShell(Get-ChildItem -Recurse \"C:\\\\Users\\\\domenicoizzoj\\\\Documents\\\\FantaTrading\\\\reports\" -File | Select-Object @{N='Path';E={$_.FullName.Replace\\('C:\\\\Users\\\\domenicoizzoj\\\\Documents\\\\FantaTrading\\\\reports\\\\',''\\)}}, @{N='SizeKB';E={[math]::Round\\($_.Length/1024,1\\)}})",
+      "PowerShell(Get-ChildItem -Recurse \"C:\\\\Users\\\\domenicoizzoj\\\\Documents\\\\FantaTrading\\\\reports\" -File | ForEach-Object { \"$\\($_.FullName.Replace\\('C:\\\\Users\\\\domenicoizzoj\\\\Documents\\\\FantaTrading\\\\reports\\\\',''\\)\\) — $\\([math]::Round\\($_.Length/1024,1\\)\\) KB\" })",
+      "PowerShell(Get-Content \"C:\\\\Users\\\\domenicoizzoj\\\\Documents\\\\FantaTrading\\\\src\\\\services\\\\ruleComparisonEngine.ts\" | Select-Object -First 5; Write-Host \"---\"; Get-Content \"C:\\\\Users\\\\domenicoizzoj\\\\Documents\\\\FantaTrading\\\\src\\\\services\\\\ruleComparisonEngine.ts\" | Where-Object { $_ -match \"registrationFee|numSimulations|participantCount\" } | Select-Object -First 15)",
+      "PowerShell(New-Item *)",
+      "Bash(npm test *)",
+      "Bash(npm run *)",
+      "Bash(npm install *)",
+      "Bash(node -e \"require\\('xlsx'\\); console.log\\('xlsx ok'\\)\")",
+      "Bash(New-Item -ItemType Directory -Force -Path \"data\\\\real\\\\raw\\\\quotazioni\", \"data\\\\real\\\\processed\", \"reports\\\\real-data\", \"src\\\\importers\")",
+      "Bash(Out-Null)",
+      "Bash(node -e ' *)"
     ]
   }
 }

@@ -4,7 +4,14 @@ import {
 } from '../../src/analysis/breakEvenAnalysis';
 import { DEFAULT_RULES, TradingRules } from '../../src/config/defaultRules';
 
-const rules = DEFAULT_RULES;
+// Regole con margine esplicito per testare il break-even (10% comm, 20% piattaforma)
+const rules: TradingRules = {
+  ...DEFAULT_RULES,
+  buyCommissionRate: 0.10,
+  sellCommissionRate: 0.10,
+  prizePoolContributionRate: 0.80,
+  platformFeeRate: 0.20,
+};
 
 describe('calculateBreakEven', () => {
   test('con costi fissi 0 il break-even è 0 operazioni', () => {

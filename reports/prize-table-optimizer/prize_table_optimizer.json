@@ -1,0 +1,2588 @@
+{
+  "generatedAt": "2026-05-11T14:43:56.459Z",
+  "numParticipants": 50,
+  "registrationFeePerTeam": 50,
+  "numSimulations": 80,
+  "candidatesEvaluated": 42,
+  "paretoFrontier": [
+    {
+      "numPrizes": 10,
+      "firstPrizePct": 0.3,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.300000000023247,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.21291853305834008,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.1511143390540083,
+          "label": "3° posto"
+        },
+        {
+          "rank": 4,
+          "percentageOfPool": 0.1072501446432228,
+          "label": "4° posto"
+        },
+        {
+          "rank": 5,
+          "percentageOfPool": 0.07611847821986754,
+          "label": "5° posto"
+        },
+        {
+          "rank": 6,
+          "percentageOfPool": 0.05402344906650507,
+          "label": "6° posto"
+        },
+        {
+          "rank": 7,
+          "percentageOfPool": 0.038341978417002924,
+          "label": "7° posto"
+        },
+        {
+          "rank": 8,
+          "percentageOfPool": 0.027212392661567303,
+          "label": "8° posto"
+        },
+        {
+          "rank": 9,
+          "percentageOfPool": 0.0193134090868649,
+          "label": "9° posto"
+        },
+        {
+          "rank": 10,
+          "percentageOfPool": 0.013707275769374123,
+          "label": "10° posto"
+        }
+      ],
+      "giniCoefficient": 0.8956039929175881,
+      "pctAbove0": 20,
+      "pctAbove5": 20,
+      "avgFirstPrize": 1386.013802637007,
+      "avgLastPrize": 63.328244704773766,
+      "avgWinnerROIPct": 2672.0276052740123,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": true,
+      "isParetoOptimal": true
+    },
+    {
+      "numPrizes": 10,
+      "firstPrizePct": 0.4,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.39999999995286717,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.24100890666539754,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.14521323274723658,
+          "label": "3° posto"
+        },
+        {
+          "rank": 4,
+          "percentageOfPool": 0.08749420615470811,
+          "label": "4° posto"
+        },
+        {
+          "rank": 5,
+          "percentageOfPool": 0.05271720741846953,
+          "label": "5° posto"
+        },
+        {
+          "rank": 6,
+          "percentageOfPool": 0.03176329130968855,
+          "label": "6° posto"
+        },
+        {
+          "rank": 7,
+          "percentageOfPool": 0.01913809027886149,
+          "label": "7° posto"
+        },
+        {
+          "rank": 8,
+          "percentageOfPool": 0.011531125535788939,
+          "label": "8° posto"
+        },
+        {
+          "rank": 9,
+          "percentageOfPool": 0.006947759895823516,
+          "label": "9° posto"
+        },
+        {
+          "rank": 10,
+          "percentageOfPool": 0.004186180041158572,
+          "label": "10° posto"
+        }
+      ],
+      "giniCoefficient": 0.9219037041277189,
+      "pctAbove0": 16,
+      "pctAbove5": 15.725,
+      "avgFirstPrize": 1848.01840315505,
+      "avgLastPrize": 19.34034438973242,
+      "avgWinnerROIPct": 3596.0368063100996,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": false,
+      "isParetoOptimal": true
+    },
+    {
+      "numPrizes": 15,
+      "firstPrizePct": 0.4,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.40000000004662384,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.24007558578431523,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.14409071720741012,
+          "label": "3° posto"
+        },
+        {
+          "rank": 4,
+          "percentageOfPool": 0.08648165833904747,
+          "label": "4° posto"
+        },
+        {
+          "rank": 5,
+          "percentageOfPool": 0.05190533695731452,
+          "label": "5° posto"
+        },
+        {
+          "rank": 6,
+          "percentageOfPool": 0.031153010434767703,
+          "label": "6° posto"
+        },
+        {
+          "rank": 7,
+          "percentageOfPool": 0.018697693070499958,
+          "label": "7° posto"
+        },
+        {
+          "rank": 8,
+          "percentageOfPool": 0.011222149040480975,
+          "label": "8° posto"
+        },
+        {
+          "rank": 9,
+          "percentageOfPool": 0.0067354100108458275,
+          "label": "9° posto"
+        },
+        {
+          "rank": 10,
+          "percentageOfPool": 0.004042518759157188,
+          "label": "10° posto"
+        },
+        {
+          "rank": 11,
+          "percentageOfPool": 0.0024262751475890576,
+          "label": "11° posto"
+        },
+        {
+          "rank": 12,
+          "percentageOfPool": 0.0014562235681586857,
+          "label": "12° posto"
+        },
+        {
+          "rank": 13,
+          "percentageOfPool": 0.0008740093152946811,
+          "label": "13° posto"
+        },
+        {
+          "rank": 14,
+          "percentageOfPool": 0.0005245707458146534,
+          "label": "14° posto"
+        },
+        {
+          "rank": 15,
+          "percentageOfPool": 0.00031484157268022237,
+          "label": "15° posto"
+        }
+      ],
+      "giniCoefficient": 0.9202363171973118,
+      "pctAbove0": 15.975,
+      "pctAbove5": 14.399999999999999,
+      "avgFirstPrize": 1848.0184035882103,
+      "avgLastPrize": 1.4545825511497188,
+      "avgWinnerROIPct": 3596.03680717642,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": false,
+      "isParetoOptimal": true
+    },
+    {
+      "numPrizes": 8,
+      "firstPrizePct": 0.5,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.5000000000316136,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.2510085275886874,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.12601056183651443,
+          "label": "3° posto"
+        },
+        {
+          "rank": 4,
+          "percentageOfPool": 0.06325945117041376,
+          "label": "4° posto"
+        },
+        {
+          "rank": 5,
+          "percentageOfPool": 0.03175732338670013,
+          "label": "5° posto"
+        },
+        {
+          "rank": 6,
+          "percentageOfPool": 0.015942717965898766,
+          "label": "6° posto"
+        },
+        {
+          "rank": 7,
+          "percentageOfPool": 0.008003516324257887,
+          "label": "7° posto"
+        },
+        {
+          "rank": 8,
+          "percentageOfPool": 0.004017901695913951,
+          "label": "8° posto"
+        }
+      ],
+      "giniCoefficient": 0.940972108081352,
+      "pctAbove0": 12,
+      "pctAbove5": 12,
+      "avgFirstPrize": 2310.0230043620627,
+      "avgLastPrize": 18.562890692479467,
+      "avgWinnerROIPct": 4520.046008724127,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": false,
+      "isParetoOptimal": true
+    },
+    {
+      "numPrizes": 8,
+      "firstPrizePct": 0.6,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.6000000000249991,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.2402378062782961,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.09619033927167242,
+          "label": "3° posto"
+        },
+        {
+          "rank": 4,
+          "percentageOfPool": 0.038514260151381326,
+          "label": "4° posto"
+        },
+        {
+          "rank": 5,
+          "percentageOfPool": 0.01542096894802323,
+          "label": "5° posto"
+        },
+        {
+          "rank": 6,
+          "percentageOfPool": 0.006174499584340779,
+          "label": "6° posto"
+        },
+        {
+          "rank": 7,
+          "percentageOfPool": 0.002472247058244127,
+          "label": "7° posto"
+        },
+        {
+          "rank": 8,
+          "percentageOfPool": 0.0009898786830429898,
+          "label": "8° posto"
+        }
+      ],
+      "giniCoefficient": 0.9535007891151861,
+      "pctAbove0": 10,
+      "pctAbove5": 10,
+      "avgFirstPrize": 2772.027605174707,
+      "avgLastPrize": 4.573285058424703,
+      "avgWinnerROIPct": 5444.055210349412,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": false,
+      "isParetoOptimal": true
+    },
+    {
+      "numPrizes": 6,
+      "firstPrizePct": 0.7,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.7000000000303188,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.21036090929038476,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.06321673165080119,
+          "label": "3° posto"
+        },
+        {
+          "rank": 4,
+          "percentageOfPool": 0.01899761307407543,
+          "label": "4° posto"
+        },
+        {
+          "rank": 5,
+          "percentageOfPool": 0.005709078800623311,
+          "label": "5° posto"
+        },
+        {
+          "rank": 6,
+          "percentageOfPool": 0.0017156671537965173,
+          "label": "6° posto"
+        }
+      ],
+      "giniCoefficient": 0.9629919254885726,
+      "pctAbove0": 8,
+      "pctAbove5": 8,
+      "avgFirstPrize": 3234.0322060424846,
+      "avgLastPrize": 7.926461185695512,
+      "avgWinnerROIPct": 6368.064412084968,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": false,
+      "isParetoOptimal": true
+    },
+    {
+      "numPrizes": 1,
+      "firstPrizePct": 0.3,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 1,
+          "label": "1° posto"
+        }
+      ],
+      "giniCoefficient": 0.98,
+      "pctAbove0": 2,
+      "pctAbove5": 2,
+      "avgFirstPrize": 4620.046008432013,
+      "avgLastPrize": 4620.046008432013,
+      "avgWinnerROIPct": 9140.092016864028,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": true,
+      "isParetoOptimal": true
+    },
+    {
+      "numPrizes": 1,
+      "firstPrizePct": 0.4,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 1,
+          "label": "1° posto"
+        }
+      ],
+      "giniCoefficient": 0.98,
+      "pctAbove0": 2,
+      "pctAbove5": 2,
+      "avgFirstPrize": 4620.046008432013,
+      "avgLastPrize": 4620.046008432013,
+      "avgWinnerROIPct": 9140.092016864028,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": true,
+      "isParetoOptimal": true
+    },
+    {
+      "numPrizes": 1,
+      "firstPrizePct": 0.5,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 1,
+          "label": "1° posto"
+        }
+      ],
+      "giniCoefficient": 0.98,
+      "pctAbove0": 2,
+      "pctAbove5": 2,
+      "avgFirstPrize": 4620.046008432013,
+      "avgLastPrize": 4620.046008432013,
+      "avgWinnerROIPct": 9140.092016864028,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": true,
+      "isParetoOptimal": true
+    },
+    {
+      "numPrizes": 1,
+      "firstPrizePct": 0.6,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 1,
+          "label": "1° posto"
+        }
+      ],
+      "giniCoefficient": 0.98,
+      "pctAbove0": 2,
+      "pctAbove5": 2,
+      "avgFirstPrize": 4620.046008432013,
+      "avgLastPrize": 4620.046008432013,
+      "avgWinnerROIPct": 9140.092016864028,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": true,
+      "isParetoOptimal": true
+    },
+    {
+      "numPrizes": 1,
+      "firstPrizePct": 0.7,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 1,
+          "label": "1° posto"
+        }
+      ],
+      "giniCoefficient": 0.98,
+      "pctAbove0": 2,
+      "pctAbove5": 2,
+      "avgFirstPrize": 4620.046008432013,
+      "avgLastPrize": 4620.046008432013,
+      "avgWinnerROIPct": 9140.092016864028,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": true,
+      "isParetoOptimal": true
+    }
+  ],
+  "bestForWinnerROI": {
+    "numPrizes": 1,
+    "firstPrizePct": 0.3,
+    "table": [
+      {
+        "rank": 1,
+        "percentageOfPool": 1,
+        "label": "1° posto"
+      }
+    ],
+    "giniCoefficient": 0.98,
+    "pctAbove0": 2,
+    "pctAbove5": 2,
+    "avgFirstPrize": 4620.046008432013,
+    "avgLastPrize": 4620.046008432013,
+    "avgWinnerROIPct": 9140.092016864028,
+    "avgPrizePool": 4620.046008432013,
+    "lastPrizeCoversRegistrationFee": true,
+    "isParetoOptimal": true
+  },
+  "bestForBreakEven": {
+    "numPrizes": 10,
+    "firstPrizePct": 0.3,
+    "table": [
+      {
+        "rank": 1,
+        "percentageOfPool": 0.300000000023247,
+        "label": "1° posto"
+      },
+      {
+        "rank": 2,
+        "percentageOfPool": 0.21291853305834008,
+        "label": "2° posto"
+      },
+      {
+        "rank": 3,
+        "percentageOfPool": 0.1511143390540083,
+        "label": "3° posto"
+      },
+      {
+        "rank": 4,
+        "percentageOfPool": 0.1072501446432228,
+        "label": "4° posto"
+      },
+      {
+        "rank": 5,
+        "percentageOfPool": 0.07611847821986754,
+        "label": "5° posto"
+      },
+      {
+        "rank": 6,
+        "percentageOfPool": 0.05402344906650507,
+        "label": "6° posto"
+      },
+      {
+        "rank": 7,
+        "percentageOfPool": 0.038341978417002924,
+        "label": "7° posto"
+      },
+      {
+        "rank": 8,
+        "percentageOfPool": 0.027212392661567303,
+        "label": "8° posto"
+      },
+      {
+        "rank": 9,
+        "percentageOfPool": 0.0193134090868649,
+        "label": "9° posto"
+      },
+      {
+        "rank": 10,
+        "percentageOfPool": 0.013707275769374123,
+        "label": "10° posto"
+      }
+    ],
+    "giniCoefficient": 0.8956039929175881,
+    "pctAbove0": 20,
+    "pctAbove5": 20,
+    "avgFirstPrize": 1386.013802637007,
+    "avgLastPrize": 63.328244704773766,
+    "avgWinnerROIPct": 2672.0276052740123,
+    "avgPrizePool": 4620.046008432013,
+    "lastPrizeCoversRegistrationFee": true,
+    "isParetoOptimal": true
+  },
+  "bestBalanced": {
+    "numPrizes": 10,
+    "firstPrizePct": 0.3,
+    "table": [
+      {
+        "rank": 1,
+        "percentageOfPool": 0.300000000023247,
+        "label": "1° posto"
+      },
+      {
+        "rank": 2,
+        "percentageOfPool": 0.21291853305834008,
+        "label": "2° posto"
+      },
+      {
+        "rank": 3,
+        "percentageOfPool": 0.1511143390540083,
+        "label": "3° posto"
+      },
+      {
+        "rank": 4,
+        "percentageOfPool": 0.1072501446432228,
+        "label": "4° posto"
+      },
+      {
+        "rank": 5,
+        "percentageOfPool": 0.07611847821986754,
+        "label": "5° posto"
+      },
+      {
+        "rank": 6,
+        "percentageOfPool": 0.05402344906650507,
+        "label": "6° posto"
+      },
+      {
+        "rank": 7,
+        "percentageOfPool": 0.038341978417002924,
+        "label": "7° posto"
+      },
+      {
+        "rank": 8,
+        "percentageOfPool": 0.027212392661567303,
+        "label": "8° posto"
+      },
+      {
+        "rank": 9,
+        "percentageOfPool": 0.0193134090868649,
+        "label": "9° posto"
+      },
+      {
+        "rank": 10,
+        "percentageOfPool": 0.013707275769374123,
+        "label": "10° posto"
+      }
+    ],
+    "giniCoefficient": 0.8956039929175881,
+    "pctAbove0": 20,
+    "pctAbove5": 20,
+    "avgFirstPrize": 1386.013802637007,
+    "avgLastPrize": 63.328244704773766,
+    "avgWinnerROIPct": 2672.0276052740123,
+    "avgPrizePool": 4620.046008432013,
+    "lastPrizeCoversRegistrationFee": true,
+    "isParetoOptimal": true
+  },
+  "allCandidates": [
+    {
+      "numPrizes": 1,
+      "firstPrizePct": 0.3,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 1,
+          "label": "1° posto"
+        }
+      ],
+      "giniCoefficient": 0.98,
+      "pctAbove0": 2,
+      "pctAbove5": 2,
+      "avgFirstPrize": 4620.046008432013,
+      "avgLastPrize": 4620.046008432013,
+      "avgWinnerROIPct": 9140.092016864028,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": true,
+      "isParetoOptimal": true
+    },
+    {
+      "numPrizes": 1,
+      "firstPrizePct": 0.4,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 1,
+          "label": "1° posto"
+        }
+      ],
+      "giniCoefficient": 0.98,
+      "pctAbove0": 2,
+      "pctAbove5": 2,
+      "avgFirstPrize": 4620.046008432013,
+      "avgLastPrize": 4620.046008432013,
+      "avgWinnerROIPct": 9140.092016864028,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": true,
+      "isParetoOptimal": true
+    },
+    {
+      "numPrizes": 1,
+      "firstPrizePct": 0.5,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 1,
+          "label": "1° posto"
+        }
+      ],
+      "giniCoefficient": 0.98,
+      "pctAbove0": 2,
+      "pctAbove5": 2,
+      "avgFirstPrize": 4620.046008432013,
+      "avgLastPrize": 4620.046008432013,
+      "avgWinnerROIPct": 9140.092016864028,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": true,
+      "isParetoOptimal": true
+    },
+    {
+      "numPrizes": 1,
+      "firstPrizePct": 0.6,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 1,
+          "label": "1° posto"
+        }
+      ],
+      "giniCoefficient": 0.98,
+      "pctAbove0": 2,
+      "pctAbove5": 2,
+      "avgFirstPrize": 4620.046008432013,
+      "avgLastPrize": 4620.046008432013,
+      "avgWinnerROIPct": 9140.092016864028,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": true,
+      "isParetoOptimal": true
+    },
+    {
+      "numPrizes": 1,
+      "firstPrizePct": 0.7,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 1,
+          "label": "1° posto"
+        }
+      ],
+      "giniCoefficient": 0.98,
+      "pctAbove0": 2,
+      "pctAbove5": 2,
+      "avgFirstPrize": 4620.046008432013,
+      "avgLastPrize": 4620.046008432013,
+      "avgWinnerROIPct": 9140.092016864028,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": true,
+      "isParetoOptimal": true
+    },
+    {
+      "numPrizes": 2,
+      "firstPrizePct": 0.5,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.5,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.5,
+          "label": "2° posto"
+        }
+      ],
+      "giniCoefficient": 0.96,
+      "pctAbove0": 4,
+      "pctAbove5": 4,
+      "avgFirstPrize": 2310.0230042160065,
+      "avgLastPrize": 2310.0230042160065,
+      "avgWinnerROIPct": 4520.046008432014,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": true,
+      "isParetoOptimal": false
+    },
+    {
+      "numPrizes": 2,
+      "firstPrizePct": 0.6,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.6000000000050201,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.39999999999497987,
+          "label": "2° posto"
+        }
+      ],
+      "giniCoefficient": 0.9640000000002007,
+      "pctAbove0": 4,
+      "pctAbove5": 4,
+      "avgFirstPrize": 2772.027605082401,
+      "avgLastPrize": 1848.018403349612,
+      "avgWinnerROIPct": 5444.055210164803,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": true,
+      "isParetoOptimal": false
+    },
+    {
+      "numPrizes": 2,
+      "firstPrizePct": 0.7,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.6999999999998072,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.3000000000001927,
+          "label": "2° posto"
+        }
+      ],
+      "giniCoefficient": 0.9679999999999922,
+      "pctAbove0": 4,
+      "pctAbove5": 4,
+      "avgFirstPrize": 3234.03220590152,
+      "avgLastPrize": 1386.0138025304943,
+      "avgWinnerROIPct": 6368.064411803037,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": true,
+      "isParetoOptimal": false
+    },
+    {
+      "numPrizes": 3,
+      "firstPrizePct": 0.4,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.4000000000025129,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.32915026221261146,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.27084973778487564,
+          "label": "3° posto"
+        }
+      ],
+      "giniCoefficient": 0.9451660104887054,
+      "pctAbove0": 6,
+      "pctAbove5": 6,
+      "avgFirstPrize": 1848.0184033844157,
+      "avgLastPrize": 1251.338249937872,
+      "avgWinnerROIPct": 3596.0368067688305,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": true,
+      "isParetoOptimal": false
+    },
+    {
+      "numPrizes": 3,
+      "firstPrizePct": 0.5,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.5000000000045822,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.3090169943736809,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.19098300562173684,
+          "label": "3° posto"
+        }
+      ],
+      "giniCoefficient": 0.9523606797753137,
+      "pctAbove0": 6,
+      "pctAbove5": 6,
+      "avgFirstPrize": 2310.0230042371777,
+      "avgLastPrize": 882.350272801054,
+      "avgWinnerROIPct": 4520.046008474352,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": true,
+      "isParetoOptimal": false
+    },
+    {
+      "numPrizes": 3,
+      "firstPrizePct": 0.6,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.6000000000232671,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.2744562646441945,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.12554373533253851,
+          "label": "3° posto"
+        }
+      ],
+      "giniCoefficient": 0.9589782505876294,
+      "pctAbove0": 6,
+      "pctAbove5": 6,
+      "avgFirstPrize": 2772.0276051667042,
+      "avgLastPrize": 580.0178333067396,
+      "avgWinnerROIPct": 5444.0552103334085,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": true,
+      "isParetoOptimal": false
+    },
+    {
+      "numPrizes": 3,
+      "firstPrizePct": 0.7,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.7000000000186446,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.2266281297234092,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.07337187025794628,
+          "label": "3° posto"
+        }
+      ],
+      "giniCoefficient": 0.9650651251904281,
+      "pctAbove0": 6,
+      "pctAbove5": 6,
+      "avgFirstPrize": 3234.0322059885484,
+      "avgLastPrize": 338.98141631641624,
+      "avgWinnerROIPct": 6368.064411977099,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": true,
+      "isParetoOptimal": false
+    },
+    {
+      "numPrizes": 4,
+      "firstPrizePct": 0.3,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.3000000000257963,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.26385011951162973,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.23205628520105034,
+          "label": "3° posto"
+        },
+        {
+          "rank": 4,
+          "percentageOfPool": 0.2040935952615237,
+          "label": "4° posto"
+        }
+      ],
+      "giniCoefficient": 0.926390260972068,
+      "pctAbove0": 8,
+      "pctAbove5": 8,
+      "avgFirstPrize": 1386.0138026487841,
+      "avgLastPrize": 942.9218001345414,
+      "avgWinnerROIPct": 2672.0276052975682,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": true,
+      "isParetoOptimal": false
+    },
+    {
+      "numPrizes": 4,
+      "firstPrizePct": 0.4,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.40000000001346425,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.2765655919131854,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.19122131656928995,
+          "label": "3° posto"
+        },
+        {
+          "rank": 4,
+          "percentageOfPool": 0.13221309150406035,
+          "label": "4° posto"
+        }
+      ],
+      "giniCoefficient": 0.9377741000174422,
+      "pctAbove0": 8,
+      "pctAbove5": 8,
+      "avgFirstPrize": 1848.018403435011,
+      "avgLastPrize": 610.8305656657906,
+      "avgWinnerROIPct": 3596.036806870024,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": true,
+      "isParetoOptimal": false
+    },
+    {
+      "numPrizes": 4,
+      "firstPrizePct": 0.5,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.49999999996376976,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.27184450635070345,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.14779887127682487,
+          "label": "3° posto"
+        },
+        {
+          "rank": 4,
+          "percentageOfPool": 0.08035662240870191,
+          "label": "4° posto"
+        }
+      ],
+      "giniCoefficient": 0.9476595153547815,
+      "pctAbove0": 8,
+      "pctAbove5": 8,
+      "avgFirstPrize": 2310.0230040486226,
+      "avgLastPrize": 371.2512926104017,
+      "avgWinnerROIPct": 4520.046008097243,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": true,
+      "isParetoOptimal": false
+    },
+    {
+      "numPrizes": 4,
+      "firstPrizePct": 0.6,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.5999999999997035,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.2510307546789507,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.10502739965785778,
+          "label": "3° posto"
+        },
+        {
+          "rank": 4,
+          "percentageOfPool": 0.04394184566348805,
+          "label": "4° posto"
+        }
+      ],
+      "giniCoefficient": 0.9562835563605949,
+      "pctAbove0": 8,
+      "pctAbove5": 8,
+      "avgFirstPrize": 2772.0276050578386,
+      "avgLastPrize": 203.01334866073353,
+      "avgWinnerROIPct": 5444.055210115679,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": true,
+      "isParetoOptimal": false
+    },
+    {
+      "numPrizes": 4,
+      "firstPrizePct": 0.7,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.6999999999739993,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.21430456866309378,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.06560921164511509,
+          "label": "3° posto"
+        },
+        {
+          "rank": 4,
+          "percentageOfPool": 0.02008621971779182,
+          "label": "4° posto"
+        }
+      ],
+      "giniCoefficient": 0.9637687339557319,
+      "pctAbove0": 8,
+      "pctAbove5": 8,
+      "avgFirstPrize": 3234.0322057822846,
+      "avgLastPrize": 92.7992592316725,
+      "avgWinnerROIPct": 6368.064411564574,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": true,
+      "isParetoOptimal": false
+    },
+    {
+      "numPrizes": 5,
+      "firstPrizePct": 0.3,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.3000000000112298,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.23870272338158546,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.18992996715884278,
+          "label": "3° posto"
+        },
+        {
+          "rank": 4,
+          "percentageOfPool": 0.15112266803631266,
+          "label": "4° posto"
+        },
+        {
+          "rank": 5,
+          "percentageOfPool": 0.12024464141202929,
+          "label": "5° posto"
+        }
+      ],
+      "giniCoefficient": 0.9178836309017471,
+      "pctAbove0": 10,
+      "pctAbove5": 10,
+      "avgFirstPrize": 1386.0138025814865,
+      "avgLastPrize": 555.5357755909846,
+      "avgWinnerROIPct": 2672.027605162973,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": true,
+      "isParetoOptimal": false
+    },
+    {
+      "numPrizes": 5,
+      "firstPrizePct": 0.4,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.4000000000410149,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.25778839965346706,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.16613714747270386,
+          "label": "3° posto"
+        },
+        {
+          "rank": 4,
+          "percentageOfPool": 0.1070705734139722,
+          "label": "4° posto"
+        },
+        {
+          "rank": 5,
+          "percentageOfPool": 0.06900387941884191,
+          "label": "5° posto"
+        }
+      ],
+      "giniCoefficient": 0.9325084026993533,
+      "pctAbove0": 10,
+      "pctAbove5": 10,
+      "avgFirstPrize": 1848.0184035622963,
+      "avgLastPrize": 318.8010976753445,
+      "avgWinnerROIPct": 3596.0368071245916,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": true,
+      "isParetoOptimal": false
+    },
+    {
+      "numPrizes": 5,
+      "firstPrizePct": 0.5,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.4999999999667878,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.2593950318402283,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.1345715650957249,
+          "label": "3° posto"
+        },
+        {
+          "rank": 4,
+          "percentageOfPool": 0.06981439083022722,
+          "label": "4° posto"
+        },
+        {
+          "rank": 5,
+          "percentageOfPool": 0.03621901226703168,
+          "label": "5° posto"
+        }
+      ],
+      "giniCoefficient": 0.9446857046563806,
+      "pctAbove0": 10,
+      "pctAbove5": 10,
+      "avgFirstPrize": 2310.0230040625647,
+      "avgLastPrize": 167.33350305364985,
+      "avgWinnerROIPct": 4520.046008125129,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": true,
+      "isParetoOptimal": false
+    },
+    {
+      "numPrizes": 5,
+      "firstPrizePct": 0.6,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.600000000014382,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.2440043707182457,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.0992302215469666,
+          "label": "3° posto"
+        },
+        {
+          "rank": 4,
+          "percentageOfPool": 0.04035434627369886,
+          "label": "4° posto"
+        },
+        {
+          "rank": 5,
+          "percentageOfPool": 0.01641106144670675,
+          "label": "5° posto"
+        }
+      ],
+      "giniCoefficient": 0.9548331160631958,
+      "pctAbove0": 10,
+      "pctAbove5": 10,
+      "avgFirstPrize": 2772.027605125654,
+      "avgLastPrize": 75.81985893099001,
+      "avgWinnerROIPct": 5444.055210251309,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": true,
+      "isParetoOptimal": false
+    },
+    {
+      "numPrizes": 5,
+      "firstPrizePct": 0.7,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.7000000000284066,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.21122586126955406,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.06373766352464903,
+          "label": "3° posto"
+        },
+        {
+          "rank": 4,
+          "percentageOfPool": 0.01923291838965242,
+          "label": "4° posto"
+        },
+        {
+          "rank": 5,
+          "percentageOfPool": 0.0058035567877378815,
+          "label": "5° posto"
+        }
+      ],
+      "giniCoefficient": 0.9632154331744494,
+      "pctAbove0": 8,
+      "pctAbove5": 8,
+      "avgFirstPrize": 3234.0322060336493,
+      "avgLastPrize": 26.812699371896915,
+      "avgWinnerROIPct": 6368.064412067298,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": false,
+      "isParetoOptimal": false
+    },
+    {
+      "numPrizes": 6,
+      "firstPrizePct": 0.3,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.3000000000165748,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.2268044574156734,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.1714675396692532,
+          "label": "3° posto"
+        },
+        {
+          "rank": 4,
+          "percentageOfPool": 0.129632007656456,
+          "label": "4° posto"
+        },
+        {
+          "rank": 5,
+          "percentageOfPool": 0.09800372386200844,
+          "label": "5° posto"
+        },
+        {
+          "rank": 6,
+          "percentageOfPool": 0.07409227138003413,
+          "label": "6° posto"
+        }
+      ],
+      "giniCoefficient": 0.9111555275171299,
+      "pctAbove0": 12,
+      "pctAbove5": 12,
+      "avgFirstPrize": 1386.0138026061802,
+      "avgLastPrize": 342.30970264498814,
+      "avgWinnerROIPct": 2672.027605212361,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": true,
+      "isParetoOptimal": false
+    },
+    {
+      "numPrizes": 6,
+      "firstPrizePct": 0.4,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.3999999999847746,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.24940030419751005,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.15550127934044533,
+          "label": "3° posto"
+        },
+        {
+          "rank": 4,
+          "percentageOfPool": 0.09695516593021307,
+          "label": "4° posto"
+        },
+        {
+          "rank": 5,
+          "percentageOfPool": 0.06045161969358902,
+          "label": "5° posto"
+        },
+        {
+          "rank": 6,
+          "percentageOfPool": 0.037691630853467904,
+          "label": "6° posto"
+        }
+      ],
+      "giniCoefficient": 0.9287386802515702,
+      "pctAbove0": 12,
+      "pctAbove5": 12,
+      "avgFirstPrize": 1848.018403302463,
+      "avgLastPrize": 174.1370686758573,
+      "avgWinnerROIPct": 3596.036806604927,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": true,
+      "isParetoOptimal": false
+    },
+    {
+      "numPrizes": 6,
+      "firstPrizePct": 0.5,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.49999999994801614,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.25433019582300775,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.12936769702818898,
+          "label": "3° posto"
+        },
+        {
+          "rank": 4,
+          "percentageOfPool": 0.06580422344354321,
+          "label": "4° posto"
+        },
+        {
+          "rank": 5,
+          "percentageOfPool": 0.03347200207223461,
+          "label": "5° posto"
+        },
+        {
+          "rank": 6,
+          "percentageOfPool": 0.01702588168500924,
+          "label": "6° posto"
+        }
+      ],
+      "giniCoefficient": 0.9428201729230401,
+      "pctAbove0": 12,
+      "pctAbove5": 12,
+      "avgFirstPrize": 2310.0230039758417,
+      "avgLastPrize": 78.66035671886266,
+      "avgWinnerROIPct": 4520.046007951678,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": true,
+      "isParetoOptimal": false
+    },
+    {
+      "numPrizes": 6,
+      "firstPrizePct": 0.6,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.5999999999578504,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.24153194243075796,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.09722946536412191,
+          "label": "3° posto"
+        },
+        {
+          "rank": 4,
+          "percentageOfPool": 0.03914003605425035,
+          "label": "4° posto"
+        },
+        {
+          "rank": 5,
+          "percentageOfPool": 0.015755948226095155,
+          "label": "5° posto"
+        },
+        {
+          "rank": 6,
+          "percentageOfPool": 0.0063426079669242595,
+          "label": "6° posto"
+        }
+      ],
+      "giniCoefficient": 0.9540740874375699,
+      "pctAbove0": 10,
+      "pctAbove5": 10,
+      "avgFirstPrize": 2772.0276048644746,
+      "avgLastPrize": 29.30314062063751,
+      "avgWinnerROIPct": 5444.055209728951,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": false,
+      "isParetoOptimal": false
+    },
+    {
+      "numPrizes": 6,
+      "firstPrizePct": 0.7,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.7000000000303188,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.21036090929038476,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.06321673165080119,
+          "label": "3° posto"
+        },
+        {
+          "rank": 4,
+          "percentageOfPool": 0.01899761307407543,
+          "label": "4° posto"
+        },
+        {
+          "rank": 5,
+          "percentageOfPool": 0.005709078800623311,
+          "label": "5° posto"
+        },
+        {
+          "rank": 6,
+          "percentageOfPool": 0.0017156671537965173,
+          "label": "6° posto"
+        }
+      ],
+      "giniCoefficient": 0.9629919254885726,
+      "pctAbove0": 8,
+      "pctAbove5": 8,
+      "avgFirstPrize": 3234.0322060424846,
+      "avgLastPrize": 7.926461185695512,
+      "avgWinnerROIPct": 6368.064412084968,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": false,
+      "isParetoOptimal": true
+    },
+    {
+      "numPrizes": 8,
+      "firstPrizePct": 0.3,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.2999999999612993,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.21666057254359117,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.1564726790032411,
+          "label": "3° posto"
+        },
+        {
+          "rank": 4,
+          "percentageOfPool": 0.11300486741548382,
+          "label": "4° posto"
+        },
+        {
+          "rank": 5,
+          "percentageOfPool": 0.08161233092536596,
+          "label": "5° posto"
+        },
+        {
+          "rank": 6,
+          "percentageOfPool": 0.058940581157292886,
+          "label": "6° posto"
+        },
+        {
+          "rank": 7,
+          "percentageOfPool": 0.04256700020412816,
+          "label": "7° posto"
+        },
+        {
+          "rank": 8,
+          "percentageOfPool": 0.03074196878959769,
+          "label": "8° posto"
+        }
+      ],
+      "giniCoefficient": 0.901585258198544,
+      "pctAbove0": 16,
+      "pctAbove5": 16,
+      "avgFirstPrize": 1386.0138023508048,
+      "avgLastPrize": 142.02931019772234,
+      "avgWinnerROIPct": 2672.0276047016105,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": true,
+      "isParetoOptimal": false
+    },
+    {
+      "numPrizes": 8,
+      "firstPrizePct": 0.4,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.3999999999527799,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.2429647358486665,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.14757965718245258,
+          "label": "3° posto"
+        },
+        {
+          "rank": 4,
+          "percentageOfPool": 0.08964163107051058,
+          "label": "4° posto"
+        },
+        {
+          "rank": 5,
+          "percentageOfPool": 0.05444938804165332,
+          "label": "5° posto"
+        },
+        {
+          "rank": 6,
+          "percentageOfPool": 0.0330732029605589,
+          "label": "6° posto"
+        },
+        {
+          "rank": 7,
+          "percentageOfPool": 0.020089055054825344,
+          "label": "7° posto"
+        },
+        {
+          "rank": 8,
+          "percentageOfPool": 0.012202329888552884,
+          "label": "8° posto"
+        }
+      ],
+      "giniCoefficient": 0.9241534740022666,
+      "pctAbove0": 16,
+      "pctAbove5": 16,
+      "avgFirstPrize": 1848.0184031546457,
+      "avgLastPrize": 56.375325495179396,
+      "avgWinnerROIPct": 3596.0368063092938,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": true,
+      "isParetoOptimal": false
+    },
+    {
+      "numPrizes": 8,
+      "firstPrizePct": 0.5,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.5000000000316136,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.2510085275886874,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.12601056183651443,
+          "label": "3° posto"
+        },
+        {
+          "rank": 4,
+          "percentageOfPool": 0.06325945117041376,
+          "label": "4° posto"
+        },
+        {
+          "rank": 5,
+          "percentageOfPool": 0.03175732338670013,
+          "label": "5° posto"
+        },
+        {
+          "rank": 6,
+          "percentageOfPool": 0.015942717965898766,
+          "label": "6° posto"
+        },
+        {
+          "rank": 7,
+          "percentageOfPool": 0.008003516324257887,
+          "label": "7° posto"
+        },
+        {
+          "rank": 8,
+          "percentageOfPool": 0.004017901695913951,
+          "label": "8° posto"
+        }
+      ],
+      "giniCoefficient": 0.940972108081352,
+      "pctAbove0": 12,
+      "pctAbove5": 12,
+      "avgFirstPrize": 2310.0230043620627,
+      "avgLastPrize": 18.562890692479467,
+      "avgWinnerROIPct": 4520.046008724127,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": false,
+      "isParetoOptimal": true
+    },
+    {
+      "numPrizes": 8,
+      "firstPrizePct": 0.6,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.6000000000249991,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.2402378062782961,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.09619033927167242,
+          "label": "3° posto"
+        },
+        {
+          "rank": 4,
+          "percentageOfPool": 0.038514260151381326,
+          "label": "4° posto"
+        },
+        {
+          "rank": 5,
+          "percentageOfPool": 0.01542096894802323,
+          "label": "5° posto"
+        },
+        {
+          "rank": 6,
+          "percentageOfPool": 0.006174499584340779,
+          "label": "6° posto"
+        },
+        {
+          "rank": 7,
+          "percentageOfPool": 0.002472247058244127,
+          "label": "7° posto"
+        },
+        {
+          "rank": 8,
+          "percentageOfPool": 0.0009898786830429898,
+          "label": "8° posto"
+        }
+      ],
+      "giniCoefficient": 0.9535007891151861,
+      "pctAbove0": 10,
+      "pctAbove5": 10,
+      "avgFirstPrize": 2772.027605174707,
+      "avgLastPrize": 4.573285058424703,
+      "avgWinnerROIPct": 5444.055210349412,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": false,
+      "isParetoOptimal": true
+    },
+    {
+      "numPrizes": 8,
+      "firstPrizePct": 0.7,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.7000000000098071,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.210032188338932,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.06301931448260367,
+          "label": "3° posto"
+        },
+        {
+          "rank": 4,
+          "percentageOfPool": 0.018908692183164513,
+          "label": "4° posto"
+        },
+        {
+          "rank": 5,
+          "percentageOfPool": 0.005673477139716656,
+          "label": "5° posto"
+        },
+        {
+          "rank": 6,
+          "percentageOfPool": 0.001702304027326999,
+          "label": "6° posto"
+        },
+        {
+          "rank": 7,
+          "percentageOfPool": 0.0005107694858180822,
+          "label": "7° posto"
+        },
+        {
+          "rank": 8,
+          "percentageOfPool": 0.00015325433263088558,
+          "label": "8° posto"
+        }
+      ],
+      "giniCoefficient": 0.9628744112083014,
+      "pctAbove0": 8,
+      "pctAbove5": 8,
+      "avgFirstPrize": 3234.03220594772,
+      "avgLastPrize": 0.7080420677462349,
+      "avgWinnerROIPct": 6368.0644118954415,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": false,
+      "isParetoOptimal": false
+    },
+    {
+      "numPrizes": 10,
+      "firstPrizePct": 0.3,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.300000000023247,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.21291853305834008,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.1511143390540083,
+          "label": "3° posto"
+        },
+        {
+          "rank": 4,
+          "percentageOfPool": 0.1072501446432228,
+          "label": "4° posto"
+        },
+        {
+          "rank": 5,
+          "percentageOfPool": 0.07611847821986754,
+          "label": "5° posto"
+        },
+        {
+          "rank": 6,
+          "percentageOfPool": 0.05402344906650507,
+          "label": "6° posto"
+        },
+        {
+          "rank": 7,
+          "percentageOfPool": 0.038341978417002924,
+          "label": "7° posto"
+        },
+        {
+          "rank": 8,
+          "percentageOfPool": 0.027212392661567303,
+          "label": "8° posto"
+        },
+        {
+          "rank": 9,
+          "percentageOfPool": 0.0193134090868649,
+          "label": "9° posto"
+        },
+        {
+          "rank": 10,
+          "percentageOfPool": 0.013707275769374123,
+          "label": "10° posto"
+        }
+      ],
+      "giniCoefficient": 0.8956039929175881,
+      "pctAbove0": 20,
+      "pctAbove5": 20,
+      "avgFirstPrize": 1386.013802637007,
+      "avgLastPrize": 63.328244704773766,
+      "avgWinnerROIPct": 2672.0276052740123,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": true,
+      "isParetoOptimal": true
+    },
+    {
+      "numPrizes": 10,
+      "firstPrizePct": 0.4,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.39999999995286717,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.24100890666539754,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.14521323274723658,
+          "label": "3° posto"
+        },
+        {
+          "rank": 4,
+          "percentageOfPool": 0.08749420615470811,
+          "label": "4° posto"
+        },
+        {
+          "rank": 5,
+          "percentageOfPool": 0.05271720741846953,
+          "label": "5° posto"
+        },
+        {
+          "rank": 6,
+          "percentageOfPool": 0.03176329130968855,
+          "label": "6° posto"
+        },
+        {
+          "rank": 7,
+          "percentageOfPool": 0.01913809027886149,
+          "label": "7° posto"
+        },
+        {
+          "rank": 8,
+          "percentageOfPool": 0.011531125535788939,
+          "label": "8° posto"
+        },
+        {
+          "rank": 9,
+          "percentageOfPool": 0.006947759895823516,
+          "label": "9° posto"
+        },
+        {
+          "rank": 10,
+          "percentageOfPool": 0.004186180041158572,
+          "label": "10° posto"
+        }
+      ],
+      "giniCoefficient": 0.9219037041277189,
+      "pctAbove0": 16,
+      "pctAbove5": 15.725,
+      "avgFirstPrize": 1848.01840315505,
+      "avgLastPrize": 19.34034438973242,
+      "avgWinnerROIPct": 3596.0368063100996,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": false,
+      "isParetoOptimal": true
+    },
+    {
+      "numPrizes": 10,
+      "firstPrizePct": 0.5,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.4999999999575223,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.25024655914344535,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.12524668073690814,
+          "label": "3° posto"
+        },
+        {
+          "rank": 4,
+          "percentageOfPool": 0.06268510180242323,
+          "label": "4° posto"
+        },
+        {
+          "rank": 5,
+          "percentageOfPool": 0.031373462073891335,
+          "label": "5° posto"
+        },
+        {
+          "rank": 6,
+          "percentageOfPool": 0.01570220186615136,
+          "label": "6° posto"
+        },
+        {
+          "rank": 7,
+          "percentageOfPool": 0.007858843976627979,
+          "label": "7° posto"
+        },
+        {
+          "rank": 8,
+          "percentageOfPool": 0.00393329732832684,
+          "label": "8° posto"
+        },
+        {
+          "rank": 9,
+          "percentageOfPool": 0.0019685882451710383,
+          "label": "9° posto"
+        },
+        {
+          "rank": 10,
+          "percentageOfPool": 0.0009852648695322748,
+          "label": "10° posto"
+        }
+      ],
+      "giniCoefficient": 0.9403159072561573,
+      "pctAbove0": 12,
+      "pctAbove5": 12,
+      "avgFirstPrize": 2310.023004019758,
+      "avgLastPrize": 4.551969027730874,
+      "avgWinnerROIPct": 4520.046008039515,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": false,
+      "isParetoOptimal": false
+    },
+    {
+      "numPrizes": 10,
+      "firstPrizePct": 0.6,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.5999999999645718,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.2400378082525171,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.09603024899012393,
+          "label": "3° posto"
+        },
+        {
+          "rank": 4,
+          "percentageOfPool": 0.038418150824823215,
+          "label": "4° posto"
+        },
+        {
+          "rank": 5,
+          "percentageOfPool": 0.01536968120274953,
+          "label": "5° posto"
+        },
+        {
+          "rank": 6,
+          "percentageOfPool": 0.006148840982776251,
+          "label": "6° posto"
+        },
+        {
+          "rank": 7,
+          "percentageOfPool": 0.0024599238548100254,
+          "label": "7° posto"
+        },
+        {
+          "rank": 8,
+          "percentageOfPool": 0.0009841245510192457,
+          "label": "8° posto"
+        },
+        {
+          "rank": 9,
+          "percentageOfPool": 0.00039371183381350114,
+          "label": "9° posto"
+        },
+        {
+          "rank": 10,
+          "percentageOfPool": 0.00015750954279542058,
+          "label": "10° posto"
+        }
+      ],
+      "giniCoefficient": 0.953368344641049,
+      "pctAbove0": 10,
+      "pctAbove5": 10,
+      "avgFirstPrize": 2772.0276048955284,
+      "avgLastPrize": 0.7277013344819342,
+      "avgWinnerROIPct": 5444.055209791058,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": false,
+      "isParetoOptimal": false
+    },
+    {
+      "numPrizes": 10,
+      "firstPrizePct": 0.7,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.7000000000071244,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.21000289379688494,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.0630017362894527,
+          "label": "3° posto"
+        },
+        {
+          "rank": 4,
+          "percentageOfPool": 0.018900781335540906,
+          "label": "4° posto"
+        },
+        {
+          "rank": 5,
+          "percentageOfPool": 0.005670312536350492,
+          "label": "5° posto"
+        },
+        {
+          "rank": 6,
+          "percentageOfPool": 0.0017011172019346264,
+          "label": "6° posto"
+        },
+        {
+          "rank": 7,
+          "percentageOfPool": 0.0005103421929861364,
+          "label": "7° posto"
+        },
+        {
+          "rank": 8,
+          "percentageOfPool": 0.00015310476764663746,
+          "label": "8° posto"
+        },
+        {
+          "rank": 9,
+          "percentageOfPool": 0.00004593206322795188,
+          "label": "9° posto"
+        },
+        {
+          "rank": 10,
+          "percentageOfPool": 0.0000137798088511903,
+          "label": "10° posto"
+        }
+      ],
+      "giniCoefficient": 0.9628591676858231,
+      "pctAbove0": 8,
+      "pctAbove5": 8,
+      "avgFirstPrize": 3234.0322059353257,
+      "avgLastPrize": 0.06366335087989787,
+      "avgWinnerROIPct": 6368.06441187065,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": false,
+      "isParetoOptimal": false
+    },
+    {
+      "numPrizes": 15,
+      "firstPrizePct": 0.3,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.2999999999969936,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.21044093757369903,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.14761796069113764,
+          "label": "3° posto"
+        },
+        {
+          "rank": 4,
+          "percentageOfPool": 0.10354954016957256,
+          "label": "4° posto"
+        },
+        {
+          "rank": 5,
+          "percentageOfPool": 0.07263687439609544,
+          "label": "5° posto"
+        },
+        {
+          "rank": 6,
+          "percentageOfPool": 0.050952573168301735,
+          "label": "6° posto"
+        },
+        {
+          "rank": 7,
+          "percentageOfPool": 0.035741690898124574,
+          "label": "7° posto"
+        },
+        {
+          "rank": 8,
+          "percentageOfPool": 0.025071716477153522,
+          "label": "8° posto"
+        },
+        {
+          "rank": 9,
+          "percentageOfPool": 0.017587051740290065,
+          "label": "9° posto"
+        },
+        {
+          "rank": 10,
+          "percentageOfPool": 0.012336785524736285,
+          "label": "10° posto"
+        },
+        {
+          "rank": 11,
+          "percentageOfPool": 0.00865388237499053,
+          "label": "11° posto"
+        },
+        {
+          "rank": 12,
+          "percentageOfPool": 0.006070437068879222,
+          "label": "12° posto"
+        },
+        {
+          "rank": 13,
+          "percentageOfPool": 0.004258228227566276,
+          "label": "13° posto"
+        },
+        {
+          "rank": 14,
+          "percentageOfPool": 0.0029870184687360597,
+          "label": "14° posto"
+        },
+        {
+          "rank": 15,
+          "percentageOfPool": 0.002095303223723569,
+          "label": "15° posto"
+        }
+      ],
+      "giniCoefficient": 0.888964266290863,
+      "pctAbove0": 20,
+      "pctAbove5": 20,
+      "avgFirstPrize": 1386.0138025157148,
+      "avgLastPrize": 9.680397295218803,
+      "avgWinnerROIPct": 2672.027605031429,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": false,
+      "isParetoOptimal": false
+    },
+    {
+      "numPrizes": 15,
+      "firstPrizePct": 0.4,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.40000000004662384,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.24007558578431523,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.14409071720741012,
+          "label": "3° posto"
+        },
+        {
+          "rank": 4,
+          "percentageOfPool": 0.08648165833904747,
+          "label": "4° posto"
+        },
+        {
+          "rank": 5,
+          "percentageOfPool": 0.05190533695731452,
+          "label": "5° posto"
+        },
+        {
+          "rank": 6,
+          "percentageOfPool": 0.031153010434767703,
+          "label": "6° posto"
+        },
+        {
+          "rank": 7,
+          "percentageOfPool": 0.018697693070499958,
+          "label": "7° posto"
+        },
+        {
+          "rank": 8,
+          "percentageOfPool": 0.011222149040480975,
+          "label": "8° posto"
+        },
+        {
+          "rank": 9,
+          "percentageOfPool": 0.0067354100108458275,
+          "label": "9° posto"
+        },
+        {
+          "rank": 10,
+          "percentageOfPool": 0.004042518759157188,
+          "label": "10° posto"
+        },
+        {
+          "rank": 11,
+          "percentageOfPool": 0.0024262751475890576,
+          "label": "11° posto"
+        },
+        {
+          "rank": 12,
+          "percentageOfPool": 0.0014562235681586857,
+          "label": "12° posto"
+        },
+        {
+          "rank": 13,
+          "percentageOfPool": 0.0008740093152946811,
+          "label": "13° posto"
+        },
+        {
+          "rank": 14,
+          "percentageOfPool": 0.0005245707458146534,
+          "label": "14° posto"
+        },
+        {
+          "rank": 15,
+          "percentageOfPool": 0.00031484157268022237,
+          "label": "15° posto"
+        }
+      ],
+      "giniCoefficient": 0.9202363171973118,
+      "pctAbove0": 15.975,
+      "pctAbove5": 14.399999999999999,
+      "avgFirstPrize": 1848.0184035882103,
+      "avgLastPrize": 1.4545825511497188,
+      "avgWinnerROIPct": 3596.03680717642,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": false,
+      "isParetoOptimal": true
+    },
+    {
+      "numPrizes": 15,
+      "firstPrizePct": 0.5,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.49999999996257294,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.25000763288934497,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.12500763301522427,
+          "label": "3° posto"
+        },
+        {
+          "rank": 4,
+          "percentageOfPool": 0.0625057248511511,
+          "label": "4° posto"
+        },
+        {
+          "rank": 5,
+          "percentageOfPool": 0.031253816626477464,
+          "label": "5° posto"
+        },
+        {
+          "rank": 6,
+          "percentageOfPool": 0.01562738542825634,
+          "label": "6° posto"
+        },
+        {
+          "rank": 7,
+          "percentageOfPool": 0.007813931278920523,
+          "label": "7° posto"
+        },
+        {
+          "rank": 8,
+          "percentageOfPool": 0.0039070849254983255,
+          "label": "8° posto"
+        },
+        {
+          "rank": 9,
+          "percentageOfPool": 0.0019536021075891937,
+          "label": "9° posto"
+        },
+        {
+          "rank": 10,
+          "percentageOfPool": 0.000976830877125139,
+          "label": "10° posto"
+        },
+        {
+          "rank": 11,
+          "percentageOfPool": 0.0004884303506831182,
+          "label": "11° posto"
+        },
+        {
+          "rank": 12,
+          "percentageOfPool": 0.00024422263162947913,
+          "label": "12° posto"
+        },
+        {
+          "rank": 13,
+          "percentageOfPool": 0.00012211504407252588,
+          "label": "13° posto"
+        },
+        {
+          "rank": 14,
+          "percentageOfPool": 0.00006105938622207102,
+          "label": "14° posto"
+        },
+        {
+          "rank": 15,
+          "percentageOfPool": 0.00003053062523239786,
+          "label": "15° posto"
+        }
+      ],
+      "giniCoefficient": 0.9400158768885978,
+      "pctAbove0": 12,
+      "pctAbove5": 12,
+      "avgFirstPrize": 2310.0230040430924,
+      "avgLastPrize": 0.1410528932398734,
+      "avgWinnerROIPct": 4520.046008086187,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": false,
+      "isParetoOptimal": false
+    },
+    {
+      "numPrizes": 15,
+      "firstPrizePct": 0.6,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.5999999999945375,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.24000038655748823,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.09600030924711365,
+          "label": "3° posto"
+        },
+        {
+          "rank": 4,
+          "percentageOfPool": 0.038400185548592425,
+          "label": "4° posto"
+        },
+        {
+          "rank": 5,
+          "percentageOfPool": 0.015360098959375604,
+          "label": "5° posto"
+        },
+        {
+          "rank": 6,
+          "percentageOfPool": 0.006144049479741634,
+          "label": "6° posto"
+        },
+        {
+          "rank": 7,
+          "percentageOfPool": 0.0024576237502995863,
+          "label": "7° posto"
+        },
+        {
+          "rank": 8,
+          "percentageOfPool": 0.0009830510834835577,
+          "label": "8° posto"
+        },
+        {
+          "rank": 9,
+          "percentageOfPool": 0.0003932210667399325,
+          "label": "9° posto"
+        },
+        {
+          "rank": 10,
+          "percentageOfPool": 0.00015728868003498481,
+          "label": "10° posto"
+        },
+        {
+          "rank": 11,
+          "percentageOfPool": 0.00006291557334976186,
+          "label": "11° posto"
+        },
+        {
+          "rank": 12,
+          "percentageOfPool": 0.000025166269874277215,
+          "label": "12° posto"
+        },
+        {
+          "rank": 13,
+          "percentageOfPool": 0.000010066524163485983,
+          "label": "13° posto"
+        },
+        {
+          "rank": 14,
+          "percentageOfPool": 0.00000402661615091488,
+          "label": "14° posto"
+        },
+        {
+          "rank": 15,
+          "percentageOfPool": 0.0000016106490545783248,
+          "label": "15° posto"
+        }
+      ],
+      "giniCoefficient": 0.9533339060094834,
+      "pctAbove0": 10,
+      "pctAbove5": 10,
+      "avgFirstPrize": 2772.0276050339717,
+      "avgLastPrize": 0.007441272735589385,
+      "avgWinnerROIPct": 5444.0552100679415,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": false,
+      "isParetoOptimal": false
+    },
+    {
+      "numPrizes": 15,
+      "firstPrizePct": 0.7,
+      "table": [
+        {
+          "rank": 1,
+          "percentageOfPool": 0.6999999999470212,
+          "label": "1° posto"
+        },
+        {
+          "rank": 2,
+          "percentageOfPool": 0.21000000705215954,
+          "label": "2° posto"
+        },
+        {
+          "rank": 3,
+          "percentageOfPool": 0.06300000423606389,
+          "label": "3° posto"
+        },
+        {
+          "rank": 4,
+          "percentageOfPool": 0.018900001906943995,
+          "label": "4° posto"
+        },
+        {
+          "rank": 5,
+          "percentageOfPool": 0.005670000762920653,
+          "label": "5° posto"
+        },
+        {
+          "rank": 6,
+          "percentageOfPool": 0.0017010002861274345,
+          "label": "6° posto"
+        },
+        {
+          "rank": 7,
+          "percentageOfPool": 0.0005103001030136025,
+          "label": "7° posto"
+        },
+        {
+          "rank": 8,
+          "percentageOfPool": 0.00015309003605669256,
+          "label": "8° posto"
+        },
+        {
+          "rank": 9,
+          "percentageOfPool": 0.000045927012362791356,
+          "label": "9° posto"
+        },
+        {
+          "rank": 10,
+          "percentageOfPool": 0.000013778104172572503,
+          "label": "10° posto"
+        },
+        {
+          "rank": 11,
+          "percentageOfPool": 0.000004133431390892284,
+          "label": "11° posto"
+        },
+        {
+          "rank": 12,
+          "percentageOfPool": 0.0000012400294590038464,
+          "label": "12° posto"
+        },
+        {
+          "rank": 13,
+          "percentageOfPool": 3.720088502220027e-7,
+          "label": "13° posto"
+        },
+        {
+          "rank": 14,
+          "percentageOfPool": 1.1160265882285558e-7,
+          "label": "14° posto"
+        },
+        {
+          "rank": 15,
+          "percentageOfPool": 3.348079877373314e-8,
+          "label": "15° posto"
+        }
+      ],
+      "giniCoefficient": 0.962857150642229,
+      "pctAbove0": 8,
+      "pctAbove5": 8,
+      "avgFirstPrize": 3234.032205657647,
+      "avgLastPrize": 0.00015468283073370124,
+      "avgWinnerROIPct": 6368.064411315292,
+      "avgPrizePool": 4620.046008432013,
+      "lastPrizeCoversRegistrationFee": false,
+      "isParetoOptimal": false
+    }
+  ],
+  "recommendations": [
+    "BILANCIATO: n=10 premi, top=30% → break-even 20.0%, ROI vincitore 2672%, Gini 0.90.",
+    "MASSIMO ROI VINCITORE: n=1 premi, top=30% → ROI vincitore 9140%, premio 1° 4620 crediti.",
+    "MASSIMO BREAK-EVEN: n=10 premi, top=30% → 20.0% dei partecipanti recupera la quota, ultimo premio 63 crediti (>= quota).",
+    "FRONTIERA DI PARETO: 11 soluzioni non dominate sul piano (break-even %, premio 1°). Aggiungere premi aumenta la % di vincitori ma riduce la dimensione di ciascun premio.",
+    "OGNI VINCITORE COPRE LA QUOTA: con n=10 premi e top=30%, anche l'ultimo classificato premiato riceve 63 crediti ≥ quota 50."
+  ]
+}

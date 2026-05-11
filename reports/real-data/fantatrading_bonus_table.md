@@ -1,51 +1,102 @@
-# FantaTrading - Tabella Bonus/Malus Fasce Voti
+# FantaTrading - Tabella Bonus/Malus Ufficiale
 
 ## Stato ufficialita
 
-`docs/regolamento_originale.md` e presente ma non contiene la tabella numerica originale del regolamento.
+La configurazione in `src/config/teamBandBonusTables.ts` usa la tabella del **Regolamento FantaTrading originale**.
 
-Per rendere il motore configurabile e testabile e stata creata una tabella completa interpretata in `src/config/teamBandBonusTables.ts`.
+- `isOfficial`: `true`
+- `source`: `Regolamento FantaTrading originale`
 
-Questa tabella **non va considerata ufficiale per simulazioni economiche** finche i valori del regolamento originale non vengono inseriti in forma strutturata.
+La gestione dei senza voto resta separata e configurabile tramite `NoVotePolicy`; non e dichiarata ufficiale.
 
 ## Fasce squadra
 
-Le fasce sono calcolate sulla media dei 25 giocatori:
+| Fascia | Media squadra | Somma voti squadra |
+|--------|---------------|--------------------|
+| FASCIA_0 | < 5 | < 125 |
+| FASCIA_1 | >= 5 e < 5.5 | >= 125 e < 137.5 |
+| FASCIA_2 | >= 5.5 e < 6 | >= 137.5 e < 150 |
+| FASCIA_3 | >= 6 e < 6.5 | >= 150 e < 162.5 |
+| FASCIA_4 | >= 6.5 | >= 162.5 |
 
-| Fascia | Media minima | Media massima | Somma minima | Somma massima |
-|--------|--------------|---------------|--------------|---------------|
-| FASCIA_0 | -inf | < 5 | -inf | 124.99 |
-| FASCIA_1 | 5 | < 5.5 | 125 | 137.49 |
-| FASCIA_2 | 5.5 | < 6 | 137.5 | 149.99 |
-| FASCIA_3 | 6 | < 6.5 | 150 | 162.49 |
-| FASCIA_4 | 6.5 | +inf | 162.5 | +inf |
+## FASCIA_0
 
-## Voti individuali supportati
+Bonus/malus generale: **-2.50%** a tutti i giocatori.
 
-La tabella include almeno:
+## FASCIA_1
 
-```text
-3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9
-```
+| Voto | Bonus/Malus |
+|------|-------------|
+| 3 | -1.75% |
+| 3.5 | -1.50% |
+| 4 | -1.25% |
+| 4.5 | -1.00% |
+| 5 | -0.75% |
+| 5.5 | -0.50% |
+| 6 | 0.00% |
+| 6.5 | 0.50% |
+| 7 | 0.75% |
+| 7.5 | 1.00% |
+| 8 | 1.25% |
+| 8.5 | 1.50% |
+| 9 | 1.75% |
 
-## Assunzioni interpretative
+## FASCIA_2
 
-- Il voto 6 e neutro in tutte le fasce.
-- I voti sotto 6 generano malus percentuale.
-- I voti sopra 6 generano bonus percentuale.
-- Le fasce peggiori amplificano il malus tramite moltiplicatore.
-- La fascia migliore amplifica il bonus/malus tramite moltiplicatore dedicato.
-- I voti fuori range sono gestiti con clamp al voto piu vicino presente in tabella.
+| Voto | Bonus/Malus |
+|------|-------------|
+| 3 | -2.63% |
+| 3.5 | -2.25% |
+| 4 | -1.88% |
+| 4.5 | -1.50% |
+| 5 | -1.13% |
+| 5.5 | -0.75% |
+| 6 | 0.00% |
+| 6.5 | 0.75% |
+| 7 | 1.13% |
+| 7.5 | 1.50% |
+| 8 | 1.88% |
+| 8.5 | 2.25% |
+| 9 | 2.63% |
 
-## Valori chiave testati
+## FASCIA_3
 
-| Fascia | Voto | Bonus/Malus |
-|--------|------|-------------|
-| FASCIA_3 | 7 | +4% |
-| FASCIA_2 | 5 | -4% |
-| Tutte | 6 | 0% |
+| Voto | Bonus/Malus |
+|------|-------------|
+| 3 | -3.50% |
+| 3.5 | -3.00% |
+| 4 | -2.50% |
+| 4.5 | -2.00% |
+| 5 | -1.50% |
+| 5.5 | -1.00% |
+| 6 | 0.00% |
+| 6.5 | 1.00% |
+| 7 | 1.50% |
+| 7.5 | 2.00% |
+| 8 | 2.50% |
+| 8.5 | 3.00% |
+| 9 | 3.50% |
 
-## Prossima azione richiesta
+## FASCIA_4
 
-Sostituire `DEFAULT_TEAM_BAND_BONUS_TABLE_CONFIG` con la tabella ufficiale appena disponibile.
+| Voto | Bonus/Malus |
+|------|-------------|
+| 3 | -4.38% |
+| 3.5 | -3.75% |
+| 4 | -3.13% |
+| 4.5 | -2.50% |
+| 5 | -1.88% |
+| 5.5 | -1.25% |
+| 6 | 0.00% |
+| 6.5 | 1.25% |
+| 7 | 1.88% |
+| 7.5 | 2.50% |
+| 8 | 3.13% |
+| 8.5 | 3.75% |
+| 9 | 4.38% |
 
+## Gestione voti intermedi
+
+Per voti intermedi non presenti, il motore arrotonda al valore tabellare piu vicino.
+
+Per voti sotto 3 o sopra 9, il motore applica clamp controllato al valore tabellare piu vicino.

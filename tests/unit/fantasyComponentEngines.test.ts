@@ -1,4 +1,5 @@
 import { analyzeRealVotes, buildVotesQualityMarkdown } from '../../src/analysis/realVotesAnalysis';
+import { DEFAULT_TEAM_BAND_BONUS_TABLE_CONFIG } from '../../src/config/teamBandBonusTables';
 import { getBonusMalusPct, getNoVoteBonusMalusPct } from '../../src/engine/fantaTradingBonusTableEngine';
 import { calculateTeamVoteBand, getTeamVoteBand, TeamVoteInput } from '../../src/engine/teamVoteBandEngine';
 
@@ -73,6 +74,11 @@ describe('teamVoteBandEngine', () => {
 });
 
 describe('fantaTradingBonusTableEngine', () => {
+  test('tabella bonus/malus ufficiale FantaTrading', () => {
+    expect(DEFAULT_TEAM_BAND_BONUS_TABLE_CONFIG.isOfficial).toBe(true);
+    expect(DEFAULT_TEAM_BAND_BONUS_TABLE_CONFIG.source).toBe('Regolamento FantaTrading originale');
+  });
+
   test('restituisce bonus/malus per voto individuale e fascia', () => {
     const result = getBonusMalusPct('FASCIA_4', 7);
     expect(result.bonusMalusPct).toBeGreaterThan(0);
@@ -81,26 +87,41 @@ describe('fantaTradingBonusTableEngine', () => {
 
   test('bonus/malus voto 7 in fascia 3', () => {
     const result = getBonusMalusPct('FASCIA_3', 7);
-    expect(result.bonusMalusPct).toBe(4);
+    expect(result.bonusMalusPct).toBe(1.5);
     expect(result.handling).toBe('EXACT');
   });
 
   test('bonus/malus voto 5 in fascia 2', () => {
     const result = getBonusMalusPct('FASCIA_2', 5);
-    expect(result.bonusMalusPct).toBe(-4);
+    expect(result.bonusMalusPct).toBe(-1.13);
   });
 
-  test.each(['FASCIA_0', 'FASCIA_1', 'FASCIA_2', 'FASCIA_3', 'FASCIA_4'] as const)(
+  test('valori ufficiali specifici', () => {
+    expect(getBonusMalusPct('FASCIA_1', 7).bonusMalusPct).toBe(0.75);
+    expect(getBonusMalusPct('FASCIA_2', 5).bonusMalusPct).toBe(-1.13);
+    expect(getBonusMalusPct('FASCIA_3', 7).bonusMalusPct).toBe(1.5);
+    expect(getBonusMalusPct('FASCIA_4', 8.5).bonusMalusPct).toBe(3.75);
+    expect(getBonusMalusPct('FASCIA_0', 7).bonusMalusPct).toBe(-2.5);
+  });
+
+  test.each(['FASCIA_1', 'FASCIA_2', 'FASCIA_3', 'FASCIA_4'] as const)(
     'voto 6 sempre neutro in %s',
     (band) => {
       expect(getBonusMalusPct(band, 6).bonusMalusPct).toBe(0);
     },
   );
 
+  test('FASCIA_0 applica -2.50 a tutti i voti tabellari', () => {
+    expect(getBonusMalusPct('FASCIA_0', 3).bonusMalusPct).toBe(-2.5);
+    expect(getBonusMalusPct('FASCIA_0', 6).bonusMalusPct).toBe(-2.5);
+    expect(getBonusMalusPct('FASCIA_0', 9).bonusMalusPct).toBe(-2.5);
+  });
+
   test('usa fallback se il voto non e presente esattamente in tabella', () => {
     const result = getBonusMalusPct('FASCIA_3', 6.25);
     expect(result.usedFallback).toBe(true);
     expect(result.matchedIndividualVote).toBe(6);
+    expect(result.handling).toBe('ROUND_TO_NEAREST');
   });
 
   test('voti fuori range sono gestiti con clamp controllato', () => {

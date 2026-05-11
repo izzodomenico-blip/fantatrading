@@ -8,7 +8,7 @@ export interface BonusLookupResult {
   bonusMalusPct: number;
   usedFallback: boolean;
   outOfRange: boolean;
-  handling: 'EXACT' | 'CLAMP' | 'MISSING_BAND';
+  handling: 'EXACT' | 'ROUND_TO_NEAREST' | 'CLAMP' | 'MISSING_BAND';
 }
 
 export function getBonusMalusPct(
@@ -52,7 +52,11 @@ export function getBonusMalusPct(
     ? min
     : individualVote > max.individualVote
       ? max
-      : [...bandRows].reverse().find(row => individualVote >= row.individualVote) as TeamBandBonusTableEntry;
+      : bandRows.reduce((best, row) => {
+        const bestDistance = Math.abs(individualVote - best.individualVote);
+        const rowDistance = Math.abs(individualVote - row.individualVote);
+        return rowDistance < bestDistance ? row : best;
+      }, bandRows[0]);
 
   return {
     teamBand,
@@ -61,7 +65,7 @@ export function getBonusMalusPct(
     bonusMalusPct: matched.bonusMalusPct,
     usedFallback: true,
     outOfRange,
-    handling: 'CLAMP',
+    handling: outOfRange ? 'CLAMP' : 'ROUND_TO_NEAREST',
   };
 }
 

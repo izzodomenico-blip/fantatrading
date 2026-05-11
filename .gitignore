@@ -1,0 +1,16 @@
+node_modules/
+dist/
+coverage/
+.env
+*.log
+.DS_Store
+Thumbs.db
+
+# Report generati (tenere la struttura ma non i file)
+reports/simulations/*.json
+reports/profitability/*.json
+reports/rule-comparison/*.json
+reports/final/*.json
+
+# Cache TypeScript
+*.tsbuildinfo

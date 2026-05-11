@@ -14,5 +14,11 @@ module.exports = {
     '^@simulation/(.*)$': '<rootDir>/src/simulation/$1',
     '^@analysis/(.*)$': '<rootDir>/src/analysis/$1',
     '^@utils/(.*)$': '<rootDir>/src/utils/$1',
+    '^@services/(.*)$': '<rootDir>/src/services/$1',
+  },
+  globals: {
+    'ts-jest': {
+      tsconfig: 'tsconfig.json',
+    },
   },
 };

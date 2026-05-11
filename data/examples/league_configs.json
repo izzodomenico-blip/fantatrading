@@ -1,0 +1,47 @@
+{
+  "s20": {
+    "id": "s20",
+    "label": "Lega 20 partecipanti",
+    "numParticipants": 20,
+    "numSimulations": 200,
+    "operationsPerTeamPerRound": 3.0,
+    "registrationFeePerTeam": 50,
+    "notes": "Lega piccola — scenario baseline"
+  },
+  "s50": {
+    "id": "s50",
+    "label": "Lega 50 partecipanti",
+    "numParticipants": 50,
+    "numSimulations": 150,
+    "operationsPerTeamPerRound": 3.0,
+    "registrationFeePerTeam": 50,
+    "notes": "Lega media"
+  },
+  "s100": {
+    "id": "s100",
+    "label": "Lega 100 partecipanti",
+    "numParticipants": 100,
+    "numSimulations": 100,
+    "operationsPerTeamPerRound": 3.0,
+    "registrationFeePerTeam": 50,
+    "notes": "Lega grande"
+  },
+  "s250": {
+    "id": "s250",
+    "label": "Lega 250 partecipanti",
+    "numParticipants": 250,
+    "numSimulations": 50,
+    "operationsPerTeamPerRound": 3.0,
+    "registrationFeePerTeam": 50,
+    "notes": "Torneo regionale"
+  },
+  "s500": {
+    "id": "s500",
+    "label": "Lega 500 partecipanti",
+    "numParticipants": 500,
+    "numSimulations": 30,
+    "operationsPerTeamPerRound": 3.0,
+    "registrationFeePerTeam": 50,
+    "notes": "Torneo nazionale"
+  }
+}

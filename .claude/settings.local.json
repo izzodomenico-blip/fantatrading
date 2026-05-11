@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(cd \"C:\\\\Users\\\\domenicoizzoj\\\\Documents\\\\FantaTrading\"; Get-ChildItem reports -Recurse | Where-Object { -not $_.PSIsContainer } | Select-Object FullName, Length | Format-Table -AutoSize)"
+    ]
+  }
+}

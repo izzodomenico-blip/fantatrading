@@ -29,6 +29,7 @@
     "synthetic:quote-deep-optimizer": "ts-node --project tsconfig.scripts.json scripts/run-synthetic-quote-deep-optimizer.ts",
     "synthetic:quote-operational-model": "ts-node --project tsconfig.scripts.json scripts/run-synthetic-quote-operational-model.ts",
     "intraseason:backtest": "ts-node --project tsconfig.scripts.json scripts/run-intraseason-trading-backtest.ts",
+    "intraseason:fee-comparison": "ts-node --project tsconfig.scripts.json scripts/run-intraseason-fee-comparison.ts",
     "web:install": "npm install --prefix app/web",
     "web:dev": "npm run dev --prefix app/web",
     "web:build": "npm run build --prefix app/web"

@@ -62,6 +62,31 @@ Le commissioni previste nella V1 sono:
 
 Le commissioni servono a rendere sostenibile il gioco e a bilanciare il rendimento dei portafogli.
 
+## 5a. Cambi durante la stagione
+
+Puoi acquistare e vendere giocatori liberamente durante la stagione. Non esiste un numero massimo di cambi per giornata o per stagione.
+
+Ogni cambio comporta un costo:
+
+- commissione di vendita: 2% del valore del giocatore ceduto;
+- commissione di acquisto: 2% del valore del giocatore acquistato.
+
+**Attenzione al rischio overtrading.**
+
+Operare frequentemente puo sembrare un vantaggio, ma ogni cambio ha un costo immediato in commissioni. Le simulazioni mostrano che strategie con molti cambi tendono a produrre rendimenti significativamente piu bassi rispetto a chi mantiene la rosa relativamente stabile.
+
+Esempi orientativi (basati su quotazioni sintetiche esplorative, non dati ufficiali):
+
+| Tipo di strategia | ROI medio stimato |
+|-------------------|-------------------|
+| Mantieni la rosa (HOLD) | circa +5% |
+| Pochi cambi mirati | circa -1% / -2% |
+| Molti cambi aggressivi | fino a -25% / -57% |
+
+Questi valori derivano da simulazioni con quotazioni non ufficiali e hanno carattere esplorativo. Il dato che resta solido e la direzione: le commissioni si accumulano rapidamente e possono azzerare o invertire qualsiasi guadagno da quotazioni.
+
+Il freno all overtrading e il costo stesso delle commissioni, non un limite regolamentare.
+
 ## 6. Platform fee
 
 La platform fee e pari al 10% delle sole commissioni generate dalle operazioni.
@@ -268,14 +293,27 @@ La platform fee del 10% riguarda solo le commissioni e non deve essere confusa c
 
 Questo regolamento V1 e una baseline.
 
-La V1 e pensata per essere chiara, giocabile e coerente con i dati oggi disponibili, ma deve essere validata ulteriormente con le quotazioni giornata per giornata.
+La V1 e pensata per essere chiara, giocabile e coerente con i dati oggi disponibili, ma deve essere validata ulteriormente con le quotazioni giornata per giornata ufficiali.
+
+### Cosa e gia stato verificato
+
+E stato condotto un backtest intra-stagione usando quotazioni sintetiche (non ufficiali) per simulare il trading giornata per giornata. I risultati principali, avvertiti come esplorativi, mostrano:
+
+- **HOLD** (mantieni la rosa invariata) produce il ROI piu alto tra tutte le strategie simulate: circa **5.30%** nella versione con commissione vendita 1.25%, e **4.50%** con commissione vendita 2%;
+- nessuna strategia di trading attivo ha superato HOLD nelle simulazioni;
+- le strategie con cambi molto frequenti producono perdite significative a causa dell accumulo di commissioni;
+- la commissione vendita 2% penalizza HOLD di circa 0.80 punti percentuali rispetto a 1.25%, ma aumenta il ricavo della piattaforma del 21.3%.
+
+Queste simulazioni usano quotazioni sintetiche stimate, non le quotazioni ufficiali Fantacalcio giornata per giornata. I valori numerici sono esplorativi. La direzione delle conclusioni e comunque utile per impostare il regolamento.
+
+### Cosa manca ancora
 
 Prima di considerare il regolamento definitivo, sara necessario verificare:
 
-- andamento reale dei prezzi durante la stagione;
-- effetti di acquisti e vendite in corso d anno;
-- numero effettivo di partecipanti sopra soglia;
-- sostenibilita economica della struttura premi;
-- possibile vantaggio eccessivo di alcune strategie.
+- andamento reale dei prezzi ufficiali durante la stagione;
+- effetti di acquisti e vendite in corso d anno con dati reali;
+- numero effettivo di partecipanti sopra soglia con prezzi dinamici ufficiali;
+- sostenibilita economica della struttura premi con dati reali;
+- possibile vantaggio eccessivo di alcune strategie su dati ufficiali.
 
 Fino a quella validazione, la V1 va considerata un regolamento ufficiale di baseline, non una versione definitiva immutabile.

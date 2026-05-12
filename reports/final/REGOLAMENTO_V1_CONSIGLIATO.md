@@ -85,6 +85,17 @@ La commissione vendita al 2% e proposta perche:
 
 La commissione vendita 3% migliora ulteriormente la piattaforma, ma risulta piu aggressiva e peggiora l attrattivita utente. Per V1, 2% e il compromesso piu prudente.
 
+### Conferma dal confronto fee intra-stagione
+
+Il confronto tra commissione vendita 1.25% (scenario A) e 2% (scenario B) condotto con il backtest intra-stagione a quotazioni sintetiche (ROLE_BONUS_SENSITIVE, stagioni 2023/24 e 2024/25) ha prodotto i seguenti risultati quantitativi:
+
+| Metrica | Scenario A (1.25%) | Scenario B (2%) | Delta |
+|---------|-------------------|-----------------|-------|
+| HOLD ROI medio | 5.30% | 4.50% | -0.80pp |
+| Ricavo piattaforma medio | baseline | +21.3% | +21.3% |
+
+La commissione al 2% penalizza il partecipante in HOLD di soli 0.80 punti percentuali, ma aumenta il ricavo medio della piattaforma del 21.3%. Questo rapporto costo/beneficio conferma la scelta per V1. Nota: i valori assoluti derivano da quotazioni sintetiche esplorative, non ufficiali Fantacalcio; la direzione del confronto e tuttavia robusta.
+
 ## 6. Perche PLAYER_ZERO_TEAM_EXCLUDE per gli SV
 
 I file voti contengono solo giocatori con voto effettivo. Quindi gli SV devono essere derivati per assenza:
@@ -136,9 +147,31 @@ La sostenibilita nel report resta classificata LOW perche il modello considera s
 - struttura premi finale;
 - retention attesa.
 
-## 9. Limiti attuali
+## 9. Backtest intra-stagione con quotazioni sintetiche
 
-Il limite principale e l assenza di quotazioni giornata per giornata.
+E stato condotto un backtest intra-stagione usando quotazioni sintetiche round-by-round (modello ROLE_BONUS_SENSITIVE, MAE 1.46 punti) e voti reali per stagioni completed 2023/24 e 2024/25.
+
+**Risultato principale per HOLD:** ROI medio 5.30% (scenario A, vendita 1.25%) e 4.50% (scenario B, vendita 2%). Valori coerenti con il full-rules backtest.
+
+**Il trading attivo non batte HOLD in nessuno scenario testato.** Mediando su tutte le configurazioni di parametri (frequenza, limiti cambi, soglie), la miglior strategia attiva (HYBRID_VALUE_MOMENTUM) arriva a -15.04% vs HOLD 5.30%. Anche prendendo la configurazione ottimale per ogni strategia, il divario e netto.
+
+| Strategia (best config) | ROI scenario A | ROI scenario B |
+|------------------------|----------------|----------------|
+| HOLD | 5.30% | 4.50% |
+| VALUE_ROTATION | -1.86% | -2.46% |
+| HYBRID_VALUE_MOMENTUM | -0.24% | -0.94% |
+| MOMENTUM | -24.34% | -24.67% |
+| TAKE_PROFIT | -29.29% | -29.77% |
+
+**Cambi frequenti e pericolosi.** MOMENTUM con configurazione aggressiva (max 5 cambi ogni 3 giornate) raggiunge ROI medio -57.5%, TAKE_PROFIT -37.4%. Le commissioni rappresentano il principale fattore di erosione del rendimento.
+
+**Conclusione:** I cambi non vanno limitati per regolamento, ma il partecipante deve essere consapevole che ogni cambio ha un costo (acquisto 2% + vendita 2%) e che operare frequentemente tende a ridurre, non aumentare, il rendimento finale.
+
+**Avvertenza:** tutti i valori derivano da quotazioni sintetiche, non ufficiali Fantacalcio. Il backtest e esplorativo. La conferma richiede quotazioni giornata per giornata ufficiali.
+
+## 10. Limiti attuali
+
+Il limite principale e l assenza di quotazioni ufficiali giornata per giornata.
 
 I backtest attuali usano:
 
@@ -146,20 +179,21 @@ I backtest attuali usano:
 - Qt.A a fine stagione;
 - voti reali giornata per giornata;
 - bonus/malus ufficiale;
-- SV derivati per assenza nel round.
+- SV derivati per assenza nel round;
+- quotazioni sintetiche round-by-round (per backtest intra-stagione esplorativo).
 
 Mancano ancora:
 
-- trading intra-stagione;
-- valore azione aggiornato giornata per giornata;
+- quotazioni giornata per giornata ufficiali Fantacalcio;
 - timing reale di acquisto/vendita;
 - effetti di infortuni e trasferimenti sul comportamento degli utenti;
 - liquidita e vincoli di mercato;
-- verifica della strategia VALUE con prezzi dinamici.
+- verifica della strategia VALUE con prezzi dinamici ufficiali;
+- conferma del backtest intra-stagione con dati non sintetici.
 
 Quindi il regolamento V1 e consigliato come baseline, non come versione definitiva blindata.
 
-## 10. Regolamento V1 proposto
+## 11. Regolamento V1 proposto
 
 ### Rosa
 
@@ -196,6 +230,13 @@ Policy consigliata: `PLAYER_ZERO_TEAM_EXCLUDE`.
 - Lo SV ha effetto fantasy individuale 0%.
 - Gli SV derivati vanno tracciati.
 
+### Cambi durante la stagione
+
+- I cambi sono liberi: non esiste un numero massimo per finestra o per stagione.
+- Ogni operazione di vendita seguita da acquisto genera commissione vendita 2% + commissione acquisto 2%.
+- Il regolamento deve avvisare esplicitamente che operare frequentemente tende a ridurre il rendimento finale a causa dell accumulo di commissioni.
+- Non esiste un limite regolamentare, ma il costo delle commissioni e il freno naturale all overtrading.
+
 ### Premi
 
 - Soglia premio consigliata: ROI 7%.
@@ -207,18 +248,18 @@ Policy consigliata: `PLAYER_ZERO_TEAM_EXCLUDE`.
 - 2023/24 e 2024/25 sono le stagioni completed usate per raccomandazioni.
 - 2025/26 resta in_progress e non va usata per decisioni definitive.
 
-## 11. Cosa serve prima di considerarlo definitivo
+## 12. Cosa serve prima di considerarlo definitivo
 
 Prima di rendere V1 definitivo servono:
 
-- quotazioni giornata per giornata;
-- backtest con trading intra-stagione;
-- simulazione di utenti con acquisti e vendite durante la stagione;
+- quotazioni ufficiali Fantacalcio giornata per giornata;
+- simulazione di utenti con acquisti e vendite durante la stagione su dati non sintetici;
 - stress test con quote iscrizione e montepremi reale;
 - validazione economica su numero utenti e volume medio operazioni;
-- controllo ulteriore della strategia VALUE su dati dinamici;
+- controllo ulteriore della strategia VALUE su dati dinamici ufficiali;
 - decisione ufficiale sulla gestione SV;
-- confronto tra soglia premio 7% e 10% con prezzi giornata per giornata.
+- confronto tra soglia premio 7% e 10% con prezzi giornata per giornata ufficiali;
+- conferma backtest intra-stagione con quotazioni non sintetiche.
 
 ## Decisione consigliata
 
@@ -233,6 +274,10 @@ Platform fee: 10% delle commissioni
 Soglia premio: 7%
 SV: PLAYER_ZERO_TEAM_EXCLUDE
 Bonus/malus: tabella ufficiale FantaTrading
+Cambi: liberi (senza limite massimo)
+Avviso overtrading: da inserire nel regolamento utente
 ```
 
-Questa configurazione e il miglior compromesso attuale tra coerenza regolamentare, attrattivita per gli utenti e sostenibilita preliminare della piattaforma.
+La commissione vendita 2% e confermata dal confronto fee intra-stagione: penalizza HOLD di soli 0.80pp e aumenta il ricavo piattaforma del 21.3%. I cambi restano liberi perche il costo delle commissioni costituisce gia un freno naturale all overtrading. Il backtest intra-stagione mostra che strategie attive aggressive (MOMENTUM: -57.5%, TAKE_PROFIT: -37.4% mediati su tutte le configurazioni) distruggono valore molto piu di HOLD (+5.30%): questo dato va comunicato ai partecipanti tramite avviso esplicito, non tramite vincolo regolamentare.
+
+Questa configurazione e il miglior compromesso attuale tra coerenza regolamentare, attrattivita per gli utenti e sostenibilita preliminare della piattaforma. I risultati del backtest intra-stagione derivano da quotazioni sintetiche esplorative: la validazione definitiva richiede quotazioni ufficiali giornata per giornata.

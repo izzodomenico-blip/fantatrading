@@ -33,6 +33,7 @@ export interface IntraseasonBacktestConfig {
   maxChangesPerWindow: number[];
   stopLossThresholds: number[];
   takeProfitThresholds: number[];
+  sellFee?: number;
 }
 
 export interface IntraseasonScenarioResult {
@@ -294,8 +295,9 @@ export function executeTrade(
   buyRound: number,
   sellPrice: number,
   buyPrice: number,
+  sellFee: number = SELL_FEE,
 ): { positions: Position[]; commission: number; capitalAdded: number; realizedPnL: number } {
-  const sellCommission = sellPrice * SELL_FEE;
+  const sellCommission = sellPrice * sellFee;
   const buyCommission = buyPrice * BUY_FEE;
   const netSell = sellPrice - sellCommission;
   const buyCost = buyPrice + buyCommission;
@@ -317,6 +319,7 @@ function simulateScenario(
   quoteRows: NormalizedQuoteRow[],
   syntheticRows: SyntheticRoundQuoteInput[],
   voteRows: NormalizedVoteRow[],
+  sellFee: number = SELL_FEE,
 ): IntraseasonScenarioResult {
   const index = buildSyntheticQuoteIndex(syntheticRows);
   const voteIndex = buildVoteIndex(voteRows);
@@ -345,7 +348,7 @@ function simulateScenario(
       const buyQuote = quoteAt(index, season, round, replacement.playerId);
       if (!buyQuote) continue;
       const sellValue = positionValue(sold, currentSellQuote.qaa);
-      const trade = executeTrade(positions, sold, replacement, round, sellValue, buyQuote.qaa);
+      const trade = executeTrade(positions, sold, replacement, round, sellValue, buyQuote.qaa, sellFee);
       positions = trade.positions;
       totalCommissions += trade.commission;
       totalCapitalAdded += trade.capitalAdded;
@@ -359,7 +362,7 @@ function simulateScenario(
     const finalQuote = quoteAt(index, season, lastRound, position.playerId)?.qaa ?? position.buyPrice;
     return sum + positionValue(position, finalQuote);
   }, 0);
-  const finalSellFees = finalGross * SELL_FEE;
+  const finalSellFees = finalGross * sellFee;
   totalCommissions += finalSellFees;
   const finalValue = finalGross - finalSellFees;
   const finalROI = totalCapitalAdded > 0 ? ((finalValue - totalCapitalAdded) / totalCapitalAdded) * 100 : 0;
@@ -428,6 +431,7 @@ export function runIntraseasonTradingBacktest(
   syntheticRows: SyntheticRoundQuoteInput[],
   config: IntraseasonBacktestConfig = DEFAULT_INTRASEASON_BACKTEST_CONFIG,
 ): IntraseasonBacktestReport {
+  const effectiveSellFee = config.sellFee ?? SELL_FEE;
   const scenarioResults: IntraseasonScenarioResult[] = [];
   for (const season of [...COMPLETED_SEASONS, ...IN_PROGRESS_SEASONS]) {
     const seasonSynthetic = syntheticRows.filter(row => row.season === season);
@@ -448,6 +452,7 @@ export function runIntraseasonTradingBacktest(
                 quoteRows,
                 syntheticRows,
                 voteRows,
+                effectiveSellFee,
               ));
             }
           }

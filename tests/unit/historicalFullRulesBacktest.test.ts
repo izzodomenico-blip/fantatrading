@@ -144,12 +144,20 @@ describe('historicalFullRulesBacktest', () => {
     expect(result.averageVote).toBe(6);
   });
 
-  test('applicazione NoVotePolicy FIXED_MALUS', () => {
+  test('applicazione NoVotePolicy PLAYER_MALUS_TEAM_EXCLUDE', () => {
     const roster = makeRoster();
     const votes = makeVotesForRoster(roster).filter(row => row.playerId !== '1');
-    const result = evaluateFullRulesPortfolio(roster, votes, { policy: 'FIXED_MALUS', fixedMalusPct: -10 });
+    const result = evaluateFullRulesPortfolio(roster, votes, { policy: 'PLAYER_MALUS_TEAM_EXCLUDE', fixedMalusPct: -10 });
     expect(result.derivedNoVotes).toBe(1);
     expect(result.fullRulesROI).toBeLessThan(result.tradingOnlyROI);
+  });
+
+  test('applicazione NoVotePolicy PLAYER_ZERO_TEAM_EXCLUDE', () => {
+    const roster = makeRoster();
+    const votes = makeVotesForRoster(roster).filter(row => row.playerId !== '1');
+    const result = evaluateFullRulesPortfolio(roster, votes, { policy: 'PLAYER_ZERO_TEAM_EXCLUDE' });
+    expect(result.derivedNoVotes).toBe(1);
+    expect(result.playedVotes).toBe(24);
   });
 
   test('calcolo fascia squadra', () => {

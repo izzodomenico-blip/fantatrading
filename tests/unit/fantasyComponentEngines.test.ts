@@ -63,6 +63,27 @@ describe('teamVoteBandEngine', () => {
     expect(result.averageVote).toBe(6);
   });
 
+  test('SV con policy PLAYER_ZERO_TEAM_EXCLUDE escluso dalla media senza malus individuale', () => {
+    const votes = makeVotes(6);
+    votes[0] = { playerId: 1, vote: null, played: false };
+    const result = calculateTeamVoteBand(votes, { policy: 'PLAYER_ZERO_TEAM_EXCLUDE' });
+    expect(result.totalVoteSum).toBe(144);
+    expect(result.evaluatedCount).toBe(24);
+    expect(result.averageVote).toBe(6);
+    expect(getNoVoteBonusMalusPct({ policy: 'PLAYER_ZERO_TEAM_EXCLUDE' })).toBe(0);
+  });
+
+  test('SV con policy PLAYER_MALUS_TEAM_EXCLUDE escluso dalla media con malus individuale', () => {
+    const votes = makeVotes(6);
+    votes[0] = { playerId: 1, vote: null, played: false };
+    const result = calculateTeamVoteBand(votes, { policy: 'PLAYER_MALUS_TEAM_EXCLUDE', fixedMalusPct: -5 });
+    expect(result.totalVoteSum).toBe(144);
+    expect(result.evaluatedCount).toBe(24);
+    expect(result.averageVote).toBe(6);
+    expect(result.fixedNoVoteMalusPct).toBe(-5);
+    expect(getNoVoteBonusMalusPct({ policy: 'PLAYER_MALUS_TEAM_EXCLUDE', fixedMalusPct: -5 })).toBe(-5);
+  });
+
   test('SV con policy FIXED_MALUS non contribuisce alla somma ma conserva malus configurabile', () => {
     const votes = makeVotes(6);
     votes[0] = { playerId: 1, vote: null, played: false };

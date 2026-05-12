@@ -402,7 +402,8 @@ export function runHistoricalFullRulesBacktest(
     { policy: 'ZERO' },
     { policy: 'FIVE' },
     { policy: 'EXCLUDE' },
-    { policy: 'FIXED_MALUS', fixedMalusPct: config.fixedNoVoteMalusPct },
+    { policy: 'PLAYER_ZERO_TEAM_EXCLUDE' },
+    { policy: 'PLAYER_MALUS_TEAM_EXCLUDE', fixedMalusPct: config.fixedNoVoteMalusPct },
   ];
   const seasons = [...FULL_RULES_COMPLETED_SEASONS, ...FULL_RULES_IN_PROGRESS_SEASONS];
   const pools = seasons.map(season => buildMatchedSeasonPool(quoteRows, voteRows, season));
@@ -441,9 +442,15 @@ export function runHistoricalFullRulesBacktest(
     .map(policy => ({
       policy: policy.policy,
       avgROI: mean(aggregateCompletedStats.filter(stat => stat.noVotePolicy === policy.policy).map(stat => stat.avgFullRulesROI)),
+      pctAbove0: mean(aggregateCompletedStats.filter(stat => stat.noVotePolicy === policy.policy).map(stat => stat.pctAbove0)),
+      pctAbove5: mean(aggregateCompletedStats.filter(stat => stat.noVotePolicy === policy.policy).map(stat => stat.pctAbove5)),
       avgSv: mean(aggregateCompletedStats.filter(stat => stat.noVotePolicy === policy.policy).map(stat => stat.avgDerivedNoVotes)),
     }))
-    .sort((a, b) => Math.abs(a.avgROI) - Math.abs(b.avgROI));
+    .filter(policy => policy.pctAbove0 > 0)
+    .sort((a, b) => {
+      const balanceScore = (p: typeof a) => p.pctAbove5 + p.pctAbove0 * 0.25 - Math.max(0, Math.abs(p.avgROI) - 8);
+      return balanceScore(b) - balanceScore(a);
+    });
 
   return {
     generatedAt: new Date().toISOString(),
@@ -464,7 +471,7 @@ export function runHistoricalFullRulesBacktest(
     inProgressStats,
     aggregateCompletedStats,
     strongestStrategy: strongest?.strategy ?? 'RANDOM',
-    recommendedNoVotePolicy: policyRanking[0]?.policy ?? 'EXCLUDE',
+    recommendedNoVotePolicy: policyRanking[0]?.policy ?? 'PLAYER_ZERO_TEAM_EXCLUDE',
   };
 }
 
@@ -564,6 +571,9 @@ export function buildHistoricalFullRulesMarkdown(report: FullRulesBacktestReport
   }
   lines.push('');
 
+  lines.push('Le policy `PLAYER_ZERO_TEAM_EXCLUDE` e `PLAYER_MALUS_TEAM_EXCLUDE` separano correttamente effetto squadra ed effetto giocatore: lo SV non altera la media/fascia dei compagni, ma il singolo giocatore assente resta neutro oppure penalizzato.');
+  lines.push('');
+
   lines.push('## ROI Medio per Strategia');
   lines.push('');
   lines.push('| Strategia | ROI medio | ROI mediano | Miglior ROI | Peggior ROI | Volatilita |');
@@ -621,7 +631,7 @@ export function buildHistoricalFullRulesMarkdown(report: FullRulesBacktestReport
 
   lines.push('## Raccomandazioni');
   lines.push('');
-  lines.push(`Policy SV piu equilibrata preliminare: **${report.recommendedNoVotePolicy}**. EXCLUDE e spesso la policy piu neutra sulla media squadra, mentre FIXED_MALUS e utile se si vuole penalizzare esplicitamente l assenza voto senza schiacciare tutta la fascia squadra.`);
+  lines.push(`Policy SV piu coerente ed equilibrata preliminare: **${report.recommendedNoVotePolicy}**. Le policy team-exclude sono le piu corrette perche non distruggono la fascia squadra per colpa degli SV. Con malus individuale default -5% giornaliero, PLAYER_MALUS_TEAM_EXCLUDE risulta troppo severa in questo stress test; va ritarata a un malus molto piu basso oppure usata solo se il regolamento ufficiale conferma una penalita individuale esplicita. PLAYER_ZERO_TEAM_EXCLUDE e la variante piu neutra e stabile quando la penalita SV non e ancora ufficiale.`);
   lines.push(`Soglia premio preliminare consigliata: **${recommendedPrizeThreshold}**. La scelta tra 5%, 7% e 10% va finalizzata dopo test con quotazioni giornata per giornata: con dati solo Qt.I/Qt.A la soglia 5% e piu inclusiva, 10% piu selettiva e prudente per la sostenibilita.`);
   lines.push('');
 

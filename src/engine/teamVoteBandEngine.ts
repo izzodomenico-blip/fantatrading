@@ -1,5 +1,11 @@
 export type TeamVoteBand = 'FASCIA_0' | 'FASCIA_1' | 'FASCIA_2' | 'FASCIA_3' | 'FASCIA_4';
-export type NoVotePolicy = 'ZERO' | 'FIVE' | 'EXCLUDE' | 'FIXED_MALUS';
+export type NoVotePolicy =
+  | 'ZERO'
+  | 'FIVE'
+  | 'EXCLUDE'
+  | 'FIXED_MALUS'
+  | 'PLAYER_ZERO_TEAM_EXCLUDE'
+  | 'PLAYER_MALUS_TEAM_EXCLUDE';
 
 export interface TeamVoteInput {
   playerId: number;
@@ -51,7 +57,11 @@ export function calculateTeamVoteBand(
       totalVoteSum += entry.vote as number;
     } else if (noVotePolicy.policy === 'FIVE') {
       totalVoteSum += 5;
-    } else if (noVotePolicy.policy === 'EXCLUDE') {
+    } else if (
+      noVotePolicy.policy === 'EXCLUDE' ||
+      noVotePolicy.policy === 'PLAYER_ZERO_TEAM_EXCLUDE' ||
+      noVotePolicy.policy === 'PLAYER_MALUS_TEAM_EXCLUDE'
+    ) {
       evaluatedCount--;
     }
   }
@@ -67,6 +77,8 @@ export function calculateTeamVoteBand(
     rosterSize: votes.length,
     teamBand: getTeamVoteBand(averageVote),
     noVotePolicy: noVotePolicy.policy,
-    fixedNoVoteMalusPct: noVotePolicy.policy === 'FIXED_MALUS' ? noVotePolicy.fixedMalusPct ?? -5 : 0,
+    fixedNoVoteMalusPct: noVotePolicy.policy === 'FIXED_MALUS' || noVotePolicy.policy === 'PLAYER_MALUS_TEAM_EXCLUDE'
+      ? noVotePolicy.fixedMalusPct ?? -5
+      : 0,
   };
 }

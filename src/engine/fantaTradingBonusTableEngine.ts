@@ -70,5 +70,7 @@ export function getBonusMalusPct(
 }
 
 export function getNoVoteBonusMalusPct(noVotePolicy: NoVotePolicyConfig = { policy: 'ZERO' }): number {
-  return noVotePolicy.policy === 'FIXED_MALUS' ? noVotePolicy.fixedMalusPct ?? -5 : 0;
+  return noVotePolicy.policy === 'FIXED_MALUS' || noVotePolicy.policy === 'PLAYER_MALUS_TEAM_EXCLUDE'
+    ? noVotePolicy.fixedMalusPct ?? -5
+    : 0;
 }

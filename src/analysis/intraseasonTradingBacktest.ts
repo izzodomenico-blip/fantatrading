@@ -5,6 +5,7 @@ import { calculateTeamVoteBand, NoVotePolicyConfig } from '../engine/teamVoteBan
 import { NormalizedQuoteRow, PlayerRole } from '../importers/realQuotesImporter';
 import { NormalizedVoteRow } from '../importers/realVotesImporter';
 import { mean, stdDev } from '../utils/mathUtils';
+import { calculatePositionValue } from '../shared/calculations/positionValue';
 
 export type IntraseasonStrategy =
   | 'HOLD'
@@ -193,13 +194,11 @@ export function buildInitialRoster(
   return roster;
 }
 
-export function fantaTradingPositionValue(initialQuote: number, currentQaa: number, fantasyMultiplier: number): number {
-  const tradingReturnPct = (currentQaa - initialQuote) * 5;
-  return Math.max(0, initialQuote * fantasyMultiplier * (1 + tradingReturnPct / 100));
-}
+/** Re-export per backward compatibility con i test esistenti. */
+export const fantaTradingPositionValue = calculatePositionValue;
 
 function positionValue(position: Position, currentQaa: number): number {
-  return fantaTradingPositionValue(position.initialQuote, currentQaa, position.fantasyMultiplier);
+  return calculatePositionValue(position.initialQuote, currentQaa, position.fantasyMultiplier);
 }
 
 function buyPosition(row: NormalizedQuoteRow, round: number, price: number): Position {

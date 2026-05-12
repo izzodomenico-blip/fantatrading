@@ -23,6 +23,7 @@
     "historical:backtest": "ts-node --project tsconfig.scripts.json scripts/run-historical-backtest.ts",
     "historical:strategy-backtest": "ts-node --project tsconfig.scripts.json scripts/run-historical-strategy-backtest.ts",
     "historical:full-rules-backtest": "ts-node --project tsconfig.scripts.json scripts/run-historical-full-rules-backtest.ts",
+    "full-rules:stress-test": "ts-node --project tsconfig.scripts.json scripts/run-full-rules-stress-test.ts",
     "web:install": "npm install --prefix app/web",
     "web:dev": "npm run dev --prefix app/web",
     "web:build": "npm run build --prefix app/web"

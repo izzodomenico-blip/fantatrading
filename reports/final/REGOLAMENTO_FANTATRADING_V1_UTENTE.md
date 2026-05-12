@@ -253,6 +253,26 @@ La struttura premi puo essere definita in base a:
 
 Le commissioni trattenute dal sistema riguardano solo le operazioni effettuate e non devono essere confuse con una trattenuta sul montepremi totale o sul capitale della rosa.
 
+### Proposta economica V1
+
+La quota di iscrizione consigliata per la V1 e pari a 30 euro per partecipante.
+
+La quota di iscrizione alimenta il montepremi secondo la percentuale indicata:
+
+- 80% della quota di iscrizione va al montepremi;
+- 20% della quota di iscrizione va al sistema per sostenere gestione e organizzazione.
+
+Con 100 partecipanti, questa struttura genera:
+
+- montepremi netto: 2.400 euro;
+- quota destinata al sistema: 600 euro.
+
+Le commissioni di acquisto e vendita sono costi operativi trattenuti dal sistema.
+
+Il premio finale dipende dalla classifica e dalla tabella premi.
+
+Per la V1 la tabella consigliata premia il top 10% dei partecipanti. Il montepremi deriva dalla quota di iscrizione, da eventuali sponsor o da un fondo premi dichiarato prima dell inizio della stagione.
+
 ## 17. Esempi numerici semplici
 
 ### Esempio A: aumento quotazione

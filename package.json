@@ -31,6 +31,7 @@
     "intraseason:backtest": "ts-node --project tsconfig.scripts.json scripts/run-intraseason-trading-backtest.ts",
     "intraseason:fee-comparison": "ts-node --project tsconfig.scripts.json scripts/run-intraseason-fee-comparison.ts",
     "commission:revenue-simulation": "ts-node --project tsconfig.scripts.json scripts/run-commission-revenue-model-simulation.ts",
+    "prizepool:attractiveness-simulation": "ts-node --project tsconfig.scripts.json scripts/run-prize-pool-attractiveness-simulation.ts",
     "web:install": "npm install --prefix app/web",
     "web:dev": "npm run dev --prefix app/web",
     "web:build": "npm run build --prefix app/web",

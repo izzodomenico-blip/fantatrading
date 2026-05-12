@@ -86,6 +86,42 @@ export interface FullRulesStressReport {
   recommended: FullRulesStressSummary;
 }
 
+export interface PrizePoolScenarioMetric {
+  id: string;
+  modelId: string;
+  participants: number;
+  entryFee: number;
+  prizeEntryShare: number;
+  systemEntryShare: number;
+  commissionSystemShare: number;
+  buyCommissionRate: number;
+  sellCommissionRate: number;
+  prizeThreshold: number;
+  prizeTableId: string;
+  grossPrizePool: number;
+  netDistributablePrizePool: number;
+  systemRevenueFromEntries: number;
+  systemRevenueFromCommissions: number;
+  totalSystemRevenue: number;
+  firstPrize: number;
+  averageWinnerPrize: number;
+  estimatedWinners: number;
+  probabilityOfWinning: number;
+  finalScore: number;
+}
+
+export interface PrizePoolAttractivenessReport {
+  generatedAt: string;
+  modelId: string;
+  warning: string;
+  matrixResults: PrizePoolScenarioMetric[];
+  recommendation: {
+    recommendedV1: PrizePoolScenarioMetric;
+    recommendedPilot: PrizePoolScenarioMetric;
+    recommendedScale: PrizePoolScenarioMetric;
+  };
+}
+
 const fullRulesBacktestModules = import.meta.glob('@reports/real-data/historical_full_rules_backtest.json', {
   eager: true,
   import: 'default',
@@ -104,11 +140,30 @@ const userRulesModules = import.meta.glob('@reports/final/REGOLAMENTO_FANTATRADI
   import: 'default',
   query: '?raw',
 });
+const prizePoolAttractivenessModules = import.meta.glob('@reports/real-data/prize_pool_attractiveness_simulation.json', {
+  import: 'default',
+  query: '?url',
+});
+const prizePoolAttractivenessMarkdownModules = import.meta.glob('@reports/real-data/prize_pool_attractiveness_simulation.md', {
+  eager: true,
+  import: 'default',
+  query: '?raw',
+});
 
 export const fullRulesBacktest = firstGlobValue<FullRulesBacktestReport>(fullRulesBacktestModules);
 export const fullRulesStressTest = firstGlobValue<FullRulesStressReport>(fullRulesStressModules);
 export const recommendedRulesMarkdown = firstGlobValue<string>(recommendedRulesModules);
 export const userRulesMarkdown = firstGlobValue<string>(userRulesModules);
+export const prizePoolAttractivenessMarkdown = firstGlobValue<string>(prizePoolAttractivenessMarkdownModules);
+
+export async function loadPrizePoolAttractiveness(): Promise<PrizePoolAttractivenessReport | null> {
+  const loaders = Object.values(prizePoolAttractivenessModules) as Array<() => Promise<string>>;
+  if (loaders.length === 0) return null;
+  const url = await loaders[0]();
+  const response = await fetch(url);
+  if (!response.ok) return null;
+  return response.json() as Promise<PrizePoolAttractivenessReport>;
+}
 
 export const COLORS = {
   blue: '#3b82f6',

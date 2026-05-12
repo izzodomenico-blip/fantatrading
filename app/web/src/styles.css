@@ -141,6 +141,24 @@ tr:hover td { background: var(--surface2); }
   line-height: 1.5;
 }
 
+.economy-list {
+  display: grid;
+  gap: 10px;
+}
+
+.economy-list div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text2);
+  font-size: 13px;
+}
+
+.economy-list div:last-child { border-bottom: none; padding-bottom: 0; }
+.economy-list strong { color: var(--text); font-size: 14px; }
+
 .empty-state {
   color: var(--text2);
   font-size: 13px;

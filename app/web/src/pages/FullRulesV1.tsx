@@ -8,6 +8,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { useEffect, useState } from 'react';
 import { MetricCard, Section, pct } from '../components';
 import {
   AXIS_STYLE,
@@ -16,10 +17,14 @@ import {
   TOOLTIP_STYLE,
   fullRulesBacktest,
   fullRulesStressTest,
+  prizePoolAttractivenessMarkdown,
+  loadPrizePoolAttractiveness,
   recommendedRulesMarkdown,
   userRulesMarkdown,
   type FullRulesBacktestStat,
   type FullRulesStressSummary,
+  type PrizePoolAttractivenessReport,
+  type PrizePoolScenarioMetric,
 } from '../data';
 
 const STRATEGIES = ['RANDOM', 'LOW_COST', 'TOP_PLAYER', 'BALANCED', 'VALUE'];
@@ -33,6 +38,18 @@ function avg(values: number[]) {
 
 function formatPct(value: number) {
   return pct(value, 1);
+}
+
+function formatEuro(value: number) {
+  return new Intl.NumberFormat('it-IT', {
+    style: 'currency',
+    currency: 'EUR',
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
+function formatScore(value: number) {
+  return value.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function getStrategyRows(stats: FullRulesBacktestStat[]) {
@@ -67,6 +84,32 @@ function getStressRows(rows: FullRulesStressSummary[]) {
   ).filter(Boolean) as FullRulesStressSummary[];
 }
 
+function getParticipantScenarioRows(rows: PrizePoolScenarioMetric[], recommended: PrizePoolScenarioMetric) {
+  return [20, 50, 100, 250, 500, 1000].map(participants => {
+    const exact = rows.find(row =>
+      row.participants === participants &&
+      row.entryFee === recommended.entryFee &&
+      row.prizeEntryShare === recommended.prizeEntryShare &&
+      row.systemEntryShare === recommended.systemEntryShare &&
+      row.buyCommissionRate === recommended.buyCommissionRate &&
+      row.sellCommissionRate === recommended.sellCommissionRate &&
+      row.prizeThreshold === recommended.prizeThreshold &&
+      row.prizeTableId === recommended.prizeTableId
+    );
+
+    return exact ?? {
+      ...recommended,
+      id: `${recommended.id}_U${participants}_DERIVED`,
+      participants,
+      grossPrizePool: participants * recommended.entryFee * recommended.prizeEntryShare,
+      netDistributablePrizePool: participants * recommended.entryFee * recommended.prizeEntryShare,
+      systemRevenueFromEntries: participants * recommended.entryFee * recommended.systemEntryShare,
+      estimatedWinners: Math.ceil(participants * 0.1),
+      probabilityOfWinning: Math.ceil(participants * 0.1) / participants,
+    };
+  });
+}
+
 function MissingReport({ label }: { label: string }) {
   return (
     <div className="card">
@@ -91,11 +134,36 @@ function MarkdownViewer({ title, content }: { title: string; content: string | n
 }
 
 export default function FullRulesV1() {
+  const [prizePoolAttractiveness, setPrizePoolAttractiveness] = useState<PrizePoolAttractivenessReport | null>(null);
+  const [prizePoolLoadState, setPrizePoolLoadState] = useState<'loading' | 'ready' | 'missing'>('loading');
   const strategyRows = fullRulesBacktest ? getStrategyRows(fullRulesBacktest.aggregateCompletedStats) : [];
   const policyRows = fullRulesBacktest ? getPolicyRows(fullRulesBacktest.aggregateCompletedStats) : [];
   const stressRows = fullRulesStressTest ? getStressRows(fullRulesStressTest.combinationSummaries) : [];
   const recommended = fullRulesStressTest?.recommended;
   const valueRow = strategyRows.find(row => row.strategy === 'VALUE');
+  const prizePoolRecommendation = prizePoolAttractiveness?.recommendation.recommendedV1;
+  const participantScenarioRows = prizePoolAttractiveness && prizePoolRecommendation
+    ? getParticipantScenarioRows(prizePoolAttractiveness.matrixResults, prizePoolRecommendation)
+    : [];
+  const example100 = participantScenarioRows.find(row => row.participants === 100);
+
+  useEffect(() => {
+    let mounted = true;
+    loadPrizePoolAttractiveness()
+      .then(report => {
+        if (!mounted) return;
+        setPrizePoolAttractiveness(report);
+        setPrizePoolLoadState(report ? 'ready' : 'missing');
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setPrizePoolAttractiveness(null);
+        setPrizePoolLoadState('missing');
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   return (
     <>
@@ -109,7 +177,7 @@ export default function FullRulesV1() {
           <MetricCard label="Acquisto" value="2%" sub="Commissione acquisto" color="var(--accent)" />
           <MetricCard label="Vendita" value="2%" sub="Commissione vendita V1" color="var(--green)" />
           <MetricCard label="Soglia Premio" value="7%" sub="ROI minimo premiabile" color="var(--amber)" />
-          <MetricCard label="Platform Fee" value="10%" sub="Solo sulle commissioni" color="var(--purple)" />
+          <MetricCard label="Commissioni" value="100%" sub="Trattenute dal sistema" color="var(--purple)" />
         </div>
         <div className="card" style={{ marginTop: 16 }}>
           <div className="config-box">
@@ -127,6 +195,103 @@ export default function FullRulesV1() {
             </div>
           </div>
         </div>
+      </Section>
+
+      <Section title="Montepremi & Economia">
+        {prizePoolLoadState === 'loading' ? (
+          <div className="card">
+            <div className="empty-state">Caricamento report prize_pool_attractiveness_simulation.json...</div>
+          </div>
+        ) : !prizePoolAttractiveness || !prizePoolRecommendation ? (
+          <MissingReport label="prize_pool_attractiveness_simulation.json" />
+        ) : (
+          <>
+            <div className="metric-grid">
+              <MetricCard label="Quota iscrizione" value={formatEuro(prizePoolRecommendation.entryFee)} sub="per partecipante" color="var(--accent)" />
+              <MetricCard label="Montepremi" value={formatPct(prizePoolRecommendation.prizeEntryShare * 100)} sub="della quota iscrizione" color="var(--green)" />
+              <MetricCard label="Sistema" value={formatPct(prizePoolRecommendation.systemEntryShare * 100)} sub="della quota iscrizione" color="var(--amber)" />
+              <MetricCard label="Score" value={`${formatScore(prizePoolRecommendation.finalScore)}/100`} sub="simulazione economica" color="var(--teal)" />
+            </div>
+
+            <div className="two-col" style={{ marginTop: 16 }}>
+              <div className="card">
+                <div className="doc-title">MODELLO ECONOMICO V1</div>
+                <div className="config-box">
+                  <div><span className="config-key">quotaIscrizione: </span><span className="config-val">{formatEuro(prizePoolRecommendation.entryFee)}</span></div>
+                  <div><span className="config-key">montepremi:       </span><span className="config-val">{formatPct(prizePoolRecommendation.prizeEntryShare * 100)}</span></div>
+                  <div><span className="config-key">sistema:          </span><span className="config-val">{formatPct(prizePoolRecommendation.systemEntryShare * 100)}</span></div>
+                  <div><span className="config-key">commissioni:      </span><span className="config-val">100% trattenute dal sistema</span></div>
+                  <div><span className="config-key">premi:            </span><span className="config-val">top 10% partecipanti</span></div>
+                </div>
+              </div>
+
+              <div className="card">
+                <div className="doc-title">ESEMPIO 100 PARTECIPANTI</div>
+                {example100 ? (
+                  <div className="economy-list">
+                    <div><span>Incasso iscrizioni</span><strong>{formatEuro(example100.participants * example100.entryFee)}</strong></div>
+                    <div><span>Montepremi</span><strong>{formatEuro(example100.netDistributablePrizePool)}</strong></div>
+                    <div><span>Quota sistema da iscrizione</span><strong>{formatEuro(example100.systemRevenueFromEntries)}</strong></div>
+                    <div><span>Commissioni trading</span><strong>{formatEuro(example100.systemRevenueFromCommissions)}</strong></div>
+                  </div>
+                ) : (
+                  <div className="empty-state">Scenario 100 partecipanti non disponibile nel report.</div>
+                )}
+                <div className="table-note">
+                  Le commissioni trading si aggiungono alla quota sistema da iscrizione come ricavo operativo del sistema.
+                </div>
+              </div>
+            </div>
+
+            <div className="card" style={{ marginTop: 16 }}>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Partecipanti</th>
+                    <th>Incasso iscrizioni</th>
+                    <th>Montepremi</th>
+                    <th>Quota sistema</th>
+                    <th>Vincitori stimati</th>
+                    <th>Premio medio</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {participantScenarioRows.map(row => (
+                    <tr key={row.participants} className={row.participants === 100 ? 'rec-row' : undefined}>
+                      <td><strong>{row.participants}</strong></td>
+                      <td>{formatEuro(row.participants * row.entryFee)}</td>
+                      <td>{formatEuro(row.netDistributablePrizePool)}</td>
+                      <td>{formatEuro(row.systemRevenueFromEntries)}</td>
+                      <td>{row.estimatedWinners}</td>
+                      <td>{formatEuro(row.averageWinnerPrize)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="three-col" style={{ marginTop: 16 }}>
+              <div className="card-sm risk-card">
+                <div className="risk-title">Distribuzione premi</div>
+                <div className="risk-text">
+                  La V1 premia il top 10% dei partecipanti. Sul caso 100 utenti significa {example100?.estimatedWinners ?? prizePoolRecommendation.estimatedWinners} vincitori stimati.
+                </div>
+              </div>
+              <div className="card-sm risk-card">
+                <div className="risk-title">Costi operativi</div>
+                <div className="risk-text">
+                  La quota iscrizione alimenta il montepremi; le commissioni trading sono costi operativi trattenuti dal sistema.
+                </div>
+              </div>
+              <div className="card-sm risk-card">
+                <div className="risk-title">Guadagno utente</div>
+                <div className="risk-text">
+                  Il guadagno deriva dal rendimento netto della rosa, dalle plusvalenze realizzate e dai premi di classifica.
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </Section>
 
       <Section title="Confronto strategie full-rules">
@@ -283,6 +448,10 @@ export default function FullRulesV1() {
           <MarkdownViewer title="REGOLAMENTO V1 CONSIGLIATO" content={recommendedRulesMarkdown} />
           <MarkdownViewer title="REGOLAMENTO FANTATRADING V1 UTENTE" content={userRulesMarkdown} />
         </div>
+      </Section>
+
+      <Section title="Report montepremi e attrattivita">
+        <MarkdownViewer title="PRIZE POOL AND ECONOMIC ATTRACTIVENESS SIMULATION" content={prizePoolAttractivenessMarkdown} />
       </Section>
     </>
   );

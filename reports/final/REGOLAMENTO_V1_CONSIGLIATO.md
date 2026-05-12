@@ -282,6 +282,42 @@ Decisione aggiornata:
 - alternativa piu conservativa da testare in pilot: 1.5% acquisto / 3% vendita / soglia 5%;
 - nessuna platform fee separata del 10%: il concetto viene sostituito da commissioni operative trattenute dal sistema.
 
+## Aggiornamento montepremi e attrattivita 2026-05-12
+
+Il report `reports/real-data/prize_pool_attractiveness_simulation.md` ha esteso l analisi economica includendo quota iscrizione, montepremi generale, distribuzione premi, probabilita di vincita, ricavo sistema e sostenibilita.
+
+La raccomandazione V1 e stata calcolata mantenendo la baseline regolamentare attuale:
+
+- commissione acquisto: 2%;
+- commissione vendita: 2%;
+- soglia premio: 7%;
+- modello commissionale: 100% delle commissioni trading trattenute dal sistema.
+
+Risultato consigliato per V1:
+
+- quota iscrizione: 30 euro per partecipante;
+- destinazione quota iscrizione: 80% al montepremi, 20% al sistema;
+- montepremi netto atteso con 100 partecipanti: 2.400 euro;
+- ricavo sistema da quota iscrizione con 100 partecipanti: 600 euro;
+- ricavo sistema totale stimato con 100 partecipanti, includendo commissioni trading simulate: circa 1.356,68 euro;
+- struttura premi consigliata: `PRIZE_TABLE_TOP_10_PERCENT`;
+- probabilita stimata di vincere qualcosa: 10%;
+- score finale: 94,56/100.
+
+La simulazione indica che lo split 80% premio / 20% sistema e il miglior compromesso V1: mantiene un montepremi percepibile, evita un garantito non coperto e aggiunge una fonte stabile di sostenibilita oltre alle commissioni trading.
+
+Modelli operativi consigliati:
+
+- Pilot 20-50 utenti: quota 20 euro, split 80%/20%, nessun montepremi garantito, premi top 5.
+- Community media 100-250 utenti: quota 30 euro, split 80%/20%, premi top 10%.
+- Scala 500-1000 utenti: quota 50 euro, split 80%/20%, premi top 10%.
+
+Da evitare in V1:
+
+- montepremi garantiti non coperti da quota iscrizione o sponsor;
+- quota iscrizione 0 con premi garantiti;
+- distribuzioni che premiano troppi utenti e riducono la selettivita competitiva.
+
 ## Decisione consigliata
 
 Adottare come baseline di lavoro:
@@ -293,6 +329,10 @@ Acquisto: 2%
 Vendita: 2%
 Modello ricavo: 100% delle commissioni trattenute dal sistema
 Soglia premio: 7%
+Quota iscrizione: 30 euro
+Destinazione quota iscrizione: 80% montepremi / 20% sistema
+Distribuzione premi: top 10% partecipanti
+Montepremi: alimentato da quota iscrizione ed eventuali sponsor/fondo premi esplicito
 SV: PLAYER_ZERO_TEAM_EXCLUDE
 Bonus/malus: tabella ufficiale FantaTrading
 Cambi: liberi (senza limite massimo)

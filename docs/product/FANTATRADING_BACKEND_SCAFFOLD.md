@@ -2,7 +2,7 @@
 
 **Versione:** 0.1.0  
 **Data:** 2026-05-12  
-**Stato:** Scaffolding iniziale — build verde, test passati
+**Stato:** Scaffolding backend + auth/users/seasons CRUD minimo, build verde, test passati
 
 ---
 
@@ -142,6 +142,44 @@ Il file `.env` va creato in `apps/backend/.env` (non nella radice). Non committa
 
 Usa `calculateQuoteStepReturn` da `src/shared` — formula canonica FantaTrading.
 
+### `POST /auth/register`
+
+Registra un nuovo utente con ruolo `PARTICIPANT`, hash password `bcrypt` e restituisce un JWT access token.
+
+### `POST /auth/login`
+
+Valida email/password con `bcrypt.compare` e restituisce un JWT access token.
+
+### `GET /users/me`
+
+Restituisce l'utente autenticato dal bearer token JWT.
+
+### `POST /users`
+
+Crea un utente. Endpoint protetto: ruoli `ADMIN` e `SUPER_ADMIN`.
+
+### `GET /users/:id`
+
+Legge un utente per id. Endpoint protetto: ruoli `ADMIN` e `SUPER_ADMIN`.
+
+### `POST /seasons`
+
+Crea una stagione. Endpoint protetto: ruoli `ADMIN` e `SUPER_ADMIN`.
+
+### `GET /seasons`
+
+Lista le stagioni disponibili per un utente autenticato.
+
+### `GET /seasons/:id`
+
+Legge una stagione per id per un utente autenticato.
+
+### `PATCH /seasons/:id/status`
+
+Aggiorna lo stato stagione. Endpoint protetto: ruoli `ADMIN` e `SUPER_ADMIN`.
+
+Stati supportati: `DRAFT`, `OPEN`, `LOCKED`, `IN_PROGRESS`, `COMPLETED`, `ARCHIVED`.
+
 ### `GET /api/docs`
 
 Swagger UI automatica (disponibile solo con `NODE_ENV !== production`).
@@ -195,14 +233,20 @@ npm run prisma:studio        # Prisma Studio (GUI database)
 
 - [x] NestJS bootstrap con ValidationPipe globale, CORS, Swagger
 - [x] Config tipizzata via `@nestjs/config`
+- [x] PrismaService globale con `onModuleInit`/`onModuleDestroy`
+- [x] Auth base: register, login, bcrypt, JWT access token
+- [x] JwtAuthGuard e RolesGuard (`PARTICIPANT`, `ADMIN`, `SUPER_ADMIN`)
+- [x] UsersModule minimo: create user, find by email/id, endpoint `GET /users/me`
+- [x] SeasonsModule CRUD minimo: create/list/get/update status
 - [x] `GET /health` con risposta strutturata
 - [x] `POST /calculations/quote-return` — usa `src/shared` (shared engine)
 - [x] `CalculationsService` con `quoteReturn`, `positionValue`, `roi`
-- [x] Moduli stub per seasons, players, teams, market, admin, reports
+- [x] Moduli stub residui per players, teams, market, admin, reports
 - [x] Schema Prisma completo con tutti i modelli V1
 - [x] Alias TypeScript `@shared` → `src/shared` (tsconfig paths)
 - [x] Test unitari: HealthController + CalculationsService (10 test, tutti passati)
 - [x] E2E test: health endpoint
+- [x] Test integrazione mockata: register, login, me, create/list/update season status
 - [x] Script npm radice: `backend:*` e `prisma:*`
 
 ---
@@ -211,10 +255,8 @@ npm run prisma:studio        # Prisma Studio (GUI database)
 
 | Componente | Note |
 |------------|------|
-| Auth JWT (login/register) | Modulo auth con passport-jwt, bcrypt |
-| Guard per ruolo | `@Roles(UserRole.ADMIN)` + Guard NestJS |
-| Prisma service | `PrismaService` con connessione e onModuleInit |
-| SeasonsService/Controller | CRUD stagioni con validazione stato |
+| Refresh token | Tabella presente nello schema, flusso non ancora implementato |
+| Validazione transizioni stagione | Per ora `PATCH /seasons/:id/status` accetta ogni stato enum valido |
 | PlayersService/Controller | Import giocatori, gestione rosa |
 | MarketService/Controller | Acquisto/vendita con lock ottimistico |
 | CalculationsService completo | Calcolo giornata, aggiornamento moltiplicatori |

@@ -14,7 +14,7 @@ datasource db {
 // ─── Enum ─────────────────────────────────────────────────────────────────────
 
 enum UserRole {
-  PARTECIPANTE
+  PARTICIPANT
   ADMIN
   SUPER_ADMIN
 }
@@ -25,12 +25,12 @@ enum UserStatus {
 }
 
 enum SeasonStatus {
-  CONFIGURATA
-  QUOTAZIONI_CARICATE
-  ISCRIZIONI_APERTE
-  IN_CORSO
-  CHIUSURA
-  TERMINATA
+  DRAFT
+  OPEN
+  LOCKED
+  IN_PROGRESS
+  COMPLETED
+  ARCHIVED
 }
 
 enum PlayerRole {
@@ -125,7 +125,7 @@ model User {
   passwordHash String     @map("password_hash") @db.VarChar(255)
   firstName    String     @map("first_name") @db.VarChar(100)
   lastName     String     @map("last_name") @db.VarChar(100)
-  role         UserRole   @default(PARTECIPANTE)
+  role         UserRole   @default(PARTICIPANT)
   status       UserStatus @default(ACTIVE)
   createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz
   updatedAt    DateTime   @updatedAt @map("updated_at") @db.Timestamptz
@@ -162,7 +162,7 @@ model Season {
   id                   String       @id @default(uuid()) @db.Uuid
   name                 String       @db.VarChar(255)
   footballSeason       String       @map("football_season") @db.VarChar(10)
-  status               SeasonStatus @default(CONFIGURATA)
+  status               SeasonStatus @default(DRAFT)
   registrationOpenAt   DateTime     @map("registration_open_at") @db.Timestamptz
   registrationCloseAt  DateTime     @map("registration_close_at") @db.Timestamptz
   startDate            DateTime     @map("start_date") @db.Timestamptz
@@ -186,6 +186,7 @@ model Season {
   createdBy          User               @relation("SeasonCreatedBy", fields: [createdById], references: [id])
   teams              Team[]
   quotes             Quote[]
+  quoteHistoryItems  QuoteHistory[]
   votes              Vote[]
   roundCalculations  RoundCalculation[]
   rankings           Ranking[]

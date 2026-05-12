@@ -18,7 +18,9 @@
       "Bash(node -e \"require\\('xlsx'\\); console.log\\('xlsx ok'\\)\")",
       "Bash(New-Item -ItemType Directory -Force -Path \"data\\\\real\\\\raw\\\\quotazioni\", \"data\\\\real\\\\processed\", \"reports\\\\real-data\", \"src\\\\importers\")",
       "Bash(Out-Null)",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(npm.cmd test *)",
+      "Bash(npm.cmd run *)"
     ]
   }
 }

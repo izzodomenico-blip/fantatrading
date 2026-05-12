@@ -98,6 +98,7 @@ interface Position {
   club: string;
   buyRound: number;
   buyPrice: number;
+  initialQuote: number;
   fantasyMultiplier: number;
 }
 
@@ -106,7 +107,7 @@ const IN_PROGRESS_SEASONS = ['2025/26'];
 const STRATEGIES: IntraseasonStrategy[] = ['HOLD', 'VALUE_ROTATION', 'MOMENTUM', 'STOP_LOSS', 'TAKE_PROFIT', 'HYBRID_VALUE_MOMENTUM'];
 const ROSTER: Record<PlayerRole, number> = { P: 3, D: 8, C: 8, A: 6 };
 const BUY_FEE = 0.02;
-const SELL_FEE = 0.02;
+const SELL_FEE = 0.0125;
 const PLATFORM_FEE_RATE = 0.1;
 const PRIZE_THRESHOLD = 7;
 const NO_VOTE_POLICY: NoVotePolicyConfig = { policy: 'PLAYER_ZERO_TEAM_EXCLUDE' };
@@ -191,8 +192,13 @@ export function buildInitialRoster(
   return roster;
 }
 
-function positionValue(position: Position, currentQuote: number): number {
-  return Math.max(0, currentQuote * position.fantasyMultiplier);
+export function fantaTradingPositionValue(initialQuote: number, currentQaa: number, fantasyMultiplier: number): number {
+  const tradingReturnPct = (currentQaa - initialQuote) * 5;
+  return Math.max(0, initialQuote * fantasyMultiplier * (1 + tradingReturnPct / 100));
+}
+
+function positionValue(position: Position, currentQaa: number): number {
+  return fantaTradingPositionValue(position.initialQuote, currentQaa, position.fantasyMultiplier);
 }
 
 function buyPosition(row: NormalizedQuoteRow, round: number, price: number): Position {
@@ -203,6 +209,7 @@ function buyPosition(row: NormalizedQuoteRow, round: number, price: number): Pos
     club: row.club,
     buyRound: round,
     buyPrice: price,
+    initialQuote: row.initialQuote,
     fantasyMultiplier: 1,
   };
 }
@@ -604,7 +611,7 @@ export function buildIntraseasonBacktestMarkdown(report: IntraseasonBacktestRepo
   lines.push('');
   lines.push('## 6. Impatto commissioni');
   lines.push('');
-  lines.push('Ogni cambio genera commissione vendita 2% e commissione acquisto 2%. La platform fee simulata e il 10% delle commissioni, non del montepremi totale.');
+  lines.push('Ogni cambio genera commissione vendita 1.25% e commissione acquisto 2%. La platform fee simulata e il 10% delle commissioni, non del montepremi totale.');
   lines.push('');
   lines.push('## 7. Cambi illimitati e limite cambi');
   lines.push('');

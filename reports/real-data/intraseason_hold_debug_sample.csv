@@ -1,0 +1,16 @@
+step,description,formula,value_before_fix,value_after_fix,note
+1_buy_cost_per_player,Costo acquisto giocatore Qt.I=5,"Qt.I × (1 + BUY_FEE) = 5 × 1.02",5.10,5.10,Invariato
+2_sell_value_raw,Valore vendita formula errata,"currentQaa × fantasyMultiplier = 7 × 1.0",7.00,N/A,BUG: raw qaa senza formula FantaTrading
+2_sell_value_correct,Valore vendita formula corretta,"Qt.I × M × (1 + (qaa-Qt.I)×5/100) = 5×1.0×1.10",N/A,5.50,CORRETTO: formula FantaTrading
+3_net_sell_before_fix,Netto vendita con SELL_FEE=2%,"7.0 × (1 - 0.02)",6.86,N/A,BUG: SELL_FEE sbagliata
+3_net_sell_after_fix,Netto vendita con SELL_FEE=1.25%,"5.5 × (1 - 0.0125)",N/A,5.43,CORRETTO
+4_roi_per_player_before,ROI singolo giocatore formula errata,"(6.86 - 5.10) / 5.10 × 100",34.5%,N/A,Gonfiato
+4_roi_per_player_after,ROI singolo giocatore formula corretta,"(5.43 - 5.10) / 5.10 × 100",N/A,6.5%,Realistico
+5_fantasy_multiplier_1round,fantasyMultiplier dopo 1 round bonus +1.5%,"1.0 × (1 + 1.5/100) = 1.015",1.015,1.015,Corretto in entrambe le versioni
+6_fantasy_multiplier_38rounds,fantasyMultiplier dopo 38 round con media +0.5%/round,"1.005^38",1.21,1.21,Corretto in entrambe le versioni (accumulatore)
+7_sell_value_qt1_eq20,Valore vendita Qt.I=20 qaa=22 mult=1.0,"20×1.0×(1+(22-20)×5/100)=20×1.10",22.0 (coincide),22.0,Solo per Qt.I=20 la formula coincide con raw qaa
+8_sell_value_qt1_gt20,Valore vendita Qt.I=34 qaa=36 mult=1.0,"34×1.0×(1+(36-34)×5/100)=34×1.10",36.0 (sbagliato),37.4,Per Qt.I>20 formula errata sottostima
+9_sell_value_qt1_lt20,Valore vendita Qt.I=5 qaa=7 mult=1.0,"5×1.0×(1+(7-5)×5/100)=5×1.10",7.0 (sbagliato),5.5,Per Qt.I<20 formula errata soprastima
+10_hold_roi_completed,HOLD ROI medio stagioni completed,Aggregato 2023/24+2024/25,217.20%,5.30%,Ora coerente con full-rules backtest
+11_hold_commissions,HOLD commissioni medie,Solo buy 2% + sell finale 1.25%,2.19,0.86,Ridotto per SELL_FEE corretta
+12_consistency_check,Confronto con full-rules backtest,"Full-rules HOLD completed ≈ 5-15%",NON COERENTE,COERENTE,Post-fix allineato

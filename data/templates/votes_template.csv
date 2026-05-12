@@ -1,2 +1,2 @@
-season,round,playerId,playerName,club,role,vote,fantasyVote,minutesPlayed,played,starter,goals,assists,yellowCards,redCards,penaltiesMissed,ownGoals
-2024/25,1,1234,Nome Giocatore,Club,P,6,6,90,true,true,0,0,0,0,0,0
+season,seasonStatus,round,playerId,playerName,club,role,vote,fantasyVote,minutesPlayed,played,starter,goals,assists,yellowCards,redCards,penaltiesMissed,ownGoals
+2024/25,completed,1,1234,Nome Giocatore,Club,P,6,6,90,true,true,0,0,0,0,0,0

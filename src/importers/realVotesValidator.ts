@@ -4,7 +4,7 @@ export interface VoteValidationIssue {
   rowIndex: number;
   season: string;
   round: number;
-  playerId: number;
+  playerId: number | string;
   playerName: string;
   field: string;
   message: string;
@@ -51,10 +51,14 @@ export function validateVoteRows(rows: NormalizedVoteRow[]): VoteValidationResul
   const seen = new Map<string, number>();
 
   rows.forEach((row, i) => {
-    for (const field of ['season', 'playerName', 'club'] as const) {
+    for (const field of ['season', 'seasonStatus', 'playerName', 'club'] as const) {
       if (!row[field] || String(row[field]).trim() === '') {
         errors.push(issue(row, i, field, `Campo obbligatorio mancante: ${field}`, 'error'));
       }
+    }
+
+    if (row.seasonStatus !== 'completed' && row.seasonStatus !== 'in_progress') {
+      errors.push(issue(row, i, 'seasonStatus', `seasonStatus non valido: "${row.seasonStatus}"`, 'error'));
     }
 
     if (!VALID_ROLES.has(row.role)) {
@@ -65,16 +69,16 @@ export function validateVoteRows(rows: NormalizedVoteRow[]): VoteValidationResul
       errors.push(issue(row, i, 'round', `Round deve essere un intero positivo (trovato: ${row.round})`, 'error'));
     }
 
-    if (!Number.isFinite(row.playerId) || row.playerId <= 0) {
-      warnings.push(issue(row, i, 'playerId', `playerId non positivo o non valido: ${row.playerId}`, 'warning'));
+    if (row.playerId === null || row.playerId === undefined || String(row.playerId).trim() === '') {
+      warnings.push(issue(row, i, 'playerId', `playerId mancante o non valido: ${row.playerId}`, 'warning'));
     }
 
     if (row.played) {
       if (typeof row.vote !== 'number' || !Number.isFinite(row.vote)) {
         errors.push(issue(row, i, 'vote', 'vote numerico obbligatorio quando played=true', 'error'));
       }
-      if (typeof row.fantasyVote !== 'number' || !Number.isFinite(row.fantasyVote)) {
-        errors.push(issue(row, i, 'fantasyVote', 'fantasyVote numerico obbligatorio quando played=true', 'error'));
+      if (row.fantasyVote !== null && (typeof row.fantasyVote !== 'number' || !Number.isFinite(row.fantasyVote))) {
+        errors.push(issue(row, i, 'fantasyVote', 'fantasyVote deve essere numerico quando presente', 'error'));
       }
     } else {
       if (row.vote !== null || row.fantasyVote !== null) {

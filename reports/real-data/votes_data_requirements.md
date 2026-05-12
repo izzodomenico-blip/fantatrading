@@ -57,15 +57,12 @@ season,round,playerId,playerName,club,role,quote
 
 ## Tabella bonus/malus
 
-La tabella ufficiale del regolamento deve essere fornita seguendo:
+La tabella bonus/malus FantaTrading ufficiale e gia stata inserita in `src/config/teamBandBonusTables.ts`.
 
-- `data/templates/team_bonus_table_template.csv`
+- `isOfficial`: `true`
+- `source`: `Regolamento FantaTrading originale`
 
-Colonne:
+La gestione SV resta invece configurabile tramite `NoVotePolicy` e non e ancora dichiarata ufficiale.
 
-```text
-teamBand,minTeamVoteSum,maxTeamVoteSum,individualVote,bonusMalusPct
-```
-
-Il codice contiene una tabella provvisoria documentata solo per rendere testabile il motore. Non va usata per decisioni economiche finche non viene sostituita dalla tabella ufficiale.
+Il backtest completo non e ancora implementato perche mancano i dati reali dei voti giornata per giornata.
 

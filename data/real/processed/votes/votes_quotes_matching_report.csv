@@ -1,0 +1,4 @@
+season,seasonStatus,votePlayers,quotePlayers,matchedVotePlayers,quotePlayersWithoutVotes,votePlayersWithoutQuote,matchRatePct,directPlayerIdMatches,fallbackNameRoleMatches,roleMismatches,nameMismatches,duplicateVotePlayerIds,duplicateQuotePlayerIds,duplicateVoteNameRoleKeys,duplicateQuoteNameRoleKeys
+2023/24,completed,587,539,512,27,75,87.22316865417376,512,0,0,0,0,0,0,0
+2024/25,completed,598,560,524,36,74,87.62541806020067,524,0,0,0,0,0,0,0
+2025/26,in_progress,565,531,497,34,68,87.9646017699115,497,0,0,0,0,0,0,0

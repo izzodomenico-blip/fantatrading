@@ -210,6 +210,123 @@ Lista voti per stagione e, opzionalmente, giornata. Query: `seasonId`, `round`.
 
 Lista voti per giocatore, opzionalmente filtrata per `seasonId`.
 
+### `POST /teams`
+
+Crea la squadra del partecipante autenticato per una stagione.
+
+Body:
+```json
+{
+  "seasonId": "uuid-stagione"
+}
+```
+
+Vincoli:
+
+- solo ruolo `PARTICIPANT`;
+- una sola squadra per utente/stagione;
+- budget iniziale copiato da `Season.initialBudget`;
+- stato pubblico iniziale `DRAFT` (mappato internamente su `ROSA_INCOMPLETA`).
+
+### `GET /teams/my`
+
+Lista le squadre dell utente autenticato. Gli admin possono leggere tutte le squadre a scopo operativo, ma non possono operare sul mercato come utenti.
+
+### `GET /teams/:id`
+
+Dettaglio squadra. Il partecipante puo leggere solo le proprie squadre; `ADMIN` e `SUPER_ADMIN` possono leggere qualsiasi squadra.
+
+### `GET /teams/:id/portfolio`
+
+Restituisce posizioni attive e riepilogo portafoglio: valore iniziale, budget disponibile, valore corrente posizioni, valore totale corrente, commissioni totali pagate, ROI corrente, numero giocatori, composizione ruoli e validita rosa.
+
+### `POST /market/buy`
+
+Acquista un giocatore per una squadra del partecipante autenticato.
+
+Body:
+```json
+{
+  "teamId": "uuid-team",
+  "playerId": "uuid-player"
+}
+```
+
+Regole applicate:
+
+- il team deve appartenere all utente autenticato;
+- admin e super admin possono leggere, ma non operare come utenti;
+- il giocatore deve avere una quotazione nella stagione del team;
+- vietati duplicati attivi dello stesso giocatore;
+- composizione massima: 3 `GK`, 8 `DEF`, 8 `MID`, 6 `FWD`, totale 25;
+- commissione acquisto dalla stagione, default V1 2%;
+- commissione trattenuta al 100% dal sistema;
+- creazione di `PortfolioPosition`;
+- creazione di `MarketOperation` di tipo `BUY`;
+- aggiornamento budget, commissioni totali, valore portafoglio e ROI.
+
+Esempio acquisto con quotazione 100 e fee 2%:
+
+```json
+{
+  "operation": {
+    "type": "BUY",
+    "grossAmount": 100,
+    "commissionAmount": 2,
+    "netAmount": 102,
+    "systemRevenue": 2
+  }
+}
+```
+
+### `POST /market/sell`
+
+Vende una posizione attiva del partecipante autenticato.
+
+Body con player:
+```json
+{
+  "teamId": "uuid-team",
+  "playerId": "uuid-player"
+}
+```
+
+Body con posizione:
+```json
+{
+  "teamId": "uuid-team",
+  "positionId": "uuid-position"
+}
+```
+
+Regole applicate:
+
+- valore lordo calcolato con shared engine: `+1` quotazione = `+5%`;
+- perdita massima -100%, sell value con floor a zero;
+- commissione vendita dalla stagione, default V1 2%;
+- commissione trattenuta al 100% dal sistema;
+- posizione marcata `SOLD`;
+- creazione di `MarketOperation` di tipo `SELL`;
+- aggiornamento budget, commissioni totali, valore portafoglio e ROI.
+
+Esempio vendita con sell value 100 e fee 2%:
+
+```json
+{
+  "operation": {
+    "type": "SELL",
+    "grossAmount": 100,
+    "commissionAmount": 2,
+    "netAmount": 98,
+    "systemRevenue": 2
+  }
+}
+```
+
+### `GET /market/operations?teamId=...`
+
+Lista operazioni mercato di una squadra. Il partecipante vede solo le proprie operazioni; `ADMIN` e `SUPER_ADMIN` possono leggere le operazioni di ogni team. Ogni riga espone anche `grossAmount`, `commissionAmount`, `netAmount` e `systemRevenue` derivati dai campi Prisma esistenti.
+
 ### `POST /admin/import/quotes`
 
 Importa quotazioni da JSON processed. Endpoint protetto: ruoli `ADMIN` e `SUPER_ADMIN`.
@@ -315,16 +432,19 @@ npm run prisma:studio        # Prisma Studio (GUI database)
 - [x] QuotesModule: list/get e import da JSON processed
 - [x] VotesModule: list per stagione/giornata, voti per player e import da JSON processed
 - [x] Admin import: `POST /admin/import/quotes`, `POST /admin/import/votes`, log import e protezione admin
+- [x] TeamsModule: create team, list my teams, dettaglio team, portfolio summary, ownership check
+- [x] MarketModule: buy/sell, vincoli rosa V1, commissioni 2%, operation log, lista operazioni
 - [x] `GET /health` con risposta strutturata
 - [x] `POST /calculations/quote-return` — usa `src/shared` (shared engine)
 - [x] `CalculationsService` con `quoteReturn`, `positionValue`, `roi`
-- [x] Moduli stub residui per teams, market, reports
+- [x] Moduli stub residui per reports
 - [x] Schema Prisma completo con tutti i modelli V1
 - [x] Alias TypeScript `@shared` → `src/shared` (tsconfig paths)
 - [x] Test unitari: HealthController + CalculationsService (10 test, tutti passati)
 - [x] E2E test: health endpoint
 - [x] Test integrazione mockata: register, login, me, create/list/update season status
 - [x] Test integrazione mockata: import quotes, import votes, list/filter players, list votes by round, import endpoint protetto
+- [x] Test integrazione mockata: create team, doppio team bloccato, buy/sell, duplicati, composizione ruoli, portfolio summary, operation log, accesso negato
 - [x] Script npm radice: `backend:*` e `prisma:*`
 
 ---
@@ -336,8 +456,7 @@ npm run prisma:studio        # Prisma Studio (GUI database)
 | Refresh token | Tabella presente nello schema, flusso non ancora implementato |
 | Validazione transizioni stagione | Per ora `PATCH /seasons/:id/status` accetta ogni stato enum valido |
 | Upload multipart import | Gli endpoint admin leggono JSON processed già presenti nel repository; upload file non ancora implementato |
-| Gestione rosa | Composizione roster e join stagione restano fuori da questo blocco |
-| MarketService/Controller | Acquisto/vendita con lock ottimistico |
+| Lock ottimistico market | `version` su team presente nello schema, lock transazionale avanzato non ancora implementato |
 | CalculationsService completo | Calcolo giornata, aggiornamento moltiplicatori |
 | RankingsService | Classifica live e finale |
 | ReportsService | Export CSV/PDF |

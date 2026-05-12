@@ -1,0 +1,281 @@
+# Regolamento FantaTrading V1
+
+## 1. Obiettivo del gioco
+
+FantaTrading e un gioco in cui ogni partecipante costruisce una rosa di calciatori e cerca di aumentare il valore complessivo del proprio portafoglio durante la stagione.
+
+Il risultato finale dipende da:
+
+- variazione delle quotazioni dei giocatori;
+- rendimento dei giocatori nelle partite reali;
+- bonus e malus legati ai voti;
+- commissioni di acquisto e vendita.
+
+L obiettivo e chiudere la stagione con il miglior ROI possibile.
+
+## 2. Composizione della rosa
+
+Ogni rosa deve essere composta da 25 giocatori:
+
+| Ruolo | Numero giocatori |
+|-------|------------------|
+| Portieri | 3 |
+| Difensori | 8 |
+| Centrocampisti | 8 |
+| Attaccanti | 6 |
+
+Una rosa non e valida se non rispetta questa composizione.
+
+## 3. Acquisto dei giocatori
+
+Quando un partecipante acquista un giocatore, il costo dell operazione e dato da:
+
+- valore del giocatore al momento dell acquisto;
+- commissione di acquisto del 2%.
+
+Esempio:
+
+- valore giocatore: 100 crediti;
+- commissione acquisto: 2%;
+- costo totale: 102 crediti.
+
+## 4. Vendita dei giocatori
+
+Quando un partecipante vende un giocatore, riceve il valore aggiornato del giocatore al netto della commissione di vendita.
+
+La commissione di vendita e pari al 2%.
+
+Esempio:
+
+- valore giocatore al momento della vendita: 120 crediti;
+- commissione vendita: 2%;
+- incasso netto: 117,60 crediti.
+
+## 5. Commissioni
+
+Le commissioni previste nella V1 sono:
+
+| Operazione | Commissione |
+|------------|-------------|
+| Acquisto | 2% |
+| Vendita | 2% |
+
+Le commissioni servono a rendere sostenibile il gioco e a bilanciare il rendimento dei portafogli.
+
+## 6. Platform fee
+
+La platform fee e pari al 10% delle sole commissioni generate dalle operazioni.
+
+Importante:
+
+- la platform fee non si applica al montepremi totale;
+- la platform fee non viene trattenuta direttamente dal capitale investito dai partecipanti;
+- la platform fee riguarda solo le commissioni di acquisto e vendita.
+
+Esempio:
+
+- commissioni totali generate: 1.000 crediti;
+- platform fee 10%: 100 crediti;
+- la restante parte delle commissioni resta disponibile secondo la struttura economica del gioco.
+
+## 7. Variazione delle quotazioni
+
+Ogni giocatore puo aumentare o diminuire di valore in base alla variazione della sua quotazione.
+
+La regola base e:
+
+```text
++1 punto quotazione = +5%
+-1 punto quotazione = -5%
+```
+
+Esempi:
+
+| Variazione quotazione | Effetto sul valore |
+|-----------------------|--------------------|
+| +1 | +5% |
+| +2 | +10% |
+| -1 | -5% |
+| -3 | -15% |
+
+La perdita massima da variazione quotazione e limitata a -100%. Il valore di vendita non puo quindi diventare negativo.
+
+## 8. Gestione dei voti
+
+Per ogni giornata vengono considerati i voti reali dei giocatori.
+
+I voti servono a:
+
+- calcolare la media squadra;
+- determinare la fascia squadra;
+- applicare bonus o malus individuali ai giocatori con voto.
+
+Solo i giocatori con voto valido entrano nel calcolo della media squadra.
+
+## 9. Fasce squadra
+
+La media dei giocatori con voto valido determina la fascia squadra della giornata.
+
+| Fascia | Media squadra |
+|--------|---------------|
+| Fascia 0 | inferiore a 5 |
+| Fascia 1 | da 5 a meno di 5,5 |
+| Fascia 2 | da 5,5 a meno di 6 |
+| Fascia 3 | da 6 a meno di 6,5 |
+| Fascia 4 | da 6,5 in su |
+
+Una fascia squadra piu alta puo migliorare l effetto dei bonus sui singoli giocatori.
+
+## 10. Bonus e malus individuali
+
+Ogni giocatore con voto valido riceve un effetto fantasy individuale.
+
+Questo effetto dipende da:
+
+- fascia squadra della giornata;
+- voto individuale del giocatore;
+- tabella bonus/malus ufficiale FantaTrading.
+
+In generale:
+
+- un buon voto in una squadra con media alta tende a generare un bonus;
+- un voto basso in una squadra con media bassa tende a generare un malus;
+- voti intermedi possono avere effetto neutro o moderato.
+
+## 11. Giocatori senza voto
+
+Un giocatore e considerato senza voto quando non ha un voto valido nella giornata.
+
+Nella V1 si applica questa regola:
+
+- il giocatore senza voto non entra nella media squadra;
+- il giocatore senza voto non riceve bonus fantasy;
+- il giocatore senza voto non riceve malus fantasy;
+- il suo effetto fantasy giornaliero e pari a 0.
+
+Questa scelta evita di penalizzare tutta la rosa per un singolo giocatore senza voto, ma mantiene tracciato il fatto che quel giocatore non ha contribuito alla giornata.
+
+## 12. Calcolo del ROI
+
+Il ROI misura il rendimento finale della rosa.
+
+In forma semplice:
+
+```text
+ROI = rendimento finale rispetto al capitale investito
+```
+
+Esempio:
+
+- capitale iniziale investito: 1.000 crediti;
+- valore finale netto: 1.080 crediti;
+- ROI: +8%.
+
+Se il valore finale netto e 970 crediti, il ROI e -3%.
+
+## 13. Soglia sopravvivenza 0%
+
+La soglia di sopravvivenza e fissata a ROI 0%.
+
+Chi chiude la stagione sopra 0% ha conservato o aumentato il valore del proprio portafoglio.
+
+Chi chiude sotto 0% ha perso valore rispetto al capitale investito.
+
+## 14. Soglia premio 7%
+
+La soglia premio V1 e fissata a ROI 7%.
+
+Un partecipante supera la soglia premio se chiude la stagione con ROI pari o superiore al 7%.
+
+Esempio:
+
+- ROI finale +6,9%: soglia premio non raggiunta;
+- ROI finale +7,0%: soglia premio raggiunta;
+- ROI finale +10,0%: soglia premio raggiunta.
+
+La soglia 7% e scelta come compromesso tra attrattivita per i partecipanti e sostenibilita del gioco.
+
+## 15. Classifica finale
+
+La classifica finale e ordinata in base al ROI.
+
+Il partecipante con ROI piu alto si posiziona davanti agli altri.
+
+In caso di pari ROI, il regolamento operativo potra prevedere criteri di spareggio, ad esempio:
+
+- valore finale netto piu alto;
+- minor numero di operazioni;
+- miglior rendimento medio dei giocatori con voto.
+
+## 16. Distribuzione premi
+
+La distribuzione dei premi deve rispettare due principi:
+
+- premiare i partecipanti che superano la soglia del 7%;
+- mantenere sostenibile il gioco nel tempo.
+
+La struttura premi puo essere definita in base a:
+
+- numero di partecipanti;
+- montepremi disponibile;
+- numero di partecipanti sopra soglia;
+- posizione in classifica.
+
+La platform fee del 10% riguarda solo le commissioni e non deve essere confusa con una trattenuta sul montepremi totale.
+
+## 17. Esempi numerici semplici
+
+### Esempio A: aumento quotazione
+
+- valore iniziale giocatore: 100;
+- quotazione iniziale: 10;
+- quotazione finale: 12;
+- variazione: +2 punti;
+- effetto quotazione: +10%;
+- valore prima delle commissioni: 110.
+
+### Esempio B: diminuzione quotazione
+
+- valore iniziale giocatore: 100;
+- quotazione iniziale: 10;
+- quotazione finale: 8;
+- variazione: -2 punti;
+- effetto quotazione: -10%;
+- valore prima delle commissioni: 90.
+
+### Esempio C: vendita con commissione
+
+- valore aggiornato giocatore: 110;
+- commissione vendita: 2%;
+- incasso netto: 107,80.
+
+### Esempio D: giocatore senza voto
+
+- il giocatore non riceve voto nella giornata;
+- non entra nella media squadra;
+- non riceve bonus;
+- non riceve malus;
+- effetto fantasy giornaliero: 0.
+
+### Esempio E: soglia premio
+
+- capitale investito: 1.000;
+- valore finale netto: 1.075;
+- ROI: +7,5%;
+- soglia premio 7% raggiunta.
+
+## 18. Nota sperimentale V1
+
+Questo regolamento V1 e una baseline.
+
+La V1 e pensata per essere chiara, giocabile e coerente con i dati oggi disponibili, ma deve essere validata ulteriormente con le quotazioni giornata per giornata.
+
+Prima di considerare il regolamento definitivo, sara necessario verificare:
+
+- andamento reale dei prezzi durante la stagione;
+- effetti di acquisti e vendite in corso d anno;
+- numero effettivo di partecipanti sopra soglia;
+- sostenibilita economica della struttura premi;
+- possibile vantaggio eccessivo di alcune strategie.
+
+Fino a quella validazione, la V1 va considerata un regolamento ufficiale di baseline, non una versione definitiva immutabile.

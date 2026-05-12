@@ -1,0 +1,238 @@
+# FantaTrading - Regolamento V1 Consigliato
+
+## 1. Regolamento originale di partenza
+
+Il regolamento originale FantaTrading parte da questi elementi:
+
+- rosa da 25 giocatori;
+- composizione rosa: 3 P, 8 D, 8 C, 6 A;
+- commissione acquisto: 2%;
+- commissione vendita: 1.25%;
+- rendimento da quotazione: `(Qt.A - Qt.I) * 5`;
+- sell value con floor a zero;
+- bonus/malus ufficiale per fascia squadra e voto individuale;
+- tabella bonus/malus ufficiale gia inserita in `src/config/teamBandBonusTables.ts`;
+- `isOfficial = true`;
+- `source = Regolamento FantaTrading originale`.
+
+La tabella ufficiale usa cinque fasce squadra:
+
+| Fascia | Media squadra |
+|--------|---------------|
+| FASCIA_0 | < 5 |
+| FASCIA_1 | >= 5 e < 5.5 |
+| FASCIA_2 | >= 5.5 e < 6 |
+| FASCIA_3 | >= 6 e < 6.5 |
+| FASCIA_4 | >= 6.5 |
+
+La gestione SV non e parte ufficiale della tabella bonus/malus: resta una regola separata e configurabile.
+
+## 2. Problemi emersi dai backtest
+
+Dai backtest full-rules emergono quattro problemi principali:
+
+- la policy SV `ZERO` distrugge il portafoglio, perche ogni SV abbassa anche la media squadra;
+- la policy `PLAYER_MALUS_TEAM_EXCLUDE` con malus -5% giornaliero e troppo severa;
+- la soglia premio 5% e molto inclusiva e aumenta troppo il numero stimato di vincitori;
+- la strategia `VALUE` resta forte e va monitorata, perche potrebbe sfruttare inefficienze visibili solo con dati Qt.I -> Qt.A.
+
+Nel full-rules backtest, `PLAYER_ZERO_TEAM_EXCLUDE` e la policy piu stabile tra quelle coerenti con una gestione prudente degli SV:
+
+| Policy SV | ROI medio full-rules | % > 0 | % > 5 | % > 7 | % > 10 |
+|-----------|----------------------|-------|-------|-------|--------|
+| PLAYER_ZERO_TEAM_EXCLUDE | -1.19% | 47.32% | 28.76% | 21.60% | 14.32% |
+| EXCLUDE | -1.32% | 46.24% | 28.12% | 21.16% | 13.20% |
+| FIVE | -2.00% | 44.80% | 27.20% | 20.40% | 12.80% |
+| ZERO | -48.29% | 0.00% | 0.00% | 0.00% | 0.00% |
+| PLAYER_MALUS_TEAM_EXCLUDE | -40.11% | 0.00% | 0.00% | 0.00% | 0.00% |
+
+## 3. Perche la soglia 5% e troppo bassa
+
+La soglia 5% e troppo bassa per un regolamento V1 per tre motivi:
+
+- genera troppi vincitori stimati;
+- aumenta il rischio che strategie forti come `VALUE` raccolgano premi troppo spesso;
+- lascia meno margine alla piattaforma se il sistema premi e finanziato principalmente dalle commissioni.
+
+Nel full-rules stress test, con `PLAYER_ZERO_TEAM_EXCLUDE`, soglia 5%, platform fee 15% e sell fee 1.25%, la quota sopra soglia arriva al 27.36%. Questo livello e attrattivo per gli utenti, ma rischia di essere troppo generoso per un regolamento da mettere in produzione.
+
+## 4. Perche si propone soglia 7%
+
+La soglia 7% e un compromesso migliore:
+
+- resta raggiungibile;
+- riduce il numero di vincitori rispetto al 5%;
+- non diventa selettiva quanto 10% o 12%;
+- mantiene attrattivita media senza scaricare troppo rischio economico sulla piattaforma.
+
+Nel full-rules stress test la raccomandazione V1 converge su:
+
+- soglia premio: 7%;
+- NoVotePolicy: `PLAYER_ZERO_TEAM_EXCLUDE`;
+- commissione vendita: 2%;
+- platform fee: 10%.
+
+## 5. Perche commissione vendita 2%
+
+La commissione vendita originale, 1.25%, e coerente con il regolamento di partenza ma debole per sostenere un modello con premi.
+
+La commissione vendita al 2% e proposta perche:
+
+- aumenta moderatamente il ricavo ricorrente;
+- non stravolge la struttura originale;
+- riduce leggermente ROI eccessivi senza annullare la giocabilita;
+- migliora la sostenibilita rispetto al modello originale puro.
+
+La commissione vendita 3% migliora ulteriormente la piattaforma, ma risulta piu aggressiva e peggiora l attrattivita utente. Per V1, 2% e il compromesso piu prudente.
+
+## 6. Perche PLAYER_ZERO_TEAM_EXCLUDE per gli SV
+
+I file voti contengono solo giocatori con voto effettivo. Quindi gli SV devono essere derivati per assenza:
+
+- se un giocatore in rosa non compare in `season + round + playerId`, allora e SV;
+- `played=false`;
+- `vote=null`;
+- `fantasyVote=null`.
+
+La policy consigliata e `PLAYER_ZERO_TEAM_EXCLUDE`:
+
+- lo SV non entra nella media squadra;
+- lo SV non abbassa la fascia dei compagni;
+- il giocatore SV riceve effetto fantasy giornaliero 0%;
+- il numero di SV derivati viene comunque tracciato.
+
+Questa policy e preferibile per V1 perche la gestione SV non e ancora ufficiale. Penalizzare con -5% giornaliero, come in `PLAYER_MALUS_TEAM_EXCLUDE`, e risultato troppo severo nei backtest.
+
+## 7. Rischi residui della strategia VALUE
+
+`VALUE` resta la strategia piu forte o tra le piu forti.
+
+Nel full-rules backtest:
+
+- `VALUE + PLAYER_ZERO_TEAM_EXCLUDE` ha ROI full-rules medio 6.61%;
+- `VALUE + PLAYER_ZERO_TEAM_EXCLUDE` supera il 5% nel 57.60% dei casi;
+- `VALUE` resta competitiva rispetto a `RANDOM`, con delta medio positivo.
+
+Nel full-rules stress test il rischio dominanza VALUE e classificato MEDIUM nella raccomandazione V1.
+
+Il rischio non e ancora sufficiente per bloccare la strategia, ma e abbastanza chiaro da richiedere ulteriori test con quotazioni giornata per giornata.
+
+## 8. Sostenibilita della piattaforma
+
+Il modello originale puro non e sufficiente per sostenere una piattaforma con premi, perche le commissioni originali sono basse e non trattengono margine rilevante.
+
+Il modello Originale + 10% margine resta fragile se applicato senza aggiustamenti, ma migliora con:
+
+- commissione vendita al 2%;
+- soglia premio al 7%;
+- platform fee del 10% sulle commissioni;
+- policy SV non distruttiva.
+
+La sostenibilita nel report resta classificata LOW perche il modello considera solo la quota piattaforma sulle commissioni. Prima della decisione definitiva servono anche ipotesi su:
+
+- quota iscrizione;
+- numero utenti;
+- volume medio di compravendite;
+- struttura premi finale;
+- retention attesa.
+
+## 9. Limiti attuali
+
+Il limite principale e l assenza di quotazioni giornata per giornata.
+
+I backtest attuali usano:
+
+- Qt.I a inizio stagione;
+- Qt.A a fine stagione;
+- voti reali giornata per giornata;
+- bonus/malus ufficiale;
+- SV derivati per assenza nel round.
+
+Mancano ancora:
+
+- trading intra-stagione;
+- valore azione aggiornato giornata per giornata;
+- timing reale di acquisto/vendita;
+- effetti di infortuni e trasferimenti sul comportamento degli utenti;
+- liquidita e vincoli di mercato;
+- verifica della strategia VALUE con prezzi dinamici.
+
+Quindi il regolamento V1 e consigliato come baseline, non come versione definitiva blindata.
+
+## 10. Regolamento V1 proposto
+
+### Rosa
+
+- 25 giocatori totali.
+- 3 portieri.
+- 8 difensori.
+- 8 centrocampisti.
+- 6 attaccanti.
+
+### Commissioni
+
+- Commissione acquisto: 2%.
+- Commissione vendita: 2%.
+- Platform fee: 10% delle commissioni.
+
+### Quotazioni
+
+- Rendimento quotazione: `(Qt.A - Qt.I) * 5`.
+- Rendimento minimo: -100%.
+- Sell value con floor a zero.
+
+### Voti e bonus/malus
+
+- Usare tabella bonus/malus ufficiale FantaTrading.
+- Fascia squadra calcolata sulla media dei giocatori con voto valido.
+- Bonus/malus individuale applicato in base a fascia squadra + voto individuale.
+
+### Senza voto
+
+Policy consigliata: `PLAYER_ZERO_TEAM_EXCLUDE`.
+
+- Lo SV e derivato per assenza del giocatore nel file voti della giornata.
+- Lo SV e escluso da somma/media/fascia squadra.
+- Lo SV ha effetto fantasy individuale 0%.
+- Gli SV derivati vanno tracciati.
+
+### Premi
+
+- Soglia premio consigliata: ROI 7%.
+- La soglia 5% resta troppo inclusiva.
+- Le soglie 10% e 12% sono piu prudenti ma meno attrattive.
+
+### Stagioni considerate
+
+- 2023/24 e 2024/25 sono le stagioni completed usate per raccomandazioni.
+- 2025/26 resta in_progress e non va usata per decisioni definitive.
+
+## 11. Cosa serve prima di considerarlo definitivo
+
+Prima di rendere V1 definitivo servono:
+
+- quotazioni giornata per giornata;
+- backtest con trading intra-stagione;
+- simulazione di utenti con acquisti e vendite durante la stagione;
+- stress test con quote iscrizione e montepremi reale;
+- validazione economica su numero utenti e volume medio operazioni;
+- controllo ulteriore della strategia VALUE su dati dinamici;
+- decisione ufficiale sulla gestione SV;
+- confronto tra soglia premio 7% e 10% con prezzi giornata per giornata.
+
+## Decisione consigliata
+
+Adottare come baseline di lavoro:
+
+```text
+FantaTrading V1 consigliato
+Rosa: 25 giocatori, 3 P / 8 D / 8 C / 6 A
+Acquisto: 2%
+Vendita: 2%
+Platform fee: 10% delle commissioni
+Soglia premio: 7%
+SV: PLAYER_ZERO_TEAM_EXCLUDE
+Bonus/malus: tabella ufficiale FantaTrading
+```
+
+Questa configurazione e il miglior compromesso attuale tra coerenza regolamentare, attrattivita per gli utenti e sostenibilita preliminare della piattaforma.

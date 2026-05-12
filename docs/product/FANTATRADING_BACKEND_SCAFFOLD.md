@@ -2,7 +2,7 @@
 
 **Versione:** 0.1.0  
 **Data:** 2026-05-12  
-**Stato:** Scaffolding backend + auth/users/seasons CRUD minimo, build verde, test passati
+**Stato:** Scaffolding backend + auth/users/seasons + dati base giocabili, build verde, test passati
 
 ---
 
@@ -40,7 +40,9 @@ FantaTrading/
 │       │       │   └── dto/
 │       │       │       └── quote-return.dto.ts
 │       │       ├── seasons/seasons.module.ts    # Stub
-│       │       ├── players/players.module.ts    # Stub
+│       │       ├── players/                    # List/filter/get + import batch
+│       │       ├── quotes/                     # List/get quote + import processed JSON
+│       │       ├── votes/                      # List votes + import processed JSON
 │       │       ├── teams/teams.module.ts        # Stub
 │       │       ├── market/market.module.ts      # Stub
 │       │       ├── admin/admin.module.ts        # Stub
@@ -180,6 +182,77 @@ Aggiorna lo stato stagione. Endpoint protetto: ruoli `ADMIN` e `SUPER_ADMIN`.
 
 Stati supportati: `DRAFT`, `OPEN`, `LOCKED`, `IN_PROGRESS`, `COMPLETED`, `ARCHIVED`.
 
+### `GET /players`
+
+Lista giocatori per utente autenticato. Filtri supportati: `seasonId`, `role`, `club`, `search`.
+
+### `GET /players/:id`
+
+Dettaglio giocatore con quote e voti collegati.
+
+### `POST /players/import`
+
+Upsert/import batch giocatori. Endpoint protetto: ruoli `ADMIN` e `SUPER_ADMIN`.
+
+### `GET /quotes`
+
+Lista quotazioni per stagione. Query obbligatoria: `seasonId`. Filtri opzionali: `role`, `club`.
+
+### `GET /quotes/:seasonId/:playerId`
+
+Dettaglio quotazione per coppia stagione/giocatore.
+
+### `GET /votes`
+
+Lista voti per stagione e, opzionalmente, giornata. Query: `seasonId`, `round`.
+
+### `GET /votes/player/:playerId`
+
+Lista voti per giocatore, opzionalmente filtrata per `seasonId`.
+
+### `POST /admin/import/quotes`
+
+Importa quotazioni da JSON processed. Endpoint protetto: ruoli `ADMIN` e `SUPER_ADMIN`.
+
+Body minimo:
+```json
+{
+  "seasonId": "uuid-stagione"
+}
+```
+
+Body con path esplicito:
+```json
+{
+  "seasonId": "uuid-stagione",
+  "sourcePath": "data/real/processed/fantacalcio_quotes_history.json"
+}
+```
+
+Il backend legge il file processed, importa solo le righe con `season` uguale a `footballSeason` della stagione DB, normalizza i ruoli `P/D/C/A` in `GK/DEF/MID/FWD`, upserta i player via `externalId`, upserta le quote e crea un record in `import_logs`.
+
+### `POST /admin/import/votes`
+
+Importa voti da JSON processed. Endpoint protetto: ruoli `ADMIN` e `SUPER_ADMIN`.
+
+Body minimo:
+```json
+{
+  "seasonId": "uuid-stagione"
+}
+```
+
+Body per singola giornata:
+```json
+{
+  "seasonId": "uuid-stagione",
+  "round": 1,
+  "sourcePath": "data/real/processed/votes/fantacalcio_votes_history.json"
+}
+```
+
+Il backend importa solo le righe con `season` coerente con la stagione DB e, se indicato, solo la giornata `round`. Ogni import restituisce `recordsRead`, `recordsImported`, `recordsSkipped`, `errors`, `warnings`, `importLogId`.
+
 ### `GET /api/docs`
 
 Swagger UI automatica (disponibile solo con `NODE_ENV !== production`).
@@ -238,15 +311,20 @@ npm run prisma:studio        # Prisma Studio (GUI database)
 - [x] JwtAuthGuard e RolesGuard (`PARTICIPANT`, `ADMIN`, `SUPER_ADMIN`)
 - [x] UsersModule minimo: create user, find by email/id, endpoint `GET /users/me`
 - [x] SeasonsModule CRUD minimo: create/list/get/update status
+- [x] PlayersModule: list/get/filter e import batch admin
+- [x] QuotesModule: list/get e import da JSON processed
+- [x] VotesModule: list per stagione/giornata, voti per player e import da JSON processed
+- [x] Admin import: `POST /admin/import/quotes`, `POST /admin/import/votes`, log import e protezione admin
 - [x] `GET /health` con risposta strutturata
 - [x] `POST /calculations/quote-return` — usa `src/shared` (shared engine)
 - [x] `CalculationsService` con `quoteReturn`, `positionValue`, `roi`
-- [x] Moduli stub residui per players, teams, market, admin, reports
+- [x] Moduli stub residui per teams, market, reports
 - [x] Schema Prisma completo con tutti i modelli V1
 - [x] Alias TypeScript `@shared` → `src/shared` (tsconfig paths)
 - [x] Test unitari: HealthController + CalculationsService (10 test, tutti passati)
 - [x] E2E test: health endpoint
 - [x] Test integrazione mockata: register, login, me, create/list/update season status
+- [x] Test integrazione mockata: import quotes, import votes, list/filter players, list votes by round, import endpoint protetto
 - [x] Script npm radice: `backend:*` e `prisma:*`
 
 ---
@@ -257,12 +335,13 @@ npm run prisma:studio        # Prisma Studio (GUI database)
 |------------|------|
 | Refresh token | Tabella presente nello schema, flusso non ancora implementato |
 | Validazione transizioni stagione | Per ora `PATCH /seasons/:id/status` accetta ogni stato enum valido |
-| PlayersService/Controller | Import giocatori, gestione rosa |
+| Upload multipart import | Gli endpoint admin leggono JSON processed già presenti nel repository; upload file non ancora implementato |
+| Gestione rosa | Composizione roster e join stagione restano fuori da questo blocco |
 | MarketService/Controller | Acquisto/vendita con lock ottimistico |
 | CalculationsService completo | Calcolo giornata, aggiornamento moltiplicatori |
 | RankingsService | Classifica live e finale |
 | ReportsService | Export CSV/PDF |
-| AdminService | Gestione utenti, import dati |
+| AdminService completo | Gestione utenti avanzata, audit browsing e report admin |
 | BullMQ | Job queue per calcoli asincroni |
 | File upload | Multer per import CSV |
 | Prisma migration seed | Dati iniziali (admin user, stagione test) |

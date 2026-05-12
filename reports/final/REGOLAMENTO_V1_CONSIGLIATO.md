@@ -261,6 +261,27 @@ Prima di rendere V1 definitivo servono:
 - confronto tra soglia premio 7% e 10% con prezzi giornata per giornata ufficiali;
 - conferma backtest intra-stagione con quotazioni non sintetiche.
 
+## Aggiornamento modello commissionale 2026-05-12
+
+Il report `reports/real-data/commission_revenue_model_simulation.md` ha testato il modello `COMMISSION_REVENUE_MODEL`, in cui il 100% delle commissioni di acquisto e vendita e trattenuto dal sistema/piattaforma.
+
+Risultato chiave:
+
+- a parita di commissioni 2% acquisto / 2% vendita, il ROI utente non cambia rispetto al modello precedente;
+- il ricavo medio per partecipante passa da 0.76 crediti equivalenti nel modello "10% delle commissioni" a 7.57 nel modello "100% commissioni al sistema";
+- il modello 100% commissioni e quindi piu coerente e sostenibile per coprire costi di gestione e organizzazione;
+- la matrice parametrica indica come miglior equilibrio numerico buy 1.5%, sell 3%, soglia premio 5%, ma questa configurazione e piu aggressiva lato vendita e richiede validazione con comportamento utenti reale;
+- per una V1 semplice e spiegabile resta accettabile mantenere 2%/2%/7% come baseline regolamentare, cambiando pero il modello economico: le commissioni non rientrano nel montepremi e sono trattenute dal sistema.
+
+Decisione aggiornata:
+
+- modello economico: 100% delle commissioni trattenute dal sistema;
+- commissione acquisto V1 baseline: 2%;
+- commissione vendita V1 baseline: 2%;
+- soglia premio V1 baseline: 7%;
+- alternativa piu conservativa da testare in pilot: 1.5% acquisto / 3% vendita / soglia 5%;
+- nessuna platform fee separata del 10%: il concetto viene sostituito da commissioni operative trattenute dal sistema.
+
 ## Decisione consigliata
 
 Adottare come baseline di lavoro:
@@ -270,7 +291,7 @@ FantaTrading V1 consigliato
 Rosa: 25 giocatori, 3 P / 8 D / 8 C / 6 A
 Acquisto: 2%
 Vendita: 2%
-Platform fee: 10% delle commissioni
+Modello ricavo: 100% delle commissioni trattenute dal sistema
 Soglia premio: 7%
 SV: PLAYER_ZERO_TEAM_EXCLUDE
 Bonus/malus: tabella ufficiale FantaTrading
@@ -280,4 +301,4 @@ Avviso overtrading: da inserire nel regolamento utente
 
 La commissione vendita 2% e confermata dal confronto fee intra-stagione: penalizza HOLD di soli 0.80pp e aumenta il ricavo piattaforma del 21.3%. I cambi restano liberi perche il costo delle commissioni costituisce gia un freno naturale all overtrading. Il backtest intra-stagione mostra che strategie attive aggressive (MOMENTUM: -57.5%, TAKE_PROFIT: -37.4% mediati su tutte le configurazioni) distruggono valore molto piu di HOLD (+5.30%): questo dato va comunicato ai partecipanti tramite avviso esplicito, non tramite vincolo regolamentare.
 
-Questa configurazione e il miglior compromesso attuale tra coerenza regolamentare, attrattivita per gli utenti e sostenibilita preliminare della piattaforma. I risultati del backtest intra-stagione derivano da quotazioni sintetiche esplorative: la validazione definitiva richiede quotazioni ufficiali giornata per giornata.
+Questa configurazione e il miglior compromesso attuale tra coerenza regolamentare, attrattivita per gli utenti e sostenibilita preliminare della piattaforma. Il nuovo modello 100% commissioni al sistema e piu sostenibile del precedente 10% delle commissioni senza modificare il costo netto dell utente a parita di fee. I risultati del backtest intra-stagione derivano da quotazioni sintetiche esplorative: la validazione definitiva richiede quotazioni ufficiali giornata per giornata.

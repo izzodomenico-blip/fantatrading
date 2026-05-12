@@ -60,7 +60,9 @@ Le commissioni previste nella V1 sono:
 | Acquisto | 2% |
 | Vendita | 2% |
 
-Le commissioni servono a rendere sostenibile il gioco e a bilanciare il rendimento dei portafogli.
+Le commissioni sono costi di operazione. Sono trattenute dal sistema a copertura dei costi di gestione e organizzazione e riducono il rendimento netto dell utente.
+
+La piattaforma non applica una percentuale diretta sul capitale della rosa: il costo nasce solo quando effettui operazioni di acquisto o vendita.
 
 ## 5a. Cambi durante la stagione
 
@@ -87,21 +89,24 @@ Questi valori derivano da simulazioni con quotazioni non ufficiali e hanno carat
 
 Il freno all overtrading e il costo stesso delle commissioni, non un limite regolamentare.
 
-## 6. Platform fee
+## 6. Commissioni trattenute dal sistema
 
-La platform fee e pari al 10% delle sole commissioni generate dalle operazioni.
+Le commissioni di acquisto e vendita sono trattenute dal sistema.
 
 Importante:
 
-- la platform fee non si applica al montepremi totale;
-- la platform fee non viene trattenuta direttamente dal capitale investito dai partecipanti;
-- la platform fee riguarda solo le commissioni di acquisto e vendita.
+- le commissioni non si applicano al montepremi totale;
+- le commissioni non sono una trattenuta diretta sul capitale della rosa;
+- le commissioni si pagano solo quando compri o vendi;
+- i cambi sono liberi, ma ogni cambio ha un costo;
+- prima di operare devi valutare se il possibile guadagno supera il costo delle commissioni.
 
 Esempio:
 
-- commissioni totali generate: 1.000 crediti;
-- platform fee 10%: 100 crediti;
-- la restante parte delle commissioni resta disponibile secondo la struttura economica del gioco.
+- acquisto giocatore a 100 con commissione 2%: costo totale 102;
+- vendita giocatore a 120 con commissione 2%: incasso netto 117,60;
+- utile netto dell operazione: 117,60 - 102 = 15,60;
+- commissioni trattenute dal sistema: 2,00 + 2,40 = 4,40.
 
 ## 7. Variazione delle quotazioni
 
@@ -246,7 +251,7 @@ La struttura premi puo essere definita in base a:
 - numero di partecipanti sopra soglia;
 - posizione in classifica.
 
-La platform fee del 10% riguarda solo le commissioni e non deve essere confusa con una trattenuta sul montepremi totale.
+Le commissioni trattenute dal sistema riguardano solo le operazioni effettuate e non devono essere confuse con una trattenuta sul montepremi totale o sul capitale della rosa.
 
 ## 17. Esempi numerici semplici
 
@@ -302,7 +307,7 @@ E stato condotto un backtest intra-stagione usando quotazioni sintetiche (non uf
 - **HOLD** (mantieni la rosa invariata) produce il ROI piu alto tra tutte le strategie simulate: circa **5.30%** nella versione con commissione vendita 1.25%, e **4.50%** con commissione vendita 2%;
 - nessuna strategia di trading attivo ha superato HOLD nelle simulazioni;
 - le strategie con cambi molto frequenti producono perdite significative a causa dell accumulo di commissioni;
-- la commissione vendita 2% penalizza HOLD di circa 0.80 punti percentuali rispetto a 1.25%, ma aumenta il ricavo della piattaforma del 21.3%.
+- il nuovo modello economico prevede che le commissioni siano trattenute dal sistema a copertura dei costi di gestione e organizzazione.
 
 Queste simulazioni usano quotazioni sintetiche stimate, non le quotazioni ufficiali Fantacalcio giornata per giornata. I valori numerici sono esplorativi. La direzione delle conclusioni e comunque utile per impostare il regolamento.
 

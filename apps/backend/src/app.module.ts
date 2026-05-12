@@ -7,6 +7,8 @@ import { UsersModule } from './modules/users/users.module';
 import { CalculationsModule } from './modules/calculations/calculations.module';
 import { SeasonsModule } from './modules/seasons/seasons.module';
 import { PlayersModule } from './modules/players/players.module';
+import { QuotesModule } from './modules/quotes/quotes.module';
+import { VotesModule } from './modules/votes/votes.module';
 import { TeamsModule } from './modules/teams/teams.module';
 import { MarketModule } from './modules/market/market.module';
 import { AdminModule } from './modules/admin/admin.module';
@@ -27,6 +29,8 @@ import appConfig from './config/app.config';
     CalculationsModule,
     SeasonsModule,
     PlayersModule,
+    QuotesModule,
+    VotesModule,
     TeamsModule,
     MarketModule,
     AdminModule,

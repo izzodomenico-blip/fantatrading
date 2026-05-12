@@ -76,13 +76,15 @@ const createPrismaMock = () => {
     { id: 'gk-3', firstName: 'Gk', lastName: 'Three', role: PlayerRole.GK, realTeam: 'Club' },
     { id: 'gk-4', firstName: 'Gk', lastName: 'Four', role: PlayerRole.GK, realTeam: 'Club' },
     { id: 'fwd-1', firstName: 'Forward', lastName: 'One', role: PlayerRole.FWD, realTeam: 'Club' },
+    // Giocatore costoso per test FAVC: quota > initialBudget della stagione (500)
+    { id: 'fwd-expensive', firstName: 'Forward', lastName: 'Expensive', role: PlayerRole.FWD, realTeam: 'Club' },
   ];
   const quotes: StoredQuote[] = players.map((player) => ({
     id: `quote-${player.id}`,
     seasonId: season.id,
     playerId: player.id,
-    initialQuote: player.id === 'fwd-1' ? 100 : 10,
-    currentQuote: player.id === 'fwd-1' ? 100 : 10,
+    initialQuote: player.id === 'fwd-1' ? 100 : player.id === 'fwd-expensive' ? 600 : 10,
+    currentQuote: player.id === 'fwd-1' ? 100 : player.id === 'fwd-expensive' ? 600 : 10,
     finalQuote: null,
   }));
   const teams: StoredTeam[] = [];
@@ -353,7 +355,17 @@ describe('Teams, portfolio and market', () => {
     expect(portfolio.body.summary.totalCommissionsPaid).toBe(2);
     expect(portfolio.body.summary.playerCount).toBe(1);
     expect(portfolio.body.summary.composition.FWD).toBe(1);
-    expect(portfolio.body.summary.currentRoi).toBeCloseTo(-0.4);
+    // FAVC ROI: netLiquidation = 100*(1-0.02)=98, cash=398, deposited=500
+    // ROI = (98+398-500)/500*100 = -0.8%
+    expect(portfolio.body.summary.currentRoi).toBeCloseTo(-0.8);
+    // Campi FAVC
+    expect(portfolio.body.summary.totalCapitalDeposited).toBe(500);
+    expect(portfolio.body.summary.virtualCashBalance).toBe(398);
+    expect(portfolio.body.summary.netLiquidationValue).toBeCloseTo(98);
+    expect(portfolio.body.summary.initialRosterCost).toBe(100);
+    expect(portfolio.body.summary.totalBuyCommissions).toBeCloseTo(2);
+    expect(portfolio.body.summary.totalSellCommissions).toBeCloseTo(0);
+    expect(portfolio.body.summary.roiPct).toBeCloseTo(-0.8);
 
     const operations = await request(app.getHttpServer())
       .get('/market/operations')
@@ -364,6 +376,85 @@ describe('Teams, portfolio and market', () => {
     expect(operations.body).toHaveLength(1);
     expect(operations.body[0].grossAmount).toBe(100);
     expect(operations.body[0].systemRevenue).toBe(2);
+  });
+
+  // ─── FREE_ACCESS_VARIABLE_CAPITAL tests ───────────────────────────────────────
+
+  it('[FAVC] vendita giocatore meno costoso aumenta virtualCashBalance', async () => {
+    const team = await createTeam();
+    // Acquisto: budget 500 → 500-102=398, virtualCashBalance=398
+    await request(app.getHttpServer())
+      .post('/market/buy')
+      .set('Authorization', `Bearer ${participantToken}`)
+      .send({ teamId: team.id, playerId: 'fwd-1' })
+      .expect(201);
+
+    // Vendita: 100*(1-0.02)=98 netti rientrano in virtualCashBalance → 398+98=496
+    const sell = await request(app.getHttpServer())
+      .post('/market/sell')
+      .set('Authorization', `Bearer ${participantToken}`)
+      .send({ teamId: team.id, playerId: 'fwd-1' })
+      .expect(201);
+
+    expect(sell.body.portfolio.summary.virtualCashBalance).toBe(496);
+    expect(sell.body.portfolio.summary.currentPortfolioValue).toBe(0);
+    expect(sell.body.portfolio.summary.netLiquidationValue).toBe(0);
+  });
+
+  it('[FAVC] acquisto giocatore costoso oltre liquidità aumenta totalCapitalDeposited', async () => {
+    const team = await createTeam();
+    // fwd-expensive: quota 600, commissione 2% → totalCost = 612
+    // initialBudget=500 < 612 → capitalToAdd=112 → newInitialBudget=612
+    const buy = await request(app.getHttpServer())
+      .post('/market/buy')
+      .set('Authorization', `Bearer ${participantToken}`)
+      .send({ teamId: team.id, playerId: 'fwd-expensive' })
+      .expect(201);
+
+    expect(buy.body.portfolio.summary.totalCapitalDeposited).toBeCloseTo(612);
+    expect(buy.body.portfolio.summary.virtualCashBalance).toBeCloseTo(0);
+    expect(buy.body.portfolio.summary.currentPortfolioValue).toBeCloseTo(600);
+  });
+
+  it('[FAVC] commissioni trattenute dal sistema come system revenue', async () => {
+    const team = await createTeam();
+    const buy = await request(app.getHttpServer())
+      .post('/market/buy')
+      .set('Authorization', `Bearer ${participantToken}`)
+      .send({ teamId: team.id, playerId: 'fwd-1' })
+      .expect(201);
+
+    // systemRevenue = commissione trattenta dal sistema
+    expect(buy.body.operation.systemRevenue).toBe(2);
+    expect(buy.body.operation.systemRevenue).toBe(buy.body.operation.commissionAmount);
+  });
+
+  it('[FAVC] classifica per ROI% — totalBuyCommissions e totalSellCommissions separati', async () => {
+    const team = await createTeam();
+    await request(app.getHttpServer())
+      .post('/market/buy')
+      .set('Authorization', `Bearer ${participantToken}`)
+      .send({ teamId: team.id, playerId: 'fwd-1' })
+      .expect(201);
+
+    await request(app.getHttpServer())
+      .post('/market/sell')
+      .set('Authorization', `Bearer ${participantToken}`)
+      .send({ teamId: team.id, playerId: 'fwd-1' })
+      .expect(201);
+
+    const portfolio = await request(app.getHttpServer())
+      .get(`/teams/${team.id}/portfolio`)
+      .set('Authorization', `Bearer ${participantToken}`)
+      .expect(200);
+
+    // Dopo buy+sell: totalCommissions = 2 (buy) + 2 (sell) = 4
+    expect(portfolio.body.summary.totalCommissionsPaid).toBeCloseTo(4);
+    expect(portfolio.body.summary.totalBuyCommissions).toBeCloseTo(2);
+    expect(portfolio.body.summary.totalSellCommissions).toBeCloseTo(2);
+    // Nessuna posizione attiva → netLiquidationValue=0
+    expect(portfolio.body.summary.netLiquidationValue).toBe(0);
+    expect(portfolio.body.summary.currentPortfolioValue).toBe(0);
   });
 
   it('denies access to another user team and prevents admin operations', async () => {

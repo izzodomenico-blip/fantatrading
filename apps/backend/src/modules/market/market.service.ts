@@ -57,9 +57,12 @@ export class MarketService {
     const grossAmount = toNumber(quote.currentQuote);
     const buyCost = calculateBuyCost(grossAmount, buyCommissionRate);
     const budgetBefore = toNumber(team.availableBudget);
-    if (buyCost.totalCost > budgetBefore) {
-      throw new BadRequestException('Insufficient available budget');
-    }
+
+    // FAVC: se la liquidità è insufficiente, l'utente deposita capitale aggiuntivo.
+    // Il deficit aumenta totalCapitalDeposited (initialBudget nel DB).
+    const capitalToAdd = Math.max(0, buyCost.totalCost - budgetBefore);
+    const newInitialBudget = toNumber(team.initialBudget) + capitalToAdd;
+    const budgetAfter = budgetBefore + capitalToAdd - buyCost.totalCost;
 
     const position = await this.prisma.portfolioPosition.create({
       data: {
@@ -77,7 +80,6 @@ export class MarketService {
       include: { player: true, quote: true },
     });
 
-    const budgetAfter = budgetBefore - buyCost.totalCost;
     await this.prisma.marketOperation.create({
       data: {
         teamId: team.id,
@@ -97,6 +99,7 @@ export class MarketService {
       where: { id: team.id },
       data: {
         availableBudget: budgetAfter,
+        initialBudget: newInitialBudget,
         totalCommissionsPaid: toNumber(team.totalCommissionsPaid) + buyCost.commission,
       },
     });

@@ -1,6 +1,11 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PlayerRole, PositionStatus, Prisma, TeamStatus, UserRole } from '@prisma/client';
-import { calculatePositionValue, calculateROI, V1_ROSTER_COMPOSITION } from '@shared';
+import {
+  calculateNetLiquidationValue,
+  calculatePositionValue,
+  calculateVariableCapitalROI,
+  V1_ROSTER_COMPOSITION,
+} from '@shared';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateTeamDto } from './dto/create-team.dto';
 
@@ -111,7 +116,13 @@ export class TeamsService {
     const team = await this.findTeamWithPortfolio(teamId);
     const activePositions = team.portfolioPositions.filter((position) => position.status === PositionStatus.ACTIVE);
     const currentPortfolioValue = activePositions.reduce((sum, position) => sum + this.positionCurrentValue(position), 0);
-    const currentRoi = calculateROI(currentPortfolioValue, toNumber(team.availableBudget), toNumber(team.initialBudget));
+    const sellCommissionRate = toNumber(team.season.sellCommissionRate);
+    const netLiquidationValue = calculateNetLiquidationValue(currentPortfolioValue, sellCommissionRate);
+    const currentRoi = calculateVariableCapitalROI(
+      netLiquidationValue,
+      toNumber(team.availableBudget),
+      toNumber(team.initialBudget),
+    );
 
     await this.prisma.team.update({
       where: { id: teamId },
@@ -153,7 +164,8 @@ export class TeamsService {
   }
 
   private buildPortfolioSummary(team: TeamWithRelations) {
-    const activePositions = team.portfolioPositions.filter((position) => position.status === PositionStatus.ACTIVE);
+    const allPositions = team.portfolioPositions;
+    const activePositions = allPositions.filter((position) => position.status === PositionStatus.ACTIVE);
     const positions = activePositions.map((position) => ({
       id: position.id,
       teamId: position.teamId,
@@ -172,25 +184,40 @@ export class TeamsService {
     const composition = compositionByRole(activePositions.map((position) => position.player.role));
     const currentPortfolioValue = positions.reduce((sum, position) => sum + position.currentValue, 0);
     const availableBudget = toNumber(team.availableBudget);
-    const initialBudget = toNumber(team.initialBudget);
-    const roi = calculateROI(currentPortfolioValue, availableBudget, initialBudget);
+    const totalCapitalDeposited = toNumber(team.initialBudget);
+    const sellCommissionRate = toNumber(team.season.sellCommissionRate);
+    const netLiquidationValue = calculateNetLiquidationValue(currentPortfolioValue, sellCommissionRate);
+    const roiPct = calculateVariableCapitalROI(netLiquidationValue, availableBudget, totalCapitalDeposited);
+    const totalCommissionsPaid = toNumber(team.totalCommissionsPaid);
+    const totalBuyCommissions = allPositions.reduce((sum, pos) => sum + toNumber(pos.buyCommission), 0);
+    const totalSellCommissions = totalCommissionsPaid - totalBuyCommissions;
+    const initialRosterCost = activePositions.reduce((sum, pos) => sum + toNumber(pos.buyValue), 0);
     const totalPlayers = positions.length;
 
     return {
       team: this.serializeTeam(team),
       positions,
       summary: {
-        initialValue: initialBudget,
+        // Campi originali (retrocompatibili)
+        initialValue: totalCapitalDeposited,
         availableBudget,
         currentPortfolioValue,
         currentTotalValue: currentPortfolioValue + availableBudget,
-        totalCommissionsPaid: toNumber(team.totalCommissionsPaid),
-        currentRoi: roi,
+        totalCommissionsPaid,
+        currentRoi: roiPct,
         playerCount: totalPlayers,
         composition,
         rosterLimits: ROLE_LIMITS,
         isRosterComplete: totalPlayers === V1_ROSTER_COMPOSITION.total && Object.entries(ROLE_LIMITS).every(([role, limit]) => composition[role as PlayerRole] === limit),
         isRosterValid: totalPlayers <= V1_ROSTER_COMPOSITION.total && Object.entries(ROLE_LIMITS).every(([role, limit]) => composition[role as PlayerRole] <= limit),
+        // Campi FAVC (FREE_ACCESS_VARIABLE_CAPITAL_TRADING_MODEL)
+        totalCapitalDeposited,
+        virtualCashBalance: availableBudget,
+        netLiquidationValue,
+        initialRosterCost,
+        totalBuyCommissions,
+        totalSellCommissions,
+        roiPct,
       },
     };
   }

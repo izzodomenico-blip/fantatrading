@@ -297,6 +297,9 @@ Nel modello base:
 - l accesso e libero;
 - la quota iscrizione obbligatoria e pari a 0;
 - il capitale e virtuale;
+- il settlement finale e virtuale;
+- non sono previsti pagamenti reali;
+- non e prevista riscossione fisica nel pilot;
 - ogni utente costruisce una rosa da 25 giocatori senza budget massimo;
 - ogni acquisto aumenta il capitale virtuale depositato solo se la liquidita virtuale disponibile non basta;
 - ogni vendita genera liquidita virtuale;
@@ -337,6 +340,23 @@ Da evitare in V1:
 - quota iscrizione 0 con premi garantiti;
 - distribuzioni che premiano troppi utenti e riducono la selettivita competitiva.
 
+## Riscossione reale: non inclusa nel pilot
+
+Il report `reports/real-data/real_money_redeemable_portfolio_audit.md` ha analizzato una variante nuova: `REAL_MONEY_REDEEMABLE_PORTFOLIO_MODEL`.
+
+Questa variante non coincide con il modello base V1. Nel modello base il capitale e virtuale, il settlement finale e virtuale e non sono previsti pagamenti o riscossioni fisiche. La liquidazione finale serve a misurare valore finale, profit/loss e ROI%, non a trasferire denaro all'utente.
+
+Sintesi audit solvibilita':
+
+- con riscossione reale il valore finale del portafoglio diventa un'uscita di cassa del sistema;
+- il sistema puo' avere `systemNet` negativo se le plusvalenze aggregate degli utenti superano commissioni e capitale disponibile;
+- `VALUE` e' un rischio specifico perche' mostra vantaggio storico e potrebbe generare payout ricorrenti verso utenti esperti;
+- utenti whale aumentano il rischio assoluto, perche' concentrano importi elevati e rendono piu grande l'esposizione verso pochi partecipanti;
+- servirebbero fondo/riserve, cap capitale utente, cap esposizione per singolo giocatore e controlli di concentrazione;
+- prima di qualunque payout reale servono parere legale, fiscale, regolatorio, AML/KYC e risk framework.
+
+Raccomandazione aggiornata: non procedere con payout reale immediato. Restare sul modello virtuale nel pilot; valutare eventuali premi, montepremi o riscossione reale solo come prodotto separato.
+
 ## Decisione consigliata
 
 Adottare come baseline di lavoro:
@@ -347,6 +367,9 @@ Rosa: 25 giocatori, 3 P / 8 D / 8 C / 6 A
 Accesso: libero
 Quota iscrizione obbligatoria: nessuna
 Capitale: virtuale, variabile per utente
+Settlement finale: virtuale
+Pagamenti reali: nessuno
+Riscossione fisica: non prevista nel pilot
 Budget massimo rosa: nessuno
 Acquisto: usa liquidita virtuale disponibile; se non basta, aumenta il capitale virtuale depositato
 Vendita: genera liquidita virtuale

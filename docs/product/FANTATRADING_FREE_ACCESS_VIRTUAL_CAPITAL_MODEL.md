@@ -89,9 +89,9 @@ Esempi:
 
 Il team 150 -> 180 batte il team 600 -> 660 nel ranking principale, anche se il secondo ha ricchezza assoluta maggiore.
 
-## 5a. Riscossione finale del portafoglio
+## 5a. Liquidazione finale virtuale del portafoglio
 
-A fine stagione il partecipante puo' riscuotere virtualmente il valore finale del proprio portafoglio. La riscossione finale non e' un pagamento reale: e' una chiusura contabile virtuale del pilot.
+A fine stagione il partecipante chiude virtualmente il valore finale del proprio portafoglio. Questa liquidazione finale non e' un pagamento reale e non e' una riscossione fisica: e' una chiusura contabile virtuale del pilot, usata per calcolare rendimento e classifica.
 
 Il modello attuale usa lo scenario A: la liquidazione finale applica la commissione di vendita alle posizioni ancora attive. Questa scelta e' coerente con il comportamento gia' usato dal riepilogo portafoglio, dove `netLiquidationValue` rappresenta il valore incassabile vendendo virtualmente tutta la rosa.
 
@@ -123,7 +123,7 @@ profitLoss = 310 - 285 = 25
 roiPct = 25 / 285 * 100 = 8.77%
 ```
 
-Il valore riscuotibile resta 310. Non va aumentato di nuovo dell'8.77%, perche' il ROI e' solo una misura percentuale del rendimento gia' contenuto nei 310.
+Il valore liquidabile virtuale resta 310. Non va aumentato di nuovo dell'8.77%, perche' il ROI e' solo una misura percentuale del rendimento gia' contenuto nei 310.
 
 Scenario alternativo documentato ma non attivo di default:
 
@@ -172,6 +172,31 @@ Il pilot usa solo crediti virtuali per evitare gestione di denaro di terzi, paga
 
 Nessuna parte del pilot richiede gateway di pagamento, wallet reale o premi monetari.
 
+## 7a. Riscossione reale: non inclusa nel pilot
+
+Il modello base attuale e':
+
+- accesso libero;
+- capitale virtuale;
+- settlement finale virtuale;
+- nessun pagamento reale;
+- nessuna riscossione fisica nel pilot.
+
+Il report `reports/real-data/real_money_redeemable_portfolio_audit.md` ha analizzato una variante diversa, `REAL_MONEY_REDEEMABLE_PORTFOLIO_MODEL`, in cui il valore finale del portafoglio potrebbe essere pagato fisicamente all'utente.
+
+Quella variante cambia la natura economica del prodotto. Nel modello virtuale il valore finale e' una metrica di gioco; nel modello riscattabile reale il valore finale diventa un'uscita di cassa del sistema.
+
+Sintesi audit solvibilita':
+
+- se `systemNet < 0`, il sistema non e' autosufficiente nello scenario reale;
+- il rischio nasce quando il valore finale pagato agli utenti supera capitale depositato e commissioni disponibili;
+- la strategia `VALUE` e' critica perche' puo' produrre vantaggio replicabile e quindi payout ricorrenti verso utenti esperti;
+- gli utenti whale aumentano il rischio assoluto perche' concentrano capitale elevato su poche posizioni;
+- servirebbero fondo/riserve, cap capitale per utente, cap esposizione per singolo giocatore e monitoraggio di concentrazione;
+- prima di qualunque payout reale servono parere legale, fiscale, regolatorio, AML/KYC e risk framework.
+
+Raccomandazione: non procedere con payout reale immediato. Il pilot resta virtuale; eventuali premi, montepremi o riscossione reale devono essere valutati separatamente.
+
 ## 8. Evoluzione possibile
 
 Fase 1 - pilot virtuale:
@@ -203,7 +228,7 @@ Fase 3 - modello reale:
 | `totalBuyCommissions` | Commissioni di acquisto pagate |
 | `totalSellCommissions` | Commissioni di vendita pagate |
 | `netLiquidationValue` | Valore netto liquidabile della rosa |
-| `finalLiquidationValue` | Valore finale virtualmente riscuotibile: netLiquidationValue + virtualCashBalance |
+| `finalLiquidationValue` | Valore finale virtuale liquidabile: netLiquidationValue + virtualCashBalance |
 | `profitLoss` | Utile/perdita virtuale: finalLiquidationValue - totalCapitalDeposited |
 | `roiPct` | ROI percentuale ufficiale |
 

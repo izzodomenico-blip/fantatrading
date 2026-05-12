@@ -26,7 +26,11 @@ Questo significa:
 - il capitale virtuale depositato puo essere diverso da utente a utente;
 - la classifica principale e basata sul ROI%, non sulla ricchezza assoluta;
 - il valore totale del portafoglio, o total wealth, e mostrato solo come informazione;
+- la liquidazione finale serve a calcolare rendimento e classifica;
+- non sono previsti pagamenti o riscossioni reali nel pilot;
 - premi e montepremi sono opzionali e separati dal modello base.
+
+Nel pilot il credito e virtuale. Un eventuale modello con premi o riscossione reale sara valutato separatamente e avra regole dedicate.
 
 ## 2. Composizione della rosa
 
@@ -295,6 +299,18 @@ Le commissioni di acquisto e vendita sono costi operativi trattenuti dal sistema
 Il premio finale dipende dalla classifica e dalla tabella premi.
 
 Per uno scenario opzionale a premi, la tabella consigliata puo premiare il top 10% dei partecipanti. Il montepremi puo derivare da quota iscrizione opzionale, sponsor o fondo premi dichiarato prima dell inizio della stagione.
+
+## 16a. Riscossione reale: non inclusa nel pilot
+
+Nel pilot il credito e virtuale.
+
+La liquidazione finale serve a calcolare rendimento e classifica. Non trasforma il credito in denaro e non crea un diritto automatico a ricevere pagamenti.
+
+Non sono previsti pagamenti o riscossioni reali.
+
+Un eventuale modello con premi, montepremi o riscossione reale sara valutato separatamente. Prima di introdurlo servono analisi di sostenibilita, fondo/riserve dedicate e verifiche legali, fiscali e regolatorie.
+
+La raccomandazione attuale e semplice: non procedere con payout reale immediato nel pilot.
 
 ## 17. Esempi numerici semplici
 

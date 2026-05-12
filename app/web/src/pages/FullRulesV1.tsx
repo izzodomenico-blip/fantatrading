@@ -180,6 +180,8 @@ export default function FullRulesV1() {
           <MetricCard label="Vendita" value="2%" sub="Commissione vendita V1" color="var(--green)" />
           <MetricCard label="Ranking" value="ROI%" sub="classifica principale" color="var(--amber)" />
           <MetricCard label="Commissioni" value="100%" sub="Trattenute dal sistema" color="var(--accent)" />
+          <MetricCard label="Settlement" value="Virtuale" sub="nessuna riscossione reale" color="var(--accent)" />
+          <MetricCard label="Payout reali" value="No" sub="non inclusi nel pilot" color="var(--red)" />
         </div>
         <div className="card" style={{ marginTop: 16 }}>
           <div className="config-box">
@@ -190,6 +192,14 @@ export default function FullRulesV1() {
             <div>
               <span className="config-key">Capitale:     </span>
               <span className="config-val">virtuale, aumenta sugli acquisti se la liquidita non basta</span>
+            </div>
+            <div>
+              <span className="config-key">Settlement:   </span>
+              <span className="config-val">liquidazione finale virtuale per ROI e classifica</span>
+            </div>
+            <div>
+              <span className="config-key">Riscossione:  </span>
+              <span className="config-val">nessun pagamento reale nel pilot</span>
             </div>
             <div>
               <span className="config-key">NoVotePolicy: </span>
@@ -311,6 +321,52 @@ export default function FullRulesV1() {
             </div>
           </>
         )}
+      </Section>
+
+      <Section title="Riscossione reale: non inclusa nel pilot">
+        <div className="metric-grid">
+          <MetricCard label="Modello base" value="Virtuale" sub="FREE_ACCESS_VIRTUAL_CAPITAL" color="var(--teal)" />
+          <MetricCard label="Settlement" value="Virtuale" sub="calcolo ROI e classifica" color="var(--purple)" />
+          <MetricCard label="Pagamenti" value="0" sub="nessun payout reale" color="var(--green)" />
+          <MetricCard label="Audit reale" value="Separato" sub="variante non implementata" color="var(--amber)" />
+        </div>
+
+        <div className="card" style={{ marginTop: 16 }}>
+          <div className="doc-title">SINTESI AUDIT SOLVIBILITA</div>
+          <div className="table-note">
+            Il report real_money_redeemable_portfolio_audit valuta una variante diversa dal pilot: un portafoglio
+            riscattabile fisicamente. La raccomandazione e non procedere con payout reale immediato.
+          </div>
+          <div className="config-box" style={{ marginTop: 12 }}>
+            <div><span className="config-key">scenario:      </span><span className="config-val">REAL_MONEY_REDEEMABLE_PORTFOLIO_MODEL, non incluso nel pilot</span></div>
+            <div><span className="config-key">systemNet:     </span><span className="config-val">puo diventare negativo se le plusvalenze utenti superano le commissioni</span></div>
+            <div><span className="config-key">VALUE:         </span><span className="config-val">rischio di vantaggio replicabile e payout ricorrenti verso utenti esperti</span></div>
+            <div><span className="config-key">whale:         </span><span className="config-val">rischio di concentrazione su utenti ad alto capitale</span></div>
+            <div><span className="config-key">riserve:       </span><span className="config-val">servirebbero fondo dedicato, cap capitale e limiti esposizione giocatore</span></div>
+            <div><span className="config-key">legal:         </span><span className="config-val">necessario parere legale, fiscale, regolatorio e risk framework</span></div>
+          </div>
+        </div>
+
+        <div className="three-col" style={{ marginTop: 16 }}>
+          <div className="card-sm risk-card">
+            <div className="risk-title">Settlement virtuale</div>
+            <div className="risk-text">
+              Nel pilot la liquidazione finale misura valore netto, cash virtuale, profit/loss e ROI%. Non trasferisce denaro.
+            </div>
+          </div>
+          <div className="card-sm risk-card">
+            <div className="risk-title">Riscossione reale</div>
+            <div className="risk-text">
+              Sarebbe un prodotto separato: il valore finale diventerebbe un uscita di cassa e richiederebbe riserve.
+            </div>
+          </div>
+          <div className="card-sm risk-card">
+            <div className="risk-title">Decisione</div>
+            <div className="risk-text">
+              Restare virtuali nel pilot. Eventuali premi o payout reali vanno valutati fuori dal modello base.
+            </div>
+          </div>
+        </div>
       </Section>
 
       <Section title="Confronto strategie full-rules">

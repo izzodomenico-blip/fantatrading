@@ -1,5 +1,6 @@
 import {
   calculateROI,
+  calculateVariableCapitalROI,
   calculateRealizedGains,
   compareROIs,
 } from '../../src/engine/roiEngine';
@@ -98,6 +99,20 @@ describe('calculateROI', () => {
   });
 });
 
+describe('calculateVariableCapitalROI', () => {
+  test('capitale 150 e valore finale 180 -> ROI +20%', () => {
+    expect(calculateVariableCapitalROI(180, 0, 150)).toBeCloseTo(20, 6);
+  });
+
+  test('capitale 600 e valore finale 660 -> ROI +10%', () => {
+    expect(calculateVariableCapitalROI(660, 0, 600)).toBeCloseTo(10, 6);
+  });
+
+  test('include il deposito/cash virtuale senza doppio conteggio', () => {
+    expect(calculateVariableCapitalROI(295, 15, 285)).toBeCloseTo(8.7719298, 6);
+  });
+});
+
 // ─── compareROIs ─────────────────────────────────────────────────────────────
 
 describe('compareROIs', () => {
@@ -107,6 +122,9 @@ describe('compareROIs', () => {
     currentBudget: 500,
     portfolioValue: 0,
     totalWealth: 500,
+    totalCapitalDeposited: 500,
+    virtualCashBalance: 500,
+    netLiquidationValue: 0,
     totalCommissionsPaid: 0,
     realizedGains: 0,
     unrealizedGains: 0,

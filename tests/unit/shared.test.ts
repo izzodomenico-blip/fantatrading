@@ -19,6 +19,7 @@ import {
   calculatePortfolioValue,
   // ROI
   calculateROI,
+  calculateVariableCapitalROI,
   calculatePrizeEligibility,
   // Rosa
   validateRosterComposition,
@@ -270,6 +271,20 @@ describe('calculateROI', () => {
 
   test('initialBudget zero: restituisce 0 senza errori', () => {
     expect(calculateROI(500, 0, 0)).toBe(0);
+  });
+});
+
+describe('calculateVariableCapitalROI', () => {
+  test('capitale variabile: 150→180 = +20%', () => {
+    expect(calculateVariableCapitalROI(180, 0, 150)).toBeCloseTo(20, 6);
+  });
+
+  test('capitale variabile: 600→660 = +10%', () => {
+    expect(calculateVariableCapitalROI(660, 0, 600)).toBeCloseTo(10, 6);
+  });
+
+  test('cash virtuale separato incluso nel ROI', () => {
+    expect(calculateVariableCapitalROI(295, 15, 285)).toBeCloseTo(8.7719298, 6);
   });
 });
 

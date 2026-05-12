@@ -1,6 +1,7 @@
 import { Portfolio, getPortfolioValue } from '../domain/Portfolio';
 import { Team } from '../domain/Team';
 import { PrizeAward } from './prizePoolEngine';
+import { calculateVariableCapitalROI } from './roiEngine';
 
 export interface RankingEntry {
   rank: number;
@@ -8,6 +9,9 @@ export interface RankingEntry {
   teamName: string;
   portfolioValue: number;
   budget: number;
+  virtualCashBalance: number;
+  totalCapitalDeposited: number;
+  roiPct: number;
   totalWealth: number;
   prize: number;
 }
@@ -20,18 +24,25 @@ export function calculateRanking(
   const entries: RankingEntry[] = teams.map(team => {
     const portfolio = portfolios.get(team.id);
     const portfolioValue = portfolio ? getPortfolioValue(portfolio) : 0;
+    const virtualCashBalance = team.virtualCashBalance ?? team.budget;
+    const totalCapitalDeposited = team.totalCapitalDeposited ?? virtualCashBalance;
+    const netLiquidationValue = team.netLiquidationValue || portfolioValue;
+    const roiPct = calculateVariableCapitalROI(netLiquidationValue, virtualCashBalance, totalCapitalDeposited);
     return {
       rank: 0,
       teamId: team.id,
       teamName: team.name,
       portfolioValue,
-      budget: team.budget,
-      totalWealth: portfolioValue + team.budget,
+      budget: virtualCashBalance,
+      virtualCashBalance,
+      totalCapitalDeposited,
+      roiPct,
+      totalWealth: portfolioValue + virtualCashBalance,
       prize: 0,
     };
   });
 
-  entries.sort((a, b) => b.totalWealth - a.totalWealth);
+  entries.sort((a, b) => b.roiPct - a.roiPct || b.totalWealth - a.totalWealth);
 
   entries.forEach((entry, index) => {
     entry.rank = index + 1;
@@ -86,18 +97,19 @@ export function calculateRankingByROI(
   const entries: ROIRankingEntry[] = teams.map(team => {
     const portfolio = portfolios.get(team.id);
     const portfolioValue = portfolio ? getPortfolioValue(portfolio) : 0;
-    const totalWealth = portfolioValue + team.budget;
-    const totalCapitalDeposited = capitalMap.get(team.id) ?? team.budget;
-    const roiPct = totalCapitalDeposited > 0
-      ? ((totalWealth - totalCapitalDeposited) / totalCapitalDeposited) * 100
-      : 0;
+    const virtualCashBalance = team.virtualCashBalance ?? team.budget;
+    const totalWealth = portfolioValue + virtualCashBalance;
+    const totalCapitalDeposited = capitalMap.get(team.id) ?? team.totalCapitalDeposited ?? virtualCashBalance;
+    const netLiquidationValue = team.netLiquidationValue || portfolioValue;
+    const roiPct = calculateVariableCapitalROI(netLiquidationValue, virtualCashBalance, totalCapitalDeposited);
 
     return {
       rank: 0,
       teamId: team.id,
       teamName: team.name,
       portfolioValue,
-      budget: team.budget,
+      budget: virtualCashBalance,
+      virtualCashBalance,
       totalWealth,
       totalCapitalDeposited,
       roiPct,

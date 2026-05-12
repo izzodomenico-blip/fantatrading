@@ -49,7 +49,9 @@ export class TeamsService {
       throw new ConflictException('User already has a team for this season');
     }
 
-    const initialBudget = toNumber(season.initialBudget);
+    // FAVC virtuale: nessun budget fisso assegnato all'iscrizione.
+    // Il capitale depositato cresce automaticamente al primo acquisto e ai successivi deficit di liquidità.
+    const initialBudget = 0;
     const team = await this.prisma.team.create({
       data: {
         userId: user.userId,

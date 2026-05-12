@@ -4,6 +4,7 @@ import {
   calculateBuyCost,
   calculateSellProceeds,
   canAffordBuy,
+  calculateCapitalToDeposit,
   executeBuy,
   executeSell,
 } from '../../src/engine/marketEngine';
@@ -133,6 +134,18 @@ describe('canAffordBuy', () => {
   });
 });
 
+describe('calculateCapitalToDeposit', () => {
+  test('nessun budget massimo: calcola solo il deficit da depositare', () => {
+    const team = createTeam('t1', 'Team', 'Owner', 10);
+    expect(calculateCapitalToDeposit(team, 220)).toBe(210);
+  });
+
+  test('non deposita capitale se il cash virtuale basta', () => {
+    const team = createTeam('t1', 'Team', 'Owner', 300);
+    expect(calculateCapitalToDeposit(team, 220)).toBe(0);
+  });
+});
+
 // ─── executeBuy ──────────────────────────────────────────────────────────────
 
 describe('executeBuy', () => {
@@ -154,10 +167,31 @@ describe('executeBuy', () => {
     expect(updatedPortfolio.entries.get('p1')?.shares).toBe(2);
   });
 
-  test('lancia errore se budget insufficiente', () => {
+  test('nessun budget massimo: se il cash non basta aumenta totalCapitalDeposited', () => {
     const team = createTeam('t1', 'Team', 'Owner', 10);
     const portfolio = createPortfolio('t1');
-    expect(() => executeBuy(team, portfolio, player, 100, 1, 0, rules)).toThrow();
+    const { team: updatedTeam, portfolio: updatedPortfolio } = executeBuy(team, portfolio, player, 10, 1, 0, rules);
+
+    const expectedCost = 10 * 20 * 1.10;
+    expect(updatedTeam.budget).toBeCloseTo(0);
+    expect(updatedTeam.virtualCashBalance).toBeCloseTo(0);
+    expect(updatedTeam.totalCapitalDeposited).toBeCloseTo(expectedCost);
+    expect(updatedPortfolio.entries.get('p1')?.shares).toBe(10);
+  });
+
+  test('non compra duplicati nello stesso portfolio', () => {
+    const team = createTeam('t1', 'Team', 'Owner', 500);
+    const portfolio = addShares(createPortfolio('t1'), player, 1, 20);
+    expect(() => executeBuy(team, portfolio, player, 1, 1, 0, rules)).toThrow(/già presente|presente/);
+  });
+
+  test('commissione acquisto trattenuta dal sistema e tracciata separatamente', () => {
+    const team = createTeam('t1', 'Team', 'Owner', 500);
+    const portfolio = createPortfolio('t1');
+    const { operation, team: updatedTeam } = executeBuy(team, portfolio, player, 2, 1, 0, rules);
+    expect(operation.commission).toBeCloseTo(4);
+    expect(updatedTeam.totalBuyCommissions).toBeCloseTo(4);
+    expect(updatedTeam.totalCommissionsPaid).toBeCloseTo(4);
   });
 });
 
@@ -176,7 +210,17 @@ describe('executeSell', () => {
     expect(operation.type).toBe('SELL');
     expect(operation.commission).toBeCloseTo(expectedCommission);
     expect(updatedTeam.budget).toBeCloseTo(100 + expectedNet);
+    expect(updatedTeam.virtualCashBalance).toBeCloseTo(100 + expectedNet);
+    expect(updatedTeam.totalSellCommissions).toBeCloseTo(expectedCommission);
     expect(updatedPortfolio.entries.get('p1')?.shares).toBe(1);
+  });
+
+  test('vendita meno costosa aumenta virtualCashBalance con i proventi netti', () => {
+    const team = createTeam('t1', 'Team', 'Owner', 0);
+    const portfolio = addShares(createPortfolio('t1'), player, 1, 20);
+    const { team: updatedTeam } = executeSell(team, portfolio, player, 1, 1, 0, rules);
+    expect(updatedTeam.virtualCashBalance).toBeCloseTo(18);
+    expect(updatedTeam.budget).toBeCloseTo(18);
   });
 
   test('lancia errore se non si possiedono le quote', () => {

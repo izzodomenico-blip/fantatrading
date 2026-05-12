@@ -1,7 +1,7 @@
 import { TradingRules } from '../config/defaultRules';
 import { MarketOperation, OperationType, createOperationId } from '../domain/MarketOperation';
 import { Portfolio, addShares, removeShares } from '../domain/Portfolio';
-import { Team, debitTeam, creditTeam, addCommission } from '../domain/Team';
+import { Team, debitTeam, creditTeam, depositCapital, addBuyCommission, addSellCommission } from '../domain/Team';
 import { Player } from '../domain/Player';
 
 // ─── Calcoli puri (no side effects) ─────────────────────────────────────────
@@ -54,6 +54,23 @@ export function canAffordBuy(team: Team, totalCost: number, rules: TradingRules)
   return team.budget - totalCost >= rules.minBudgetReserve;
 }
 
+export function calculateCapitalToDeposit(team: Team, totalCost: number): number {
+  return Math.max(0, totalCost - team.budget);
+}
+
+function validateRosterBuy(portfolio: Portfolio, player: Player, rules: TradingRules): void {
+  if (portfolio.entries.size >= rules.maxPlayersPerPortfolio) {
+    throw new Error(`Roster già completo: massimo ${rules.maxPlayersPerPortfolio} calciatori`);
+  }
+
+  const currentRoleCount = Array.from(portfolio.entries.values())
+    .filter(entry => entry.player.role === player.role).length;
+  const roleLimit = rules.rosterComposition[player.role];
+  if (currentRoleCount + 1 > roleLimit) {
+    throw new Error(`Limite ruolo superato per ${player.role}: massimo ${roleLimit}`);
+  }
+}
+
 // ─── Esecuzione operazioni ────────────────────────────────────────────────────
 
 export interface BuyResult {
@@ -73,9 +90,13 @@ export function executeBuy(
 ): BuyResult {
   const { grossAmount, commission, totalCost } = calculateBuyCost(shares, player.currentValue, rules);
 
-  if (!canAffordBuy(team, totalCost, rules)) {
-    throw new Error(`Squadra ${team.id}: budget insufficiente per acquistare ${shares} quote di ${player.name}`);
+  if (portfolio.entries.has(player.id)) {
+    throw new Error(`Calciatore ${player.id} già presente nel portfolio`);
   }
+  validateRosterBuy(portfolio, player, rules);
+
+  const capitalToDeposit = calculateCapitalToDeposit(team, totalCost);
+  const fundedTeam = capitalToDeposit > 0 ? depositCapital(team, capitalToDeposit) : team;
 
   const operation: MarketOperation = {
     id: createOperationId(team.id, roundNumber, opIndex),
@@ -91,7 +112,11 @@ export function executeBuy(
     timestamp: new Date(),
   };
 
-  const updatedTeam = addCommission(debitTeam(team, totalCost), commission);
+  const debitedTeam = debitTeam(fundedTeam, totalCost);
+  const updatedTeam = {
+    ...addBuyCommission(debitedTeam, commission),
+    initialRosterCost: debitedTeam.initialRosterCost + grossAmount,
+  };
   const updatedPortfolio = addShares(portfolio, player, shares, player.currentValue);
 
   return { operation, team: updatedTeam, portfolio: updatedPortfolio };
@@ -128,8 +153,14 @@ export function executeSell(
     timestamp: new Date(),
   };
 
+  const existing = portfolio.entries.get(player.id);
+  const soldPurchaseValue = existing ? existing.avgPurchasePrice * shares : 0;
   const updatedPortfolio = removeShares(portfolio, player.id, shares);
-  const updatedTeam = addCommission(creditTeam(team, netProceeds), commission);
+  const creditedTeam = creditTeam(team, netProceeds);
+  const updatedTeam = {
+    ...addSellCommission(creditedTeam, commission),
+    initialRosterCost: Math.max(0, creditedTeam.initialRosterCost - soldPurchaseValue),
+  };
 
   return { operation, team: updatedTeam, portfolio: updatedPortfolio };
 }

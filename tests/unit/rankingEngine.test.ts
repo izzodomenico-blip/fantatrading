@@ -21,12 +21,12 @@ function buildTeams() {
 }
 
 describe('calculateRanking', () => {
-  test('ordina per ricchezza totale decrescente', () => {
+  test('ordina per ROI% come classifica principale FAVC', () => {
     const { teams, portfolios } = buildTeams();
     const ranking = calculateRanking(teams, portfolios);
-    expect(ranking[0].teamId).toBe('t1'); // 460
-    expect(ranking[1].teamId).toBe('t3'); // 300
-    expect(ranking[2].teamId).toBe('t2'); // 250
+    expect(ranking[0].teamId).toBe('t2'); // 250/200 = +25%
+    expect(ranking[1].teamId).toBe('t1'); // 460/400 = +15%
+    expect(ranking[2].teamId).toBe('t3'); // 300/300 = 0%
   });
 
   test('rank parte da 1', () => {
@@ -40,6 +40,15 @@ describe('calculateRanking', () => {
     const ranking = calculateRanking(teams, portfolios);
     const first = ranking[0];
     expect(first.totalWealth).toBe(first.portfolioValue + first.budget);
+  });
+
+  test('totalWealth resta informativo e non determina il rank principale', () => {
+    const { teams, portfolios } = buildTeams();
+    const ranking = calculateRanking(teams, portfolios);
+    const t1 = ranking.find(entry => entry.teamId === 't1')!;
+    const t2 = ranking.find(entry => entry.teamId === 't2')!;
+    expect(t1.totalWealth).toBeGreaterThan(t2.totalWealth);
+    expect(t2.rank).toBeLessThan(t1.rank);
   });
 
   test('assegna premi ai rank corretti', () => {
@@ -60,6 +69,7 @@ describe('calculateRanking', () => {
     const ranking = calculateRanking([team], portfolios);
     expect(ranking[0].portfolioValue).toBe(0);
     expect(ranking[0].totalWealth).toBe(100);
+    expect(ranking[0].roiPct).toBe(0);
   });
 });
 
@@ -119,6 +129,22 @@ describe('calculateRankingByROI — modello FAVC', () => {
     expect(ranking[1].teamId).toBe('bob');
     expect(ranking[0].rank).toBe(1);
     expect(ranking[1].rank).toBe(2);
+  });
+
+  test('calculateRanking usa lo stesso criterio principale ROI%', () => {
+    const { teams, portfolios } = buildFavcTeams();
+    const [alice, bob] = teams;
+    const ranking = calculateRanking(
+      [
+        { ...alice, totalCapitalDeposited: 150 },
+        { ...bob, totalCapitalDeposited: 600 },
+      ],
+      portfolios,
+    );
+    expect(ranking[0].teamId).toBe('alice');
+    expect(ranking[0].roiPct).toBeCloseTo(20, 4);
+    expect(ranking[1].teamId).toBe('bob');
+    expect(ranking[1].roiPct).toBeCloseTo(10, 4);
   });
 
   test('ROI% calcolato correttamente per ogni squadra', () => {

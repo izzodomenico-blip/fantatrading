@@ -5,8 +5,11 @@ import { MarketOperation } from '../domain/MarketOperation';
 export interface ROIResult {
   teamId: string;
   initialBudget: number;
+  totalCapitalDeposited: number;
   currentBudget: number;
+  virtualCashBalance: number;
   portfolioValue: number;
+  netLiquidationValue: number;
   totalWealth: number;
   totalCommissionsPaid: number;
   realizedGains: number;
@@ -17,6 +20,15 @@ export interface ROIResult {
   grossROIPercent: number;
   /** Perdita da commissioni sul totale investito */
   commissionDragPercent: number;
+}
+
+export function calculateVariableCapitalROI(
+  netLiquidationValue: number,
+  virtualCashBalance: number,
+  totalCapitalDeposited: number,
+): number {
+  if (totalCapitalDeposited <= 0) return 0;
+  return ((netLiquidationValue + virtualCashBalance - totalCapitalDeposited) / totalCapitalDeposited) * 100;
 }
 
 export function calculateRealizedGains(operations: MarketOperation[]): number {
@@ -38,7 +50,10 @@ export function calculateROI(
   operations: MarketOperation[],
 ): ROIResult {
   const portfolioValue = getPortfolioValue(portfolio);
-  const totalWealth = team.budget + portfolioValue;
+  const virtualCashBalance = team.virtualCashBalance ?? team.budget;
+  const totalCapitalDeposited = team.totalCapitalDeposited ?? initialBudget;
+  const netLiquidationValue = team.netLiquidationValue || portfolioValue;
+  const totalWealth = virtualCashBalance + portfolioValue;
   const realizedGains = calculateRealizedGains(operations);
   const unrealizedGains = portfolioValue;
 
@@ -50,8 +65,11 @@ export function calculateROI(
   return {
     teamId: team.id,
     initialBudget,
-    currentBudget: team.budget,
+    totalCapitalDeposited,
+    currentBudget: virtualCashBalance,
+    virtualCashBalance,
     portfolioValue,
+    netLiquidationValue,
     totalWealth,
     totalCommissionsPaid: team.totalCommissionsPaid,
     realizedGains,

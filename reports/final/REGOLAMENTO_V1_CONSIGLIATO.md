@@ -65,12 +65,14 @@ La soglia 7% e un compromesso migliore:
 - non diventa selettiva quanto 10% o 12%;
 - mantiene attrattivita media senza scaricare troppo rischio economico sulla piattaforma.
 
-Nel full-rules stress test la raccomandazione V1 converge su:
+Nel full-rules stress test storico la raccomandazione V1 convergeva su:
 
 - soglia premio: 7%;
 - NoVotePolicy: `PLAYER_ZERO_TEAM_EXCLUDE`;
 - commissione vendita: 2%;
-- platform fee: 10%.
+- platform fee: 10% nel modello precedente.
+
+La decisione aggiornata sostituisce la platform fee separata con 100% delle commissioni trattenute dal sistema.
 
 ## 5. Perche commissione vendita 2%
 
@@ -136,12 +138,12 @@ Il modello Originale + 10% margine resta fragile se applicato senza aggiustament
 
 - commissione vendita al 2%;
 - soglia premio al 7%;
-- platform fee del 10% sulle commissioni;
+- 100% delle commissioni trattenute dal sistema nel modello aggiornato;
 - policy SV non distruttiva.
 
-La sostenibilita nel report resta classificata LOW perche il modello considera solo la quota piattaforma sulle commissioni. Prima della decisione definitiva servono anche ipotesi su:
+La sostenibilita nei report storici resta classificata LOW perche quei modelli consideravano solo una quota piattaforma sulle commissioni. Prima della decisione definitiva sugli scenari opzionali a premi servono anche ipotesi su:
 
-- quota iscrizione;
+- eventuale quota opzionale per scenari premium;
 - numero utenti;
 - volume medio di compravendite;
 - struttura premi finale;
@@ -207,7 +209,8 @@ Quindi il regolamento V1 e consigliato come baseline, non come versione definiti
 
 - Commissione acquisto: 2%.
 - Commissione vendita: 2%.
-- Platform fee: 10% delle commissioni.
+- Modello ricavo: 100% delle commissioni trattenute dal sistema.
+- Nessuna platform fee separata nel modello base.
 
 ### Quotazioni
 
@@ -239,7 +242,8 @@ Policy consigliata: `PLAYER_ZERO_TEAM_EXCLUDE`.
 
 ### Premi
 
-- Soglia premio consigliata: ROI 7%.
+- Premi e montepremi sono opzionali e separati dal modello base free access.
+- Soglia premio consigliata per eventuali scenari a premi: ROI 7%.
 - La soglia 5% resta troppo inclusiva.
 - Le soglie 10% e 12% sono piu prudenti ma meno attrattive.
 
@@ -254,7 +258,7 @@ Prima di rendere V1 definitivo servono:
 
 - quotazioni ufficiali Fantacalcio giornata per giornata;
 - simulazione di utenti con acquisti e vendite durante la stagione su dati non sintetici;
-- stress test con quote iscrizione e montepremi reale;
+- eventuale stress test con quote opzionali e montepremi reale, solo per scenari premium separati;
 - validazione economica su numero utenti e volume medio operazioni;
 - controllo ulteriore della strategia VALUE su dati dinamici ufficiali;
 - decisione ufficiale sulla gestione SV;
@@ -286,6 +290,21 @@ Decisione aggiornata:
 
 Il report `reports/real-data/prize_pool_attractiveness_simulation.md` ha esteso l analisi economica includendo quota iscrizione, montepremi generale, distribuzione premi, probabilita di vincita, ricavo sistema e sostenibilita.
 
+Questo report resta valido come scenario opzionale/premium o competizione a premi, ma non rappresenta piu il modello base consigliato per il pilot. Il modello principale attuale e `FREE_ACCESS_VIRTUAL_CAPITAL`: accesso libero, nessuna quota iscrizione obbligatoria, capitale virtuale variabile e classifica principale su ROI%.
+
+Nel modello base:
+
+- l accesso e libero;
+- la quota iscrizione obbligatoria e pari a 0;
+- il capitale e virtuale;
+- ogni utente costruisce una rosa da 25 giocatori senza budget massimo;
+- ogni acquisto aumenta il capitale virtuale depositato solo se la liquidita virtuale disponibile non basta;
+- ogni vendita genera liquidita virtuale;
+- la classifica principale e ordinata per ROI%;
+- total wealth e valore assoluto del portafoglio sono solo informativi;
+- le commissioni acquisto/vendita sono trattenute dal sistema;
+- premi e montepremi sono opzionali, separati dal modello free access e configurabili solo in una fase successiva.
+
 La raccomandazione V1 e stata calcolata mantenendo la baseline regolamentare attuale:
 
 - commissione acquisto: 2%;
@@ -293,7 +312,7 @@ La raccomandazione V1 e stata calcolata mantenendo la baseline regolamentare att
 - soglia premio: 7%;
 - modello commissionale: 100% delle commissioni trading trattenute dal sistema.
 
-Risultato consigliato per V1:
+Risultato consigliato per uno scenario opzionale a premi:
 
 - quota iscrizione: 30 euro per partecipante;
 - destinazione quota iscrizione: 80% al montepremi, 20% al sistema;
@@ -323,16 +342,21 @@ Da evitare in V1:
 Adottare come baseline di lavoro:
 
 ```text
-FantaTrading V1 consigliato
+FantaTrading V1 consigliato - FREE_ACCESS_VIRTUAL_CAPITAL
 Rosa: 25 giocatori, 3 P / 8 D / 8 C / 6 A
+Accesso: libero
+Quota iscrizione obbligatoria: nessuna
+Capitale: virtuale, variabile per utente
+Budget massimo rosa: nessuno
+Acquisto: usa liquidita virtuale disponibile; se non basta, aumenta il capitale virtuale depositato
+Vendita: genera liquidita virtuale
+Ranking principale: ROI%
+Total wealth: solo informativo
 Acquisto: 2%
 Vendita: 2%
 Modello ricavo: 100% delle commissioni trattenute dal sistema
 Soglia premio: 7%
-Quota iscrizione: 30 euro
-Destinazione quota iscrizione: 80% montepremi / 20% sistema
-Distribuzione premi: top 10% partecipanti
-Montepremi: alimentato da quota iscrizione ed eventuali sponsor/fondo premi esplicito
+Premi/montepremi: opzionali, separati dal modello base free access
 SV: PLAYER_ZERO_TEAM_EXCLUDE
 Bonus/malus: tabella ufficiale FantaTrading
 Cambi: liberi (senza limite massimo)
@@ -341,4 +365,4 @@ Avviso overtrading: da inserire nel regolamento utente
 
 La commissione vendita 2% e confermata dal confronto fee intra-stagione: penalizza HOLD di soli 0.80pp e aumenta il ricavo piattaforma del 21.3%. I cambi restano liberi perche il costo delle commissioni costituisce gia un freno naturale all overtrading. Il backtest intra-stagione mostra che strategie attive aggressive (MOMENTUM: -57.5%, TAKE_PROFIT: -37.4% mediati su tutte le configurazioni) distruggono valore molto piu di HOLD (+5.30%): questo dato va comunicato ai partecipanti tramite avviso esplicito, non tramite vincolo regolamentare.
 
-Questa configurazione e il miglior compromesso attuale tra coerenza regolamentare, attrattivita per gli utenti e sostenibilita preliminare della piattaforma. Il nuovo modello 100% commissioni al sistema e piu sostenibile del precedente 10% delle commissioni senza modificare il costo netto dell utente a parita di fee. I risultati del backtest intra-stagione derivano da quotazioni sintetiche esplorative: la validazione definitiva richiede quotazioni ufficiali giornata per giornata.
+Questa configurazione e il miglior compromesso attuale tra coerenza regolamentare, accessibilita del pilot e sostenibilita preliminare della piattaforma. Il nuovo modello 100% commissioni al sistema e piu sostenibile del precedente 10% delle commissioni senza modificare il costo netto dell utente a parita di fee. I risultati del backtest intra-stagione derivano da quotazioni sintetiche esplorative: la validazione definitiva richiede quotazioni ufficiali giornata per giornata.

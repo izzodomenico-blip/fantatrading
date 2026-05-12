@@ -89,6 +89,49 @@ Esempi:
 
 Il team 150 -> 180 batte il team 600 -> 660 nel ranking principale, anche se il secondo ha ricchezza assoluta maggiore.
 
+## 5a. Riscossione finale del portafoglio
+
+A fine stagione il partecipante puo' riscuotere virtualmente il valore finale del proprio portafoglio. La riscossione finale non e' un pagamento reale: e' una chiusura contabile virtuale del pilot.
+
+Il modello attuale usa lo scenario A: la liquidazione finale applica la commissione di vendita alle posizioni ancora attive. Questa scelta e' coerente con il comportamento gia' usato dal riepilogo portafoglio, dove `netLiquidationValue` rappresenta il valore incassabile vendendo virtualmente tutta la rosa.
+
+```text
+activePositionsValue = valore lordo delle posizioni attive
+finalSellCommissionAmount = activePositionsValue * sellCommissionRate
+netLiquidationValue = activePositionsValue - finalSellCommissionAmount
+
+finalLiquidationValue =
+  netLiquidationValue
+  + virtualCashBalance
+
+profitLoss =
+  finalLiquidationValue
+  - totalCapitalDeposited
+
+roiPct =
+  profitLoss
+  / totalCapitalDeposited
+  * 100
+```
+
+Regola anti doppio conteggio:
+
+```text
+totalCapitalDeposited = 285
+finalLiquidationValue = 310
+profitLoss = 310 - 285 = 25
+roiPct = 25 / 285 * 100 = 8.77%
+```
+
+Il valore riscuotibile resta 310. Non va aumentato di nuovo dell'8.77%, perche' il ROI e' solo una misura percentuale del rendimento gia' contenuto nei 310.
+
+Scenario alternativo documentato ma non attivo di default:
+
+- scenario A, attuale: liquidazione finale con sell fee;
+- scenario B, possibile variante futura: liquidazione finale senza sell fee.
+
+Se in futuro si decide di usare lo scenario B, il backend deve impostare `applyFinalSellCommission = false` e `finalSellCommissionAmount = 0`, senza cambiare la formula di ROI.
+
 ## 6. Market logic
 
 Acquisto:
@@ -160,6 +203,8 @@ Fase 3 - modello reale:
 | `totalBuyCommissions` | Commissioni di acquisto pagate |
 | `totalSellCommissions` | Commissioni di vendita pagate |
 | `netLiquidationValue` | Valore netto liquidabile della rosa |
+| `finalLiquidationValue` | Valore finale virtualmente riscuotibile: netLiquidationValue + virtualCashBalance |
+| `profitLoss` | Utile/perdita virtuale: finalLiquidationValue - totalCapitalDeposited |
 | `roiPct` | ROI percentuale ufficiale |
 
 Nel backend attuale alcuni campi mantengono nomi legacy per compatibilita' (`initialBudget`, `availableBudget`), ma la semantica FAVC e':

@@ -16,6 +16,8 @@
 - `↩` = ritorno alla schermata precedente
 - Ogni schermata ha un ID univoco (es. `SCR-P-01`)
 
+Nota prodotto: il modello base V1 è `FREE_ACCESS_VIRTUAL_CAPITAL`. Le schermate devono comunicare accesso libero, nessuna quota iscrizione obbligatoria, capitale virtuale variabile, classifica principale su ROI% e premi/montepremi solo come scenario opzionale.
+
 ---
 
 ## Struttura ad alto livello
@@ -71,6 +73,7 @@ FantaTrading V1
 
 **Contenuto:**
 - presentazione del gioco (cos'è FantaTrading, come funziona);
+- evidenza accesso libero e capitale virtuale nel pilot;
 - stagione corrente in corso (se pubblica): nome, numero partecipanti, giornata corrente;
 - pulsante "Registrati" → `SCR-PUB-02`;
 - pulsante "Accedi" → `SCR-PUB-03`.
@@ -159,8 +162,8 @@ FantaTrading V1
 
 **Contenuto:**
 - lista stagioni in stato `ISCRIZIONI_APERTE`;
-- per ogni stagione: nome, data inizio, data fine, budget iniziale, commissioni, soglia premio, numero iscritti;
-- pulsante "Iscriviti" per ogni stagione.
+- per ogni stagione: nome, data inizio, data fine, modello accesso libero, commissioni, soglia premio opzionale, numero iscritti;
+- pulsante "Accedi" o "Partecipa" per ogni stagione.
 
 **Navigazione uscita:**
 - Iscrizione confermata → `SCR-P-03` Mercato (per creare la rosa)
@@ -177,10 +180,10 @@ FantaTrading V1
 - filtri: ruolo (P/D/C/A), fascia di prezzo, disponibilità (non in rosa / in rosa);
 - ordinamento: quotazione crescente/decrescente, variazione, nome;
 - lista giocatori (card o riga): nome, squadra reale, ruolo, quotazione corrente, variazione dalla quotazione iniziale, costo acquisto (inclusa commissione), pulsante "Acquista" (disabilitato se già in rosa o ruolo al massimo);
-- riepilogo fisso in fondo o in sidebar: budget disponibile, composizione rosa corrente (es. 3P/8D/5C/4A).
+- riepilogo fisso in fondo o in sidebar: liquidità virtuale disponibile, capitale virtuale depositato, composizione rosa corrente (es. 3P/8D/5C/4A).
 
 **Modale acquisto:**
-- nome giocatore, valore corrente, commissione 2%, costo totale, budget residuo dopo l'acquisto;
+- nome giocatore, valore corrente, commissione 2%, costo totale, liquidità dopo l'acquisto, eventuale capitale virtuale aggiunto;
 - pulsante "Conferma acquisto" / "Annulla".
 
 **Navigazione uscita:**
@@ -214,13 +217,14 @@ FantaTrading V1
 - Sezione per ruolo (Portieri, Difensori, Centrocampisti, Attaccanti):
   - per ogni giocatore: nome, squadra reale, valore di acquisto, valore corrente, variazione in % e in crediti, pulsante "Vendi";
 - Riepilogo in fondo:
-  - budget disponibile;
-  - valore totale portafoglio;
+  - liquidità virtuale disponibile;
+  - capitale virtuale depositato;
+  - valore totale portafoglio informativo;
   - commissioni cumulative pagate;
   - ROI corrente.
 
 **Modale vendita:**
-- nome giocatore, valore corrente, commissione 2%, incasso netto, budget dopo la vendita;
+- nome giocatore, valore corrente, commissione 2%, incasso netto, liquidità virtuale dopo la vendita;
 - avviso se la vendita porta la composizione sotto i minimi;
 - pulsante "Conferma vendita" / "Annulla".
 
@@ -264,11 +268,12 @@ FantaTrading V1
 
 **Tab 08a — Classifica generale:**
 - tutti i partecipanti ordinati per ROI decrescente;
-- colonne: posizione, nome (o nickname), ROI, valore portafoglio, operazioni;
+- colonne: posizione, nome (o nickname), ROI, valore portafoglio informativo, capitale virtuale depositato, operazioni;
 - evidenziazione della propria riga;
 - colorazione per fascia: rosso (< 0%), giallo (0–7%), verde (≥ 7%).
 
 **Tab 08b — Classifica soglia premi:**
+- tab opzionale, visibile solo se la stagione abilita premi;
 - solo partecipanti con ROI ≥ 7%;
 - struttura premi in evidenza (posizione → fascia premio);
 - posizione del partecipante nella classifica premi.
@@ -284,6 +289,7 @@ FantaTrading V1
 
 **Contenuto:**
 - testo del regolamento V1, organizzato per sezioni con navigazione interna (anchor);
+- sezione specifica su accesso libero, capitale virtuale variabile, ROI% come ranking principale e total wealth informativo;
 - sezione specifica sull'avviso overtrading;
 - non modificabile.
 
@@ -459,7 +465,7 @@ FantaTrading V1
 
 **Contenuto:**
 - struttura premi: numero posizioni, percentuale montepremi per posizione;
-- calcolo montepremi disponibile (derivato da commissioni, platform fee, regole stagione);
+- calcolo montepremi disponibile solo per scenario opzionale/premium a premi;
 - lista partecipanti sopra soglia 7% con posizione e importo premio;
 - pulsante "Assegna premi" (solo a stagione terminata).
 
@@ -507,7 +513,7 @@ IN_CORSO
     ▼ (admin chiude stagione — ultima giornata)
 CHIUSURA
     │
-    ▼ (premi assegnati)
+    ▼ (premi assegnati, se scenario opzionale attivo)
 TERMINATA
 ```
 

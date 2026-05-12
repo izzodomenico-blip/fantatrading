@@ -15,6 +15,8 @@ I tipi indicati sono logici (string, number, boolean, datetime, enum). La traduz
 
 Le relazioni sono espresse come chiavi esterne logiche. La gestione di indici, vincoli e performance è fuori scope di questo documento.
 
+La semantica prodotto corrente è `FREE_ACCESS_VIRTUAL_CAPITAL`: accesso libero, nessuna quota iscrizione obbligatoria, capitale virtuale variabile, ranking principale su ROI%. Alcuni nomi di campo restano legacy per compatibilità (`initialBudget`, `availableBudget`, `PlatformFee`), ma nel modello funzionale vanno letti come capitale virtuale depositato, liquidità virtuale e registro commissioni trattenute dal sistema.
+
 ---
 
 ## Entità
@@ -60,12 +62,15 @@ Rappresenta una stagione di gioco.
 | `startDate` | datetime | Inizio stagione |
 | `endDate` | datetime | Fine stagione prevista |
 | `totalRounds` | number | Numero giornate (es. 38) |
-| `initialBudget` | number | Budget iniziale in crediti per ogni partecipante |
+| `accessModel` | enum | `FREE_ACCESS_VIRTUAL_CAPITAL` per il pilot |
+| `entryFeeRequired` | boolean | `false` nel modello base |
+| `initialBudget` | number | Legacy: nel modello FAVC non è un budget massimo; usare 0 o leggere come capitale virtuale iniziale |
 | `buyCommissionRate` | number | Es. 0.02 (2%) |
 | `sellCommissionRate` | number | Es. 0.02 (2%) |
-| `platformFeeRate` | number | Es. 0.10 (10% delle commissioni) |
+| `commissionRetentionRate` | number | Es. 1.00 (100% delle commissioni trattenute dal sistema) |
 | `survivalThreshold` | number | Es. 0.00 (0%) |
-| `prizeThreshold` | number | Es. 0.07 (7%) |
+| `prizeThreshold` | number | Es. 0.07 (7%), usata per scenari opzionali a premi |
+| `prizesEnabled` | boolean | `false` nel modello base; `true` solo per scenari opzionali/premium |
 | `noVotePolicy` | enum | `PLAYER_ZERO_TEAM_EXCLUDE`, `EXCLUDE`, `FIVE`, `ZERO`, `PLAYER_MALUS_TEAM_EXCLUDE` |
 | `rosterComposition` | object | `{ GK: 3, DEF: 8, MID: 8, FWD: 6 }` |
 | `createdBy` | FK → User | Admin che ha creato la stagione |
@@ -76,7 +81,7 @@ Rappresenta una stagione di gioco.
 - Una `Season` ha molti `Player` (tramite `Quote`).
 - Una `Season` ha molti `Team`.
 - Una `Season` ha molti `RoundCalculation`.
-- Una `Season` ha un `PrizePool`.
+- Una `Season` può avere un `PrizePool` solo se abilita uno scenario opzionale a premi.
 
 ---
 
@@ -168,10 +173,13 @@ Rappresenta il portafoglio di un partecipante in una stagione specifica.
 | `userId` | FK → User | Il partecipante |
 | `seasonId` | FK → Season | La stagione |
 | `status` | enum | `ROSA_INCOMPLETA`, `ROSA_ATTIVA`, `STAGIONE_CONCLUSA` |
-| `initialBudget` | number | Budget iniziale assegnato alla creazione (da Season.initialBudget) |
-| `availableBudget` | number | Budget disponibile corrente |
+| `initialBudget` | number | Legacy: capitale virtuale totale depositato (`totalCapitalDeposited`) |
+| `availableBudget` | number | Legacy: liquidità virtuale disponibile (`virtualCashBalance`) |
+| `totalCapitalDeposited` | number | Campo concettuale consigliato: capitale virtuale totale depositato |
+| `virtualCashBalance` | number | Campo concettuale consigliato: liquidità virtuale disponibile |
 | `totalCommissionsPaid` | number | Totale commissioni pagate (acquisto + vendita) |
 | `currentPortfolioValue` | number | Valore corrente del portafoglio (ricalcolato dopo ogni operazione/calcolo) |
+| `currentTotalWealth` | number | Valore assoluto informativo: portafoglio + liquidità virtuale |
 | `currentROI` | number | ROI corrente in percentuale |
 | `registeredAt` | datetime | Data iscrizione |
 | `updatedAt` | datetime | |
@@ -234,9 +242,10 @@ Rappresenta una singola operazione di acquisto o vendita eseguita da un partecip
 | `valueAtOperation` | number | Valore del giocatore al momento dell'operazione |
 | `commissionRate` | number | Tasso commissione applicato (es. 0.02) |
 | `commissionAmount` | number | Importo commissione in crediti |
-| `netAmount` | number | Crediti scalati (acquisto: negativo) o aggiunti (vendita: positivo) al budget |
-| `budgetBefore` | number | Budget disponibile prima dell'operazione |
-| `budgetAfter` | number | Budget disponibile dopo l'operazione |
+| `netAmount` | number | Crediti scalati dalla liquidità virtuale (acquisto) o aggiunti (vendita) |
+| `budgetBefore` | number | Legacy: liquidità virtuale prima dell'operazione |
+| `budgetAfter` | number | Legacy: liquidità virtuale dopo l'operazione |
+| `capitalAdded` | number | Capitale virtuale aggiunto dall'acquisto se la liquidità non basta |
 | `round` | number | Giornata in cui è avvenuta l'operazione (null se fuori stagione) |
 | `executedAt` | datetime | |
 
@@ -317,15 +326,16 @@ Rappresenta la classifica di una stagione in un dato momento.
 
 ### 11. PrizePool
 
-Rappresenta la struttura e il montepremi di una stagione.
+Rappresenta la struttura e il montepremi di una stagione solo quando viene attivato uno scenario opzionale/premium a premi. Nel modello base free access può non esistere o restare in stato `DRAFT`.
 
 | Campo | Tipo | Note |
 |-------|------|-------|
 | `id` | string (UUID) | |
 | `seasonId` | FK → Season (1:1) | |
 | `totalCommissions` | number | Commissioni totali generate nella stagione |
-| `platformFeeAmount` | number | Quota piattaforma (totalCommissions × platformFeeRate) |
-| `prizePoolAmount` | number | Montepremi disponibile (da definire per V1 — potrebbe includere quote iscrizione) |
+| `systemCommissionRevenue` | number | Commissioni trattenute dal sistema |
+| `prizePoolAmount` | number | Montepremi disponibile solo per scenario opzionale a premi |
+| `fundingSource` | enum | `NONE`, `OPTIONAL_ENTRY_FEE`, `SPONSOR`, `DECLARED_PRIZE_FUND` |
 | `prizeStructure` | JSON | Array di { position: number, pct: number, amount: number } |
 | `status` | enum | `DRAFT`, `CONFIRMED`, `DISTRIBUTED` |
 | `confirmedBy` | FK → User | Admin che ha confermato |
@@ -349,14 +359,44 @@ Rappresenta il premio assegnato a un singolo partecipante.
 | `userId` | FK → User | Denormalizzato |
 | `position` | number | Posizione in classifica al momento dell'assegnazione |
 | `roi` | number | ROI finale |
-| `amount` | number | Importo del premio in crediti o in valuta reale |
+| `amount` | number | Importo del premio in crediti virtuali o in altra forma dichiarata nello scenario opzionale |
 | `awardedAt` | datetime | |
 
 ---
 
-### 12. PlatformFee
+### 11b. FinalSettlement
 
-Traccia le commissioni accumulate e la quota piattaforma, per giornata e per partecipante.
+Rappresenta lo snapshot auditabile di riscossione virtuale finale del portafoglio. Non rappresenta un pagamento reale.
+
+| Campo | Tipo | Note |
+|-------|------|-------|
+| `id` | string (UUID) | |
+| `seasonId` | FK → Season | |
+| `teamId` | FK → Team | |
+| `userId` | FK → User | Denormalizzato |
+| `totalCapitalDeposited` | number | Capitale virtuale totale depositato |
+| `initialRosterCost` | number | Costo lordo delle posizioni attive |
+| `virtualCashBalance` | number | Liquidità virtuale disponibile |
+| `activePositionsValue` | number | Valore lordo posizioni attive |
+| `applyFinalSellCommission` | boolean | `true` nello scenario attuale |
+| `finalSellCommissionRate` | number | Commissione vendita usata per la liquidazione |
+| `finalSellCommissionAmount` | number | Importo commissione finale |
+| `netLiquidationValue` | number | Valore netto liquidabile della rosa |
+| `finalLiquidationValue` | number | Valore finale virtualmente riscuotibile |
+| `profitLoss` | number | Utile/perdita virtuale |
+| `roiPct` | number | ROI percentuale |
+| `rankByRoi` | number | Ranking per ROI%, se disponibile |
+| `isPrizeEligible` | boolean | Soglia premio opzionale superata |
+| `calculatedAt` | datetime | Timestamp calcolo |
+| `calculatedBy` | FK → User | Admin che ha calcolato, nullable |
+
+**Nota:** se una stagione è `COMPLETED`, uno snapshot già calcolato deve essere considerato stabile e non sovrascritto.
+
+---
+
+### 12. CommissionLedger
+
+Traccia le commissioni accumulate per giornata e per partecipante. Il 100% delle commissioni acquisto/vendita è trattenuto dal sistema nel modello base.
 
 | Campo | Tipo | Note |
 |-------|------|-------|
@@ -365,10 +405,10 @@ Traccia le commissioni accumulate e la quota piattaforma, per giornata e per par
 | `teamId` | FK → Team | Partecipante che ha generato la commissione |
 | `operationId` | FK → MarketOperation | Operazione che ha generato la commissione |
 | `grossCommission` | number | Commissione lorda generata dall'operazione |
-| `platformFeeAmount` | number | Quota piattaforma (grossCommission × platformFeeRate) |
+| `systemRetainedAmount` | number | Importo trattenuto dal sistema (grossCommission × commissionRetentionRate) |
 | `calculatedAt` | datetime | |
 
-**Note:** questa entità permette di riconciliare il ricavo piattaforma operazione per operazione.
+**Note:** questa entità sostituisce concettualmente la vecchia `PlatformFee`. Se il backend mantiene il nome legacy, la semantica corretta è comunque registro delle commissioni trattenute dal sistema.
 
 ---
 
@@ -411,7 +451,8 @@ PortfolioPosition ──── Quote (ogni posizione referenzia la sua Quote)
 MarketOperation ─────── PortfolioPosition (ogni operazione referenzia la posizione)
 RoundCalculation ───── RoundPlayerResult (dettaglio per giocatore)
 PrizePool ──────────── PrizeAward (lista vincitori)
-MarketOperation ───── PlatformFee (una riga per ogni commissione generata)
+Season ──────────────── FinalSettlement (snapshot riscossione finale)
+MarketOperation ───── CommissionLedger / PlatformFee legacy (una riga per ogni commissione generata)
 ```
 
 ---
@@ -423,13 +464,13 @@ Questi valori non devono necessariamente essere salvati nel database. Vengono ca
 | Valore | Formula |
 |--------|---------|
 | Valore corrente posizione | `max(0, initialQuote × fantasyMultiplier × (1 + (currentQuote − initialQuote) × 5 / 100))` |
-| Valore totale portafoglio | `Σ currentSellValue(i) + availableBudget` |
-| ROI corrente | `(valoreTotalePortafoglio − initialBudget) / initialBudget × 100` |
+| Valore totale portafoglio informativo | `Σ currentSellValue(i) + virtualCashBalance` |
+| ROI corrente | `(netLiquidationValue + virtualCashBalance − totalCapitalDeposited) / totalCapitalDeposited × 100` |
 | Fascia squadra | `f(mediaSquadraGiornata)` secondo tabella soglie |
 | Media squadra | `Σ vote(i) / N` su giocatori con voto valido |
 | Commissione acquisto | `valueAtOperation × buyCommissionRate` |
 | Commissione vendita | `valueAtOperation × sellCommissionRate` |
-| Ricavo piattaforma | `Σ grossCommission × platformFeeRate` |
+| Ricavo sistema | `Σ grossCommission × commissionRetentionRate` |
 
 **Nota importante:** il valore corrente della posizione dipende da `fantasyMultiplier`, che è il prodotto composto dei bonus/malus di tutte le giornate passate. Questo valore deve essere aggiornato a ogni calcolo di giornata e salvato in `PortfolioPosition.fantasyMultiplier`.
 
@@ -465,7 +506,7 @@ Questi valori non devono necessariamente essere salvati nel database. Vengono ca
 
 ## Note implementative
 
-1. **Atomicità delle operazioni di mercato:** l'acquisto e la vendita devono essere atomici. In un database relazionale, usare transazioni. Se il sistema non garantisce atomicità, il budget e la posizione possono andare in stato inconsistente.
+1. **Atomicità delle operazioni di mercato:** l'acquisto e la vendita devono essere atomici. In un database relazionale, usare transazioni. Se il sistema non garantisce atomicità, liquidità virtuale, capitale virtuale depositato e posizione possono andare in stato inconsistente.
 
 2. **Ricalcolo fantasyMultiplier:** dopo ogni calcolo di giornata, `fantasyMultiplier` di ogni posizione attiva deve essere aggiornato moltiplicandolo per `(1 + bonusPct / 100)` della giornata. Questo aggiornamento deve essere parte della transazione del calcolo giornata.
 

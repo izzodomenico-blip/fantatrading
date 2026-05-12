@@ -13,6 +13,7 @@ import { TeamsModule } from './modules/teams/teams.module';
 import { MarketModule } from './modules/market/market.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { ReportsModule } from './modules/reports/reports.module';
+import { SettlementModule } from './modules/settlement/settlement.module';
 import appConfig from './config/app.config';
 
 @Module({
@@ -35,6 +36,7 @@ import appConfig from './config/app.config';
     MarketModule,
     AdminModule,
     ReportsModule,
+    SettlementModule,
   ],
 })
 export class AppModule {}

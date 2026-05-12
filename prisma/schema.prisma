@@ -4,6 +4,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  output   = "../apps/backend/node_modules/.prisma/client"
 }
 
 datasource db {
@@ -103,6 +104,7 @@ enum AuditAction {
   IMPORT_VOTES
   CALCULATE_ROUND
   RECALCULATE_ROUND
+  CALCULATE_FINAL_SETTLEMENT
   OPEN_SEASON
   CLOSE_SEASON
   ASSIGN_PRIZES
@@ -140,6 +142,8 @@ model User {
   prizePoolsConfirmed PrizePool[]       @relation("ConfirmedBy")
   rankings           Ranking[]
   prizeAwards        PrizeAward[]
+  finalSettlements   FinalSettlement[]
+  calculatedFinalSettlements FinalSettlement[] @relation("FinalSettlementCalculatedBy")
 
   @@map("users")
 }
@@ -191,6 +195,7 @@ model Season {
   roundCalculations  RoundCalculation[]
   rankings           Ranking[]
   prizePool          PrizePool?
+  finalSettlements   FinalSettlement[]
   importLogs         ImportLog[]
   auditLogs          AuditLog[]
   platformFees       PlatformFee[]
@@ -306,6 +311,7 @@ model Team {
   marketOperations   MarketOperation[]
   rankings           Ranking[]
   prizeAwards        PrizeAward[]
+  finalSettlements   FinalSettlement[]
   roundPlayerResults RoundPlayerResult[]
   platformFees       PlatformFee[]
 
@@ -473,6 +479,39 @@ model PrizeAward {
   @@index([prizePoolId])
   @@index([userId])
   @@map("prize_awards")
+}
+
+model FinalSettlement {
+  id                         String   @id @default(uuid()) @db.Uuid
+  seasonId                   String   @map("season_id") @db.Uuid
+  teamId                     String   @map("team_id") @db.Uuid
+  userId                     String   @map("user_id") @db.Uuid
+  totalCapitalDeposited      Decimal  @map("total_capital_deposited") @db.Decimal(15, 6)
+  initialRosterCost          Decimal  @map("initial_roster_cost") @db.Decimal(15, 6)
+  virtualCashBalance         Decimal  @map("virtual_cash_balance") @db.Decimal(15, 6)
+  activePositionsValue       Decimal  @map("active_positions_value") @db.Decimal(15, 6)
+  applyFinalSellCommission   Boolean  @default(true) @map("apply_final_sell_commission")
+  finalSellCommissionRate    Decimal  @map("final_sell_commission_rate") @db.Decimal(10, 6)
+  finalSellCommissionAmount  Decimal  @map("final_sell_commission_amount") @db.Decimal(15, 6)
+  netLiquidationValue        Decimal  @map("net_liquidation_value") @db.Decimal(15, 6)
+  finalLiquidationValue      Decimal  @map("final_liquidation_value") @db.Decimal(15, 6)
+  profitLoss                 Decimal  @map("profit_loss") @db.Decimal(15, 6)
+  roiPct                     Decimal  @map("roi_pct") @db.Decimal(10, 6)
+  rankByRoi                  Int?     @map("rank_by_roi")
+  isPrizeEligible            Boolean  @default(false) @map("is_prize_eligible")
+  calculatedAt               DateTime @default(now()) @map("calculated_at") @db.Timestamptz
+  calculatedById             String?  @map("calculated_by") @db.Uuid
+  source                     String   @default("FINAL_SETTLEMENT") @db.VarChar(100)
+
+  season      Season @relation(fields: [seasonId], references: [id])
+  team        Team   @relation(fields: [teamId], references: [id])
+  user        User   @relation(fields: [userId], references: [id])
+  calculatedBy User? @relation("FinalSettlementCalculatedBy", fields: [calculatedById], references: [id])
+
+  @@index([seasonId, calculatedAt])
+  @@index([teamId, calculatedAt])
+  @@index([userId])
+  @@map("final_settlements")
 }
 
 model PlatformFee {

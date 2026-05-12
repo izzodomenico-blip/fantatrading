@@ -174,13 +174,23 @@ export default function FullRulesV1() {
 
       <Section title="Regolamento consigliato">
         <div className="metric-grid">
+          <MetricCard label="Accesso" value="Libero" sub="nessuna quota obbligatoria" color="var(--teal)" />
+          <MetricCard label="Capitale" value="Virtuale" sub="variabile per utente" color="var(--purple)" />
           <MetricCard label="Acquisto" value="2%" sub="Commissione acquisto" color="var(--accent)" />
           <MetricCard label="Vendita" value="2%" sub="Commissione vendita V1" color="var(--green)" />
-          <MetricCard label="Soglia Premio" value="7%" sub="ROI minimo premiabile" color="var(--amber)" />
-          <MetricCard label="Commissioni" value="100%" sub="Trattenute dal sistema" color="var(--purple)" />
+          <MetricCard label="Ranking" value="ROI%" sub="classifica principale" color="var(--amber)" />
+          <MetricCard label="Commissioni" value="100%" sub="Trattenute dal sistema" color="var(--accent)" />
         </div>
         <div className="card" style={{ marginTop: 16 }}>
           <div className="config-box">
+            <div>
+              <span className="config-key">AccessModel:  </span>
+              <span className="config-val">FREE_ACCESS_VIRTUAL_CAPITAL</span>
+            </div>
+            <div>
+              <span className="config-key">Capitale:     </span>
+              <span className="config-val">virtuale, aumenta sugli acquisti se la liquidita non basta</span>
+            </div>
             <div>
               <span className="config-key">NoVotePolicy: </span>
               <span className="config-val">PLAYER_ZERO_TEAM_EXCLUDE</span>
@@ -207,38 +217,47 @@ export default function FullRulesV1() {
         ) : (
           <>
             <div className="metric-grid">
-              <MetricCard label="Quota iscrizione" value={formatEuro(prizePoolRecommendation.entryFee)} sub="per partecipante" color="var(--accent)" />
-              <MetricCard label="Montepremi" value={formatPct(prizePoolRecommendation.prizeEntryShare * 100)} sub="della quota iscrizione" color="var(--green)" />
-              <MetricCard label="Sistema" value={formatPct(prizePoolRecommendation.systemEntryShare * 100)} sub="della quota iscrizione" color="var(--amber)" />
-              <MetricCard label="Score" value={`${formatScore(prizePoolRecommendation.finalScore)}/100`} sub="simulazione economica" color="var(--teal)" />
+              <MetricCard label="Modello base" value="Free" sub="accesso libero" color="var(--teal)" />
+              <MetricCard label="Quota obbligatoria" value="0 euro" sub="pilot virtuale" color="var(--green)" />
+              <MetricCard label="Ranking base" value="ROI%" sub="total wealth informativo" color="var(--amber)" />
+              <MetricCard label="Premi" value="Opzionali" sub="scenario separato" color="var(--purple)" />
+            </div>
+
+            <div className="card" style={{ marginTop: 16 }}>
+              <div className="doc-title">SCENARIO OPZIONALE / PREMIUM</div>
+              <div className="table-note">
+                La simulazione con quota iscrizione e montepremi resta visibile come scenario a premi separato. Non e il modello base:
+                il pilot usa accesso libero, capitale virtuale variabile e classifica principale su ROI%.
+              </div>
             </div>
 
             <div className="two-col" style={{ marginTop: 16 }}>
               <div className="card">
-                <div className="doc-title">MODELLO ECONOMICO V1</div>
+                <div className="doc-title">SCENARIO A PREMI SIMULATO</div>
                 <div className="config-box">
-                  <div><span className="config-key">quotaIscrizione: </span><span className="config-val">{formatEuro(prizePoolRecommendation.entryFee)}</span></div>
-                  <div><span className="config-key">montepremi:       </span><span className="config-val">{formatPct(prizePoolRecommendation.prizeEntryShare * 100)}</span></div>
-                  <div><span className="config-key">sistema:          </span><span className="config-val">{formatPct(prizePoolRecommendation.systemEntryShare * 100)}</span></div>
+                  <div><span className="config-key">quotaOpzionale:   </span><span className="config-val">{formatEuro(prizePoolRecommendation.entryFee)}</span></div>
+                  <div><span className="config-key">montepremi:       </span><span className="config-val">{formatPct(prizePoolRecommendation.prizeEntryShare * 100)} della quota opzionale</span></div>
+                  <div><span className="config-key">sistema:          </span><span className="config-val">{formatPct(prizePoolRecommendation.systemEntryShare * 100)} della quota opzionale</span></div>
                   <div><span className="config-key">commissioni:      </span><span className="config-val">100% trattenute dal sistema</span></div>
-                  <div><span className="config-key">premi:            </span><span className="config-val">top 10% partecipanti</span></div>
+                  <div><span className="config-key">premi:            </span><span className="config-val">top 10% partecipanti, solo se configurati</span></div>
+                  <div><span className="config-key">scoreScenario:    </span><span className="config-val">{formatScore(prizePoolRecommendation.finalScore)}/100</span></div>
                 </div>
               </div>
 
               <div className="card">
-                <div className="doc-title">ESEMPIO 100 PARTECIPANTI</div>
+                <div className="doc-title">ESEMPIO OPZIONALE 100 PARTECIPANTI</div>
                 {example100 ? (
                   <div className="economy-list">
-                    <div><span>Incasso iscrizioni</span><strong>{formatEuro(example100.participants * example100.entryFee)}</strong></div>
+                    <div><span>Incasso quote opzionali</span><strong>{formatEuro(example100.participants * example100.entryFee)}</strong></div>
                     <div><span>Montepremi</span><strong>{formatEuro(example100.netDistributablePrizePool)}</strong></div>
-                    <div><span>Quota sistema da iscrizione</span><strong>{formatEuro(example100.systemRevenueFromEntries)}</strong></div>
+                    <div><span>Quota sistema da scenario</span><strong>{formatEuro(example100.systemRevenueFromEntries)}</strong></div>
                     <div><span>Commissioni trading</span><strong>{formatEuro(example100.systemRevenueFromCommissions)}</strong></div>
                   </div>
                 ) : (
                   <div className="empty-state">Scenario 100 partecipanti non disponibile nel report.</div>
                 )}
                 <div className="table-note">
-                  Le commissioni trading si aggiungono alla quota sistema da iscrizione come ricavo operativo del sistema.
+                  Nel modello base l incasso quote e zero. Le commissioni trading restano ricavo operativo del sistema.
                 </div>
               </div>
             </div>
@@ -248,7 +267,7 @@ export default function FullRulesV1() {
                 <thead>
                   <tr>
                     <th>Partecipanti</th>
-                    <th>Incasso iscrizioni</th>
+                    <th>Incasso quote opzionali</th>
                     <th>Montepremi</th>
                     <th>Quota sistema</th>
                     <th>Vincitori stimati</th>
@@ -274,19 +293,19 @@ export default function FullRulesV1() {
               <div className="card-sm risk-card">
                 <div className="risk-title">Distribuzione premi</div>
                 <div className="risk-text">
-                  La V1 premia il top 10% dei partecipanti. Sul caso 100 utenti significa {example100?.estimatedWinners ?? prizePoolRecommendation.estimatedWinners} vincitori stimati.
+                  Lo scenario premium premia il top 10% dei partecipanti. Sul caso 100 utenti significa {example100?.estimatedWinners ?? prizePoolRecommendation.estimatedWinners} vincitori stimati.
                 </div>
               </div>
               <div className="card-sm risk-card">
                 <div className="risk-title">Costi operativi</div>
                 <div className="risk-text">
-                  La quota iscrizione alimenta il montepremi; le commissioni trading sono costi operativi trattenuti dal sistema.
+                  Nel modello base non c e quota obbligatoria. Le commissioni trading sono costi operativi trattenuti dal sistema.
                 </div>
               </div>
               <div className="card-sm risk-card">
                 <div className="risk-title">Guadagno utente</div>
                 <div className="risk-text">
-                  Il guadagno deriva dal rendimento netto della rosa, dalle plusvalenze realizzate e dai premi di classifica.
+                  Il ranking principale deriva dal ROI della rosa. I premi di classifica esistono solo negli scenari opzionali.
                 </div>
               </div>
             </div>
@@ -388,7 +407,7 @@ export default function FullRulesV1() {
                   <th>ROI medio</th>
                   <th>% sopra soglia</th>
                   <th>Vincitori stimati</th>
-                  <th>Ricavo piattaforma</th>
+                  <th>Ricavo sistema</th>
                   <th>Attrattivita</th>
                 </tr>
               </thead>
@@ -411,7 +430,8 @@ export default function FullRulesV1() {
             {recommended && (
               <div className="table-note">
                 Raccomandazione: soglia {recommended.prizeThresholdPct}%, vendita {(recommended.sellCommissionRate * 100).toFixed(0)}%,
-                platform fee {(recommended.platformFeeRate * 100).toFixed(0)}%, policy {recommended.noVotePolicy}.
+                scenario storico con platform fee {(recommended.platformFeeRate * 100).toFixed(0)}%, policy {recommended.noVotePolicy}.
+                Il modello base aggiornato trattiene il 100% delle commissioni al sistema.
               </div>
             )}
           </div>
@@ -450,8 +470,8 @@ export default function FullRulesV1() {
         </div>
       </Section>
 
-      <Section title="Report montepremi e attrattivita">
-        <MarkdownViewer title="PRIZE POOL AND ECONOMIC ATTRACTIVENESS SIMULATION" content={prizePoolAttractivenessMarkdown} />
+      <Section title="Report montepremi opzionale e attrattivita">
+        <MarkdownViewer title="PRIZE POOL SIMULATION - SCENARIO OPZIONALE" content={prizePoolAttractivenessMarkdown} />
       </Section>
     </>
   );

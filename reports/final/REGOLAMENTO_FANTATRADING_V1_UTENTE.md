@@ -13,6 +13,21 @@ Il risultato finale dipende da:
 
 L obiettivo e chiudere la stagione con il miglior ROI possibile.
 
+## 1a. Modello base: accesso libero e capitale virtuale
+
+La V1 usa come modello principale il modello `FREE_ACCESS_VIRTUAL_CAPITAL`.
+
+Questo significa:
+
+- l accesso e libero;
+- non esiste una quota iscrizione obbligatoria;
+- il capitale del pilot e virtuale;
+- ogni partecipante costruisce una rosa da 25 giocatori senza budget massimo;
+- il capitale virtuale depositato puo essere diverso da utente a utente;
+- la classifica principale e basata sul ROI%, non sulla ricchezza assoluta;
+- il valore totale del portafoglio, o total wealth, e mostrato solo come informazione;
+- premi e montepremi sono opzionali e separati dal modello base.
+
 ## 2. Composizione della rosa
 
 Ogni rosa deve essere composta da 25 giocatori:
@@ -33,6 +48,8 @@ Quando un partecipante acquista un giocatore, il costo dell operazione e dato da
 - valore del giocatore al momento dell acquisto;
 - commissione di acquisto del 2%.
 
+Il sistema usa prima la liquidita virtuale disponibile. Se la liquidita non basta, aggiunge automaticamente al capitale virtuale depositato solo la parte mancante. Non esiste un budget massimo: una rosa piu costosa aumenta anche il capitale virtuale depositato e quindi non crea un vantaggio automatico nel ranking ROI%.
+
 Esempio:
 
 - valore giocatore: 100 crediti;
@@ -44,6 +61,8 @@ Esempio:
 Quando un partecipante vende un giocatore, riceve il valore aggiornato del giocatore al netto della commissione di vendita.
 
 La commissione di vendita e pari al 2%.
+
+L incasso netto della vendita aumenta la liquidita virtuale disponibile. La vendita non riduce retroattivamente il capitale virtuale depositato: il ROI continua a misurare il rendimento rispetto al capitale che il sistema ha dovuto depositare virtualmente per finanziare gli acquisti.
 
 Esempio:
 
@@ -192,12 +211,12 @@ Il ROI misura il rendimento finale della rosa.
 In forma semplice:
 
 ```text
-ROI = rendimento finale rispetto al capitale investito
+ROI = rendimento finale rispetto al capitale virtuale depositato
 ```
 
 Esempio:
 
-- capitale iniziale investito: 1.000 crediti;
+- capitale virtuale depositato: 1.000 crediti;
 - valore finale netto: 1.080 crediti;
 - ROI: +8%.
 
@@ -209,11 +228,11 @@ La soglia di sopravvivenza e fissata a ROI 0%.
 
 Chi chiude la stagione sopra 0% ha conservato o aumentato il valore del proprio portafoglio.
 
-Chi chiude sotto 0% ha perso valore rispetto al capitale investito.
+Chi chiude sotto 0% ha perso valore rispetto al capitale virtuale depositato.
 
 ## 14. Soglia premio 7%
 
-La soglia premio V1 e fissata a ROI 7%.
+La soglia premio V1, quando viene attivato uno scenario opzionale a premi, e fissata a ROI 7%.
 
 Un partecipante supera la soglia premio se chiude la stagione con ROI pari o superiore al 7%.
 
@@ -223,7 +242,7 @@ Esempio:
 - ROI finale +7,0%: soglia premio raggiunta;
 - ROI finale +10,0%: soglia premio raggiunta.
 
-La soglia 7% e scelta come compromesso tra attrattivita per i partecipanti e sostenibilita del gioco.
+La soglia 7% e scelta come compromesso tra attrattivita per i partecipanti e sostenibilita del gioco. Nel modello base free access resta una soglia informativa, non un diritto automatico a un premio.
 
 ## 15. Classifica finale
 
@@ -239,7 +258,11 @@ In caso di pari ROI, il regolamento operativo potra prevedere criteri di sparegg
 
 ## 16. Distribuzione premi
 
-La distribuzione dei premi deve rispettare due principi:
+Nel modello base free access i premi non sono obbligatori e non fanno parte della meccanica principale.
+
+La classifica principale resta sempre ordinata per ROI%. Eventuali premi o montepremi possono essere attivati solo come scenario opzionale, premium o competizione a premi separata, con regole dichiarate prima dell inizio della stagione.
+
+Se viene attivato uno scenario a premi, la distribuzione deve rispettare due principi:
 
 - premiare i partecipanti che superano la soglia del 7%;
 - mantenere sostenibile il gioco nel tempo.
@@ -253,11 +276,11 @@ La struttura premi puo essere definita in base a:
 
 Le commissioni trattenute dal sistema riguardano solo le operazioni effettuate e non devono essere confuse con una trattenuta sul montepremi totale o sul capitale della rosa.
 
-### Proposta economica V1
+### Scenario opzionale a premi
 
-La quota di iscrizione consigliata per la V1 e pari a 30 euro per partecipante.
+La simulazione economica con quota di iscrizione da 30 euro per partecipante non e il modello base V1. Va letta come scenario opzionale/premium o competizione a premi.
 
-La quota di iscrizione alimenta il montepremi secondo la percentuale indicata:
+In quello scenario, la quota di iscrizione puo alimentare il montepremi secondo la percentuale indicata:
 
 - 80% della quota di iscrizione va al montepremi;
 - 20% della quota di iscrizione va al sistema per sostenere gestione e organizzazione.
@@ -271,7 +294,7 @@ Le commissioni di acquisto e vendita sono costi operativi trattenuti dal sistema
 
 Il premio finale dipende dalla classifica e dalla tabella premi.
 
-Per la V1 la tabella consigliata premia il top 10% dei partecipanti. Il montepremi deriva dalla quota di iscrizione, da eventuali sponsor o da un fondo premi dichiarato prima dell inizio della stagione.
+Per uno scenario opzionale a premi, la tabella consigliata puo premiare il top 10% dei partecipanti. Il montepremi puo derivare da quota iscrizione opzionale, sponsor o fondo premi dichiarato prima dell inizio della stagione.
 
 ## 17. Esempi numerici semplici
 
@@ -309,7 +332,7 @@ Per la V1 la tabella consigliata premia il top 10% dei partecipanti. Il montepre
 
 ### Esempio E: soglia premio
 
-- capitale investito: 1.000;
+- capitale virtuale depositato: 1.000;
 - valore finale netto: 1.075;
 - ROI: +7,5%;
 - soglia premio 7% raggiunta.

@@ -12,6 +12,104 @@ export const optimizer = optRaw;
 export const prizeTable = prizeRaw;
 export const priceModel = priceRaw;
 
+const firstGlobValue = <T>(modules: Record<string, unknown>): T | null => {
+  const values = Object.values(modules);
+  return values.length > 0 ? (values[0] as T) : null;
+};
+
+export interface FullRulesBacktestStat {
+  strategy: string;
+  noVotePolicy: string;
+  numSeasons: number;
+  numSimulations: number;
+  avgTradingOnlyROI: number;
+  avgFullRulesROI: number;
+  medianFullRulesROI: number;
+  fantasyImpactAvg: number;
+  pctAbove0: number;
+  pctAbove5: number;
+  pctAbove7: number;
+  pctAbove10: number;
+  bestROI: number;
+  worstROI: number;
+  volatility: number;
+  avgDerivedNoVotes: number;
+}
+
+export interface FullRulesBacktestReport {
+  generatedAt: string;
+  modelId: string;
+  completedSeasons: string[];
+  inProgressSeasons: string[];
+  strategies: string[];
+  aggregateCompletedStats: FullRulesBacktestStat[];
+  strongestStrategy: string;
+  recommendedNoVotePolicy: string;
+}
+
+export interface FullRulesStressSummary {
+  scope: string;
+  noVotePolicy: string;
+  prizeThresholdPct: number;
+  platformFeeRate: number;
+  sellCommissionRate: number;
+  avgROI: number;
+  pctAbove0: number;
+  pctAbove5: number;
+  pctAbove7: number;
+  pctAbove10: number;
+  pctAbovePrizeThreshold: number;
+  estimatedWinners: number;
+  avgPlatformRevenue: number;
+  valueAvgROI: number;
+  randomAvgROI: number;
+  valueDeltaVsRandom: number;
+  valueDominanceRisk: string;
+  platformSustainability: string;
+  userAttractiveness: string;
+  score: number;
+}
+
+export interface FullRulesStressReport {
+  generatedAt: string;
+  config: {
+    prizeThresholds: number[];
+    platformFeeRates: number[];
+    sellCommissionRates: number[];
+  };
+  completedSeasons: string[];
+  inProgressSeasons: string[];
+  mainPolicies: string[];
+  appendixPolicies: string[];
+  combinationSummaries: FullRulesStressSummary[];
+  appendixSummaries: FullRulesStressSummary[];
+  recommended: FullRulesStressSummary;
+}
+
+const fullRulesBacktestModules = import.meta.glob('@reports/real-data/historical_full_rules_backtest.json', {
+  eager: true,
+  import: 'default',
+});
+const fullRulesStressModules = import.meta.glob('@reports/real-data/full_rules_stress_test.json', {
+  eager: true,
+  import: 'default',
+});
+const recommendedRulesModules = import.meta.glob('@reports/final/REGOLAMENTO_V1_CONSIGLIATO.md', {
+  eager: true,
+  import: 'default',
+  query: '?raw',
+});
+const userRulesModules = import.meta.glob('@reports/final/REGOLAMENTO_FANTATRADING_V1_UTENTE.md', {
+  eager: true,
+  import: 'default',
+  query: '?raw',
+});
+
+export const fullRulesBacktest = firstGlobValue<FullRulesBacktestReport>(fullRulesBacktestModules);
+export const fullRulesStressTest = firstGlobValue<FullRulesStressReport>(fullRulesStressModules);
+export const recommendedRulesMarkdown = firstGlobValue<string>(recommendedRulesModules);
+export const userRulesMarkdown = firstGlobValue<string>(userRulesModules);
+
 export const COLORS = {
   blue: '#3b82f6',
   green: '#22c55e',

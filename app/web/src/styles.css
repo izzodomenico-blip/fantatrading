@@ -133,3 +133,52 @@ tr:hover td { background: var(--surface2); }
 .rec-row td:first-child { border-left: 3px solid var(--accent); }
 
 .chart-wrap { width: 100%; }
+
+.table-note {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.5;
+}
+
+.empty-state {
+  color: var(--text2);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.doc-title {
+  color: var(--text2);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  margin-bottom: 10px;
+}
+
+.markdown-viewer {
+  max-height: 420px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--text);
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.risk-card {
+  min-height: 130px;
+}
+
+.risk-title {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.risk-text {
+  color: var(--text2);
+  font-size: 13px;
+  line-height: 1.5;
+}

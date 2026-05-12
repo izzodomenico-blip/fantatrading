@@ -4,6 +4,7 @@ import ScaleAnalysis from './pages/ScaleAnalysis';
 import RuleComparison from './pages/RuleComparison';
 import SensitivityPage from './pages/SensitivityPage';
 import PriceModelPage from './pages/PriceModelPage';
+import FullRulesV1 from './pages/FullRulesV1';
 
 const NAV = [
   { path: '/', label: 'Dashboard', icon: '⬛', end: true },
@@ -11,6 +12,7 @@ const NAV = [
   { path: '/modelli', label: 'Modelli Regolamento', icon: '⚖️', end: false },
   { path: '/sensibilita', label: 'Sensibilità', icon: '🎛️', end: false },
   { path: '/prezzi', label: 'Modello Prezzi', icon: '💹', end: false },
+  { path: '/full-rules-v1', label: 'Full Rules V1', icon: 'V1', end: false },
 ];
 
 export default function App() {
@@ -45,6 +47,7 @@ export default function App() {
           <Route path="/modelli" element={<RuleComparison />} />
           <Route path="/sensibilita" element={<SensitivityPage />} />
           <Route path="/prezzi" element={<PriceModelPage />} />
+          <Route path="/full-rules-v1" element={<FullRulesV1 />} />
         </Routes>
       </main>
     </div>

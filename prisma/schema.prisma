@@ -1,0 +1,538 @@
+// FantaTrading V1 — Prisma Schema
+// Database: PostgreSQL 15+
+// Convenzioni: snake_case, UUID PK, NUMERIC per valori monetari
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enum ─────────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  PARTECIPANTE
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum SeasonStatus {
+  CONFIGURATA
+  QUOTAZIONI_CARICATE
+  ISCRIZIONI_APERTE
+  IN_CORSO
+  CHIUSURA
+  TERMINATA
+}
+
+enum PlayerRole {
+  GK
+  DEF
+  MID
+  FWD
+}
+
+enum NoVotePolicy {
+  PLAYER_ZERO_TEAM_EXCLUDE
+  EXCLUDE
+  FIVE
+  ZERO
+  PLAYER_MALUS_TEAM_EXCLUDE
+}
+
+enum TeamBand {
+  FASCIA_0
+  FASCIA_1
+  FASCIA_2
+  FASCIA_3
+  FASCIA_4
+}
+
+enum TeamStatus {
+  ROSA_INCOMPLETA
+  ROSA_ATTIVA
+  STAGIONE_CONCLUSA
+}
+
+enum PositionStatus {
+  ACTIVE
+  SOLD
+}
+
+enum OperationType {
+  BUY
+  SELL
+}
+
+enum CalculationStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  ERROR
+  SUPERSEDED
+}
+
+enum PrizePoolStatus {
+  DRAFT
+  CONFIRMED
+  DISTRIBUTED
+}
+
+enum ImportType {
+  QUOTES_INITIAL
+  QUOTES_UPDATE
+  VOTES
+}
+
+enum ImportStatus {
+  SUCCESS
+  ERROR
+  PARTIAL
+}
+
+enum AuditAction {
+  IMPORT_QUOTES
+  IMPORT_VOTES
+  CALCULATE_ROUND
+  RECALCULATE_ROUND
+  OPEN_SEASON
+  CLOSE_SEASON
+  ASSIGN_PRIZES
+  DISABLE_USER
+  EXPORT_REPORT
+  SEASON_STATUS_CHANGE
+  USER_STATUS_CHANGE
+}
+
+enum AuditStatus {
+  SUCCESS
+  ERROR
+}
+
+// ─── Modelli ──────────────────────────────────────────────────────────────────
+
+model User {
+  id           String     @id @default(uuid()) @db.Uuid
+  email        String     @unique @db.VarChar(255)
+  passwordHash String     @map("password_hash") @db.VarChar(255)
+  firstName    String     @map("first_name") @db.VarChar(100)
+  lastName     String     @map("last_name") @db.VarChar(100)
+  role         UserRole   @default(PARTECIPANTE)
+  status       UserStatus @default(ACTIVE)
+  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime   @updatedAt @map("updated_at") @db.Timestamptz
+
+  refreshTokens      RefreshToken[]
+  seasonsCreated     Season[]           @relation("SeasonCreatedBy")
+  teams              Team[]
+  auditLogs          AuditLog[]
+  importLogs         ImportLog[]
+  quoteHistoryItems  QuoteHistory[]
+  calculationsBy     RoundCalculation[] @relation("CalculatedBy")
+  prizePoolsConfirmed PrizePool[]       @relation("ConfirmedBy")
+  rankings           Ranking[]
+  prizeAwards        PrizeAward[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  tokenHash String   @unique @map("token_hash") @db.VarChar(255)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model Season {
+  id                   String       @id @default(uuid()) @db.Uuid
+  name                 String       @db.VarChar(255)
+  footballSeason       String       @map("football_season") @db.VarChar(10)
+  status               SeasonStatus @default(CONFIGURATA)
+  registrationOpenAt   DateTime     @map("registration_open_at") @db.Timestamptz
+  registrationCloseAt  DateTime     @map("registration_close_at") @db.Timestamptz
+  startDate            DateTime     @map("start_date") @db.Timestamptz
+  endDate              DateTime     @map("end_date") @db.Timestamptz
+  totalRounds          Int          @map("total_rounds") @db.SmallInt
+  initialBudget        Decimal      @map("initial_budget") @db.Decimal(15, 6)
+  buyCommissionRate    Decimal      @default(0.020000) @map("buy_commission_rate") @db.Decimal(10, 6)
+  sellCommissionRate   Decimal      @default(0.020000) @map("sell_commission_rate") @db.Decimal(10, 6)
+  platformFeeRate      Decimal      @default(0.100000) @map("platform_fee_rate") @db.Decimal(10, 6)
+  survivalThreshold    Decimal      @default(0.000000) @map("survival_threshold") @db.Decimal(10, 6)
+  prizeThreshold       Decimal      @default(0.070000) @map("prize_threshold") @db.Decimal(10, 6)
+  noVotePolicy         NoVotePolicy @default(PLAYER_ZERO_TEAM_EXCLUDE) @map("no_vote_policy")
+  rosterGk             Int          @default(3) @map("roster_gk") @db.SmallInt
+  rosterDef            Int          @default(8) @map("roster_def") @db.SmallInt
+  rosterMid            Int          @default(8) @map("roster_mid") @db.SmallInt
+  rosterFwd            Int          @default(6) @map("roster_fwd") @db.SmallInt
+  createdById          String       @map("created_by") @db.Uuid
+  createdAt            DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt            DateTime     @updatedAt @map("updated_at") @db.Timestamptz
+
+  createdBy          User               @relation("SeasonCreatedBy", fields: [createdById], references: [id])
+  teams              Team[]
+  quotes             Quote[]
+  votes              Vote[]
+  roundCalculations  RoundCalculation[]
+  rankings           Ranking[]
+  prizePool          PrizePool?
+  importLogs         ImportLog[]
+  auditLogs          AuditLog[]
+  platformFees       PlatformFee[]
+
+  @@index([status])
+  @@index([footballSeason])
+  @@map("seasons")
+}
+
+model Player {
+  id         String     @id @default(uuid()) @db.Uuid
+  externalId String?    @map("external_id") @db.VarChar(100)
+  firstName  String     @map("first_name") @db.VarChar(100)
+  lastName   String     @map("last_name") @db.VarChar(100)
+  role       PlayerRole
+  realTeam   String     @map("real_team") @db.VarChar(100)
+  isActive   Boolean    @default(true) @map("is_active")
+  createdAt  DateTime   @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime   @updatedAt @map("updated_at") @db.Timestamptz
+
+  quotes             Quote[]
+  votes              Vote[]
+  portfolioPositions PortfolioPosition[]
+  marketOperations   MarketOperation[]
+  quoteHistory       QuoteHistory[]
+  roundPlayerResults RoundPlayerResult[]
+
+  @@index([role])
+  @@index([realTeam])
+  @@index([lastName, firstName])
+  @@map("players")
+}
+
+model Quote {
+  id           String   @id @default(uuid()) @db.Uuid
+  seasonId     String   @map("season_id") @db.Uuid
+  playerId     String   @map("player_id") @db.Uuid
+  initialQuote Decimal  @map("initial_quote") @db.Decimal(10, 4)
+  currentQuote Decimal  @map("current_quote") @db.Decimal(10, 4)
+  finalQuote   Decimal? @map("final_quote") @db.Decimal(10, 4)
+  importedAt   DateTime @default(now()) @map("imported_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  season             Season              @relation(fields: [seasonId], references: [id])
+  player             Player              @relation(fields: [playerId], references: [id])
+  portfolioPositions PortfolioPosition[]
+  history            QuoteHistory[]
+
+  @@unique([seasonId, playerId])
+  @@index([seasonId])
+  @@index([playerId])
+  @@map("quotes")
+}
+
+model QuoteHistory {
+  id        String   @id @default(uuid()) @db.Uuid
+  quoteId   String   @map("quote_id") @db.Uuid
+  seasonId  String   @map("season_id") @db.Uuid
+  playerId  String   @map("player_id") @db.Uuid
+  round     Int?     @db.SmallInt
+  oldQuote  Decimal  @map("old_quote") @db.Decimal(10, 4)
+  newQuote  Decimal  @map("new_quote") @db.Decimal(10, 4)
+  changedAt DateTime @default(now()) @map("changed_at") @db.Timestamptz
+  changedBy String   @map("changed_by") @db.Uuid
+
+  quote    Quote  @relation(fields: [quoteId], references: [id])
+  season   Season @relation(fields: [seasonId], references: [id])
+  player   Player @relation(fields: [playerId], references: [id])
+  changedByUser User @relation(fields: [changedBy], references: [id])
+
+  @@index([quoteId])
+  @@index([seasonId, playerId])
+  @@map("quote_history")
+}
+
+model Vote {
+  id          String   @id @default(uuid()) @db.Uuid
+  seasonId    String   @map("season_id") @db.Uuid
+  round       Int      @db.SmallInt
+  playerId    String   @map("player_id") @db.Uuid
+  vote        Decimal? @db.Decimal(4, 2)
+  fantasyVote Decimal? @map("fantasy_vote") @db.Decimal(4, 2)
+  played      Boolean  @default(true)
+  isDerived   Boolean  @default(false) @map("is_derived")
+  importedAt  DateTime @default(now()) @map("imported_at") @db.Timestamptz
+
+  season Season @relation(fields: [seasonId], references: [id])
+  player Player @relation(fields: [playerId], references: [id])
+
+  @@unique([seasonId, round, playerId])
+  @@index([seasonId, round])
+  @@index([playerId])
+  @@map("votes")
+}
+
+model Team {
+  id                     String     @id @default(uuid()) @db.Uuid
+  userId                 String     @map("user_id") @db.Uuid
+  seasonId               String     @map("season_id") @db.Uuid
+  status                 TeamStatus @default(ROSA_INCOMPLETA)
+  initialBudget          Decimal    @map("initial_budget") @db.Decimal(15, 6)
+  availableBudget        Decimal    @map("available_budget") @db.Decimal(15, 6)
+  totalCommissionsPaid   Decimal    @default(0) @map("total_commissions_paid") @db.Decimal(15, 6)
+  currentPortfolioValue  Decimal    @default(0) @map("current_portfolio_value") @db.Decimal(15, 6)
+  currentRoi             Decimal    @default(0) @map("current_roi") @db.Decimal(10, 6)
+  version                Int        @default(1)
+  registeredAt           DateTime   @default(now()) @map("registered_at") @db.Timestamptz
+  updatedAt              DateTime   @updatedAt @map("updated_at") @db.Timestamptz
+
+  user               User                @relation(fields: [userId], references: [id])
+  season             Season              @relation(fields: [seasonId], references: [id])
+  portfolioPositions PortfolioPosition[]
+  marketOperations   MarketOperation[]
+  rankings           Ranking[]
+  prizeAwards        PrizeAward[]
+  roundPlayerResults RoundPlayerResult[]
+  platformFees       PlatformFee[]
+
+  @@unique([userId, seasonId])
+  @@index([seasonId])
+  @@index([userId])
+  @@map("teams")
+}
+
+model PortfolioPosition {
+  id               String         @id @default(uuid()) @db.Uuid
+  teamId           String         @map("team_id") @db.Uuid
+  playerId         String         @map("player_id") @db.Uuid
+  quoteId          String         @map("quote_id") @db.Uuid
+  initialQuote     Decimal        @map("initial_quote") @db.Decimal(10, 4)
+  buyValue         Decimal        @map("buy_value") @db.Decimal(15, 6)
+  buyCommission    Decimal        @map("buy_commission") @db.Decimal(15, 6)
+  totalBuyCost     Decimal        @map("total_buy_cost") @db.Decimal(15, 6)
+  fantasyMultiplier Decimal       @default(1.0) @map("fantasy_multiplier") @db.Decimal(15, 10)
+  currentSellValue Decimal        @default(0) @map("current_sell_value") @db.Decimal(15, 6)
+  status           PositionStatus @default(ACTIVE)
+  boughtAt         DateTime       @default(now()) @map("bought_at") @db.Timestamptz
+  boughtInRound    Int?           @map("bought_in_round") @db.SmallInt
+
+  team             Team              @relation(fields: [teamId], references: [id])
+  player           Player            @relation(fields: [playerId], references: [id])
+  quote            Quote             @relation(fields: [quoteId], references: [id])
+  marketOperations MarketOperation[]
+
+  @@index([teamId])
+  @@index([playerId])
+  @@map("portfolio_positions")
+}
+
+model MarketOperation {
+  id               String        @id @default(uuid()) @db.Uuid
+  teamId           String        @map("team_id") @db.Uuid
+  playerId         String        @map("player_id") @db.Uuid
+  positionId       String        @map("position_id") @db.Uuid
+  type             OperationType
+  valueAtOperation Decimal       @map("value_at_operation") @db.Decimal(15, 6)
+  commissionRate   Decimal       @map("commission_rate") @db.Decimal(10, 6)
+  commissionAmount Decimal       @map("commission_amount") @db.Decimal(15, 6)
+  netAmount        Decimal       @map("net_amount") @db.Decimal(15, 6)
+  budgetBefore     Decimal       @map("budget_before") @db.Decimal(15, 6)
+  budgetAfter      Decimal       @map("budget_after") @db.Decimal(15, 6)
+  round            Int?          @db.SmallInt
+  idempotencyKey   String?       @unique @map("idempotency_key") @db.Uuid
+  executedAt       DateTime      @default(now()) @map("executed_at") @db.Timestamptz
+
+  team         Team              @relation(fields: [teamId], references: [id])
+  player       Player            @relation(fields: [playerId], references: [id])
+  position     PortfolioPosition @relation(fields: [positionId], references: [id])
+  platformFee  PlatformFee?
+
+  @@index([teamId])
+  @@index([playerId])
+  @@map("market_operations")
+}
+
+model RoundCalculation {
+  id                    String            @id @default(uuid()) @db.Uuid
+  seasonId              String            @map("season_id") @db.Uuid
+  round                 Int               @db.SmallInt
+  status                CalculationStatus @default(PENDING)
+  totalPlayersWithVote  Int               @default(0) @map("total_players_with_vote")
+  totalSvDerived        Int               @default(0) @map("total_sv_derived")
+  avgPortfolioVariation Decimal?          @map("avg_portfolio_variation") @db.Decimal(10, 6)
+  inputDataHash         String?           @map("input_data_hash") @db.VarChar(64)
+  calculatedAt          DateTime?         @map("calculated_at") @db.Timestamptz
+  calculatedById        String?           @map("calculated_by") @db.Uuid
+  notes                 String?
+  supersededById        String?           @map("superseded_by") @db.Uuid
+  createdAt             DateTime          @default(now()) @map("created_at") @db.Timestamptz
+
+  season         Season              @relation(fields: [seasonId], references: [id])
+  calculatedBy   User?               @relation("CalculatedBy", fields: [calculatedById], references: [id])
+  supersededBy   RoundCalculation?   @relation("Supersedes", fields: [supersededById], references: [id])
+  supersedes     RoundCalculation[]  @relation("Supersedes")
+  playerResults  RoundPlayerResult[]
+
+  @@index([seasonId, round])
+  @@index([status])
+  @@map("round_calculations")
+}
+
+model RoundPlayerResult {
+  id                 String    @id @default(uuid()) @db.Uuid
+  roundCalculationId String    @map("round_calculation_id") @db.Uuid
+  teamId             String    @map("team_id") @db.Uuid
+  playerId           String    @map("player_id") @db.Uuid
+  vote               Decimal?  @db.Decimal(4, 2)
+  teamAvg            Decimal?  @map("team_avg") @db.Decimal(6, 4)
+  teamBand           TeamBand? @map("team_band")
+  bonusPct           Decimal   @default(0) @map("bonus_pct") @db.Decimal(10, 6)
+  svStatus           Boolean   @default(false) @map("sv_status")
+
+  roundCalculation RoundCalculation @relation(fields: [roundCalculationId], references: [id])
+  team             Team             @relation(fields: [teamId], references: [id])
+  player           Player           @relation(fields: [playerId], references: [id])
+
+  @@unique([roundCalculationId, teamId, playerId])
+  @@index([roundCalculationId])
+  @@index([teamId])
+  @@map("round_player_results")
+}
+
+model Ranking {
+  id              String   @id @default(uuid()) @db.Uuid
+  seasonId        String   @map("season_id") @db.Uuid
+  teamId          String   @map("team_id") @db.Uuid
+  userId          String   @map("user_id") @db.Uuid
+  position        Int
+  roi             Decimal  @db.Decimal(10, 6)
+  portfolioValue  Decimal  @map("portfolio_value") @db.Decimal(15, 6)
+  totalOperations Int      @default(0) @map("total_operations")
+  isFinal         Boolean  @default(false) @map("is_final")
+  round           Int?     @db.SmallInt
+  calculatedAt    DateTime @default(now()) @map("calculated_at") @db.Timestamptz
+
+  season Season @relation(fields: [seasonId], references: [id])
+  team   Team   @relation(fields: [teamId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@index([seasonId, round, position])
+  @@index([teamId])
+  @@map("rankings")
+}
+
+model PrizePool {
+  id                 String          @id @default(uuid()) @db.Uuid
+  seasonId           String          @unique @map("season_id") @db.Uuid
+  totalCommissions   Decimal         @default(0) @map("total_commissions") @db.Decimal(15, 6)
+  platformFeeAmount  Decimal         @default(0) @map("platform_fee_amount") @db.Decimal(15, 6)
+  prizePoolAmount    Decimal         @default(0) @map("prize_pool_amount") @db.Decimal(15, 6)
+  prizeStructure     Json            @default("[]") @map("prize_structure")
+  status             PrizePoolStatus @default(DRAFT)
+  confirmedById      String?         @map("confirmed_by") @db.Uuid
+  confirmedAt        DateTime?       @map("confirmed_at") @db.Timestamptz
+  createdAt          DateTime        @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime        @updatedAt @map("updated_at") @db.Timestamptz
+
+  season      Season       @relation(fields: [seasonId], references: [id])
+  confirmedBy User?        @relation("ConfirmedBy", fields: [confirmedById], references: [id])
+  awards      PrizeAward[]
+
+  @@map("prize_pools")
+}
+
+model PrizeAward {
+  id          String   @id @default(uuid()) @db.Uuid
+  prizePoolId String   @map("prize_pool_id") @db.Uuid
+  teamId      String   @map("team_id") @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  position    Int
+  roi         Decimal  @db.Decimal(10, 6)
+  amount      Decimal  @db.Decimal(15, 6)
+  awardedAt   DateTime @default(now()) @map("awarded_at") @db.Timestamptz
+
+  prizePool PrizePool @relation(fields: [prizePoolId], references: [id])
+  team      Team      @relation(fields: [teamId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@unique([prizePoolId, teamId])
+  @@index([prizePoolId])
+  @@index([userId])
+  @@map("prize_awards")
+}
+
+model PlatformFee {
+  id                 String   @id @default(uuid()) @db.Uuid
+  seasonId           String   @map("season_id") @db.Uuid
+  teamId             String   @map("team_id") @db.Uuid
+  operationId        String   @unique @map("operation_id") @db.Uuid
+  grossCommission    Decimal  @map("gross_commission") @db.Decimal(15, 6)
+  platformFeeAmount  Decimal  @map("platform_fee_amount") @db.Decimal(15, 6)
+  calculatedAt       DateTime @default(now()) @map("calculated_at") @db.Timestamptz
+
+  season    Season          @relation(fields: [seasonId], references: [id])
+  team      Team            @relation(fields: [teamId], references: [id])
+  operation MarketOperation @relation(fields: [operationId], references: [id])
+
+  @@index([seasonId])
+  @@index([teamId])
+  @@map("platform_fees")
+}
+
+model ImportLog {
+  id               String       @id @default(uuid()) @db.Uuid
+  seasonId         String       @map("season_id") @db.Uuid
+  type             ImportType
+  round            Int?         @db.SmallInt
+  status           ImportStatus
+  originalFilename String       @map("original_filename") @db.VarChar(500)
+  storagePath      String       @map("storage_path") @db.VarChar(1000)
+  rowsTotal        Int          @default(0) @map("rows_total")
+  rowsImported     Int          @default(0) @map("rows_imported")
+  rowsError        Int          @default(0) @map("rows_error")
+  errorDetail      Json?        @map("error_detail")
+  executedById     String       @map("executed_by") @db.Uuid
+  executedAt       DateTime     @default(now()) @map("executed_at") @db.Timestamptz
+
+  season      Season @relation(fields: [seasonId], references: [id])
+  executedBy  User   @relation(fields: [executedById], references: [id])
+
+  @@index([seasonId])
+  @@index([seasonId, type])
+  @@map("import_logs")
+}
+
+model AuditLog {
+  id           String      @id @default(uuid()) @db.Uuid
+  action       AuditAction
+  userId       String      @map("user_id") @db.Uuid
+  seasonId     String?     @map("season_id") @db.Uuid
+  entityType   String?     @map("entity_type") @db.VarChar(100)
+  entityId     String?     @map("entity_id") @db.Uuid
+  detail       Json?
+  status       AuditStatus
+  errorMessage String?     @map("error_message")
+  executedAt   DateTime    @default(now()) @map("executed_at") @db.Timestamptz
+
+  user   User    @relation(fields: [userId], references: [id])
+  season Season? @relation(fields: [seasonId], references: [id])
+
+  @@index([userId])
+  @@index([seasonId])
+  @@index([action])
+  @@index([executedAt])
+  @@map("audit_logs")
+}

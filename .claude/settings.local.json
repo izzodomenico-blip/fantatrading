@@ -21,7 +21,8 @@
       "Bash(node -e ' *)",
       "Bash(npm.cmd test *)",
       "Bash(npm.cmd run *)",
-      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\domenicoizzoj\\\\Documents\\\\FantaTrading\\\\docs\\\\product\\\\\" | Select-Object Name, @{N='KB';E={[math]::Round\\($_.Length/1024,1\\)}})"
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\domenicoizzoj\\\\Documents\\\\FantaTrading\\\\docs\\\\product\\\\\" | Select-Object Name, @{N='KB';E={[math]::Round\\($_.Length/1024,1\\)}})",
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\domenicoizzoj\\\\Documents\\\\FantaTrading\\\\docs\\\\product\" | Select-Object Name, @{N='KB';E={[math]::Round\\($_.Length/1024,1\\)}})"
     ]
   }
 }

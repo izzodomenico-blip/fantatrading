@@ -72,7 +72,7 @@ export default function App() {
       <main className="main">
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/partecipante-favc" element={<ParticipantFavc />} />
+          <Route path="/partecipante-favc/*" element={<ParticipantFavc />} />
           <Route path="/come-funziona" element={<HowItWorks />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/scala" element={<ScaleAnalysis />} />

@@ -85,6 +85,20 @@ export type BackendPortfolio = {
   };
 };
 
+export type BackendMarketOperation = {
+  id: string;
+  type: 'BUY' | 'SELL';
+  playerId: string;
+  player?: BackendPlayer;
+  grossAmount?: number;
+  commissionAmount?: number;
+  netAmount?: number;
+  valueAtOperation?: number;
+  budgetBefore?: number;
+  budgetAfter?: number;
+  executedAt?: string;
+};
+
 export type BackendFinalSettlement = {
   teamId: string;
   totalCapitalDeposited: number;
@@ -201,6 +215,10 @@ export class FantaTradingApi {
 
   getVotes(filters: { seasonId?: string; round?: number; playerId?: string } = {}) {
     return this.request<BackendVote[]>('/votes', filters);
+  }
+
+  getMarketOperations(teamId: string) {
+    return this.request<BackendMarketOperation[]>('/market/operations', { teamId });
   }
 
   private async post<T>(path: string, body: unknown): Promise<ApiResult<T>> {

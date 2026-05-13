@@ -1,38 +1,29 @@
+import { Link, Navigate, useLocation } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
 import {
   createFantaTradingApi,
   getOrCreateDemoAccessToken,
   getStoredAccessToken,
   type ApiMode,
-  type BackendPlayer,
   type BackendFinalSettlement,
+  type BackendMarketOperation,
+  type BackendPlayer,
   type BackendPortfolio,
   type BackendQuote,
   type BackendVote,
 } from '../api';
 import { EmptyState, MetricCard, Section, StatusBadges } from '../components';
 import PlayerCard, { type PlayerCardData } from '../components/PlayerCard';
+import PlayerDetailDrawer from '../components/PlayerDetailDrawer';
 import PlayerTrendChart from '../components/PlayerTrendChart';
+import TeamTrendChart from '../components/TeamTrendChart';
+import TradeSimulationPanel from '../components/TradeSimulationPanel';
 import {
-  BUY_COMMISSION_RATE,
   SELL_COMMISSION_RATE,
   calculatePositionValue,
   demoMarketPlayers,
   demoPositions,
   initialOperations,
-  portfolioHistory,
-  rankingExample,
   roleLimits,
   roleNames,
   type DemoMarketPlayer,
@@ -40,7 +31,6 @@ import {
   type DemoPosition,
   type FavcRole,
 } from '../mock/favcDemoData';
-import { AXIS_STYLE, COLORS, GRID_STYLE, TOOLTIP_STYLE } from '../data';
 import {
   createMockTrend,
   mergeVotesIntoTrend,
@@ -49,26 +39,18 @@ import {
   type RawSyntheticRoundQuote,
   type RawVoteRow,
 } from '../utils/playerTrend';
-import { formatCredits, formatPercent, formatSignedCredits, formatSignedPercent, valueTone } from '../utils/format';
+import { buildTeamTrendFromPositions } from '../utils/teamTrend';
+import {
+  filterAndSortMarketPlayers,
+  type MarketFilterState,
+  type MarketPriceFilter,
+  type MarketSortKey,
+  type MarketTrendFilter,
+} from '../utils/marketFilters';
+import { formatCredits, formatSignedCredits, formatSignedPercent, valueTone } from '../utils/format';
 
-type PriceFilter = 'all' | 'low' | 'mid' | 'high';
-type PerformanceFilter = 'all' | 'positive' | 'negative';
+type ParticipantTab = 'overview' | 'mercato' | 'rosa' | 'operazioni' | 'settlement';
 type DataSource = 'mock' | 'backend';
-
-type MarketRow = {
-  id: string;
-  playerId?: string;
-  playerName: string;
-  realTeam: string;
-  role: FavcRole;
-  quote: number;
-  trendPct: number;
-  performancePct: number;
-  mode: 'BUY' | 'SELL';
-  positionId?: string;
-  available?: boolean;
-  trend: PlayerTrendPoint[];
-};
 
 type BackendUiState = {
   mode: ApiMode | 'checking';
@@ -84,7 +66,16 @@ type FinancialSnapshot = {
   finalLiquidationValue?: number;
   profitLoss?: number;
   roiPct?: number;
+  rankByRoi?: number | null;
 };
+
+const TABS: Array<{ id: ParticipantTab; label: string; path: string }> = [
+  { id: 'overview', label: 'Overview', path: '/partecipante-favc/overview' },
+  { id: 'mercato', label: 'Mercato', path: '/partecipante-favc/mercato' },
+  { id: 'rosa', label: 'La mia rosa', path: '/partecipante-favc/rosa' },
+  { id: 'operazioni', label: 'Operazioni', path: '/partecipante-favc/operazioni' },
+  { id: 'settlement', label: 'Settlement', path: '/partecipante-favc/settlement' },
+];
 
 const syntheticQuoteModules = import.meta.glob<{ rows: RawSyntheticRoundQuote[] }>(
   '@data/real/processed/round-quotes/synthetic_round_quotes_history.json',
@@ -98,14 +89,6 @@ async function loadSyntheticQuoteRows() {
   return report.rows ?? [];
 }
 
-function buyCommission(grossAmount: number) {
-  return grossAmount * BUY_COMMISSION_RATE;
-}
-
-function sellCommission(grossAmount: number) {
-  return grossAmount * SELL_COMMISSION_RATE;
-}
-
 function mapBackendRole(role: string): FavcRole {
   if (role === 'GK' || role === 'P') return 'P';
   if (role === 'DEF' || role === 'D') return 'D';
@@ -115,16 +98,6 @@ function mapBackendRole(role: string): FavcRole {
 
 function backendPlayerName(player: BackendPlayer) {
   return [player.firstName, player.lastName].filter(Boolean).join(' ').trim() || player.lastName || player.id;
-}
-
-function getPositionPL(position: DemoPosition) {
-  if (position.status === 'SOLD') return 0;
-  return calculatePositionValue(position) - position.initialQuote;
-}
-
-function getPositionRoi(position: DemoPosition) {
-  if (position.initialQuote <= 0 || position.status === 'SOLD') return 0;
-  return (getPositionPL(position) / position.initialQuote) * 100;
 }
 
 function votesToRows(votes: BackendVote[]): RawVoteRow[] {
@@ -146,20 +119,8 @@ function buildFinancialSnapshot(portfolio: BackendPortfolio, settlement?: Backen
     finalLiquidationValue: Number(settlement?.finalLiquidationValue ?? summary.finalLiquidationValue ?? 0),
     profitLoss: Number(settlement?.profitLoss ?? summary.profitLoss ?? 0),
     roiPct: Number(settlement?.roiPct ?? summary.roiPct ?? summary.currentRoi ?? 0),
+    rankByRoi: settlement?.rankByRoi ?? null,
   };
-}
-
-function roleCount(positions: DemoPosition[]) {
-  return positions
-    .filter(position => position.status === 'ACTIVE')
-    .reduce(
-      (counts, position) => ({ ...counts, [position.role]: counts[position.role] + 1 }),
-      { P: 0, D: 0, C: 0, A: 0 } as Record<FavcRole, number>,
-    );
-}
-
-function marketValue(player: Pick<MarketRow, 'quote' | 'trendPct'>) {
-  return player.quote * (1 + player.trendPct / 100);
 }
 
 function normalizePortfolioPositions(
@@ -209,7 +170,7 @@ function normalizeMarketPlayers(
   const ownedIds = new Set(currentPositions.map(position => position.playerId).filter(Boolean));
   return players
     .filter(player => !ownedIds.has(player.externalId ?? player.id))
-    .slice(0, 24)
+    .slice(0, 80)
     .map<DemoMarketPlayer>(player => {
       const quote = quotes.find(item => item.playerId === player.id) ?? player.quotes?.[0];
       const initialQuote = Number(quote?.initialQuote ?? 6);
@@ -240,7 +201,47 @@ function normalizeMarketPlayers(
     });
 }
 
-function positionToCard(position: DemoPosition, actionLabel?: string, actionDisabled?: boolean): PlayerCardData {
+function backendOperationsToDemo(operations: BackendMarketOperation[]): DemoOperation[] {
+  return operations.map((operation, index) => {
+    const grossAmount = Number(operation.grossAmount ?? operation.valueAtOperation ?? 0);
+    const netAmount = Number(operation.netAmount ?? 0);
+    const cashBefore = Number(operation.budgetBefore ?? 0);
+    const cashAfter = Number(operation.budgetAfter ?? 0);
+    return {
+      id: operation.id,
+      type: operation.type,
+      playerName: operation.player ? backendPlayerName(operation.player) : operation.playerId,
+      grossAmount,
+      commission: Number(operation.commissionAmount ?? 0),
+      netAmount,
+      capitalAdded: operation.type === 'BUY' ? Math.max(0, netAmount - cashBefore) : 0,
+      cashBefore,
+      cashAfter,
+      round: operation.executedAt ? new Date(operation.executedAt).toLocaleDateString('it-IT') : `Op ${index + 1}`,
+    };
+  });
+}
+
+function roleCount(positions: DemoPosition[]) {
+  return positions
+    .filter(position => position.status === 'ACTIVE')
+    .reduce(
+      (counts, position) => ({ ...counts, [position.role]: counts[position.role] + 1 }),
+      { P: 0, D: 0, C: 0, A: 0 } as Record<FavcRole, number>,
+    );
+}
+
+function getPositionPL(position: DemoPosition) {
+  if (position.status === 'SOLD') return 0;
+  return calculatePositionValue(position) - position.initialQuote;
+}
+
+function getPositionRoi(position: DemoPosition) {
+  if (position.initialQuote <= 0 || position.status === 'SOLD') return 0;
+  return (getPositionPL(position) / position.initialQuote) * 100;
+}
+
+function positionToCard(position: DemoPosition): PlayerCardData {
   return {
     id: position.id,
     playerName: position.playerName,
@@ -251,12 +252,34 @@ function positionToCard(position: DemoPosition, actionLabel?: string, actionDisa
     fantasyMultiplier: position.fantasyMultiplier,
     status: position.status,
     trend: position.trend ?? createMockTrend(position.initialQuote, position.currentQuote, position.fantasyMultiplier),
-    actionLabel,
-    actionDisabled,
   };
 }
 
+function marketToCard(player: DemoMarketPlayer): PlayerCardData {
+  const initialQuote = player.trend?.[0]?.quote ?? player.quote;
+  return {
+    id: player.id,
+    playerName: player.playerName,
+    realTeam: player.realTeam,
+    role: player.role,
+    initialQuote,
+    currentQuote: player.quote,
+    fantasyMultiplier: 1,
+    trend: player.trend ?? createMockTrend(initialQuote, player.quote),
+    actionLabel: 'Compra demo',
+    actionDisabled: false,
+  };
+}
+
+function tabFromPath(pathname: string): ParticipantTab | null {
+  const last = pathname.split('/').filter(Boolean).at(-1);
+  if (!last || last === 'partecipante-favc') return null;
+  return TABS.some(tab => tab.id === last) ? last as ParticipantTab : null;
+}
+
 export default function ParticipantFavc() {
+  const location = useLocation();
+  const tab = tabFromPath(location.pathname);
   const [positions, setPositions] = useState<DemoPosition[]>(() => demoPositions);
   const [marketPlayers, setMarketPlayers] = useState<DemoMarketPlayer[]>(() => demoMarketPlayers);
   const [operations, setOperations] = useState<DemoOperation[]>(() => initialOperations);
@@ -267,12 +290,17 @@ export default function ParticipantFavc() {
     message: 'Verifica connessione backend in corso...',
   });
   const [dataSource, setDataSource] = useState<DataSource>('mock');
-  const [roleFilter, setRoleFilter] = useState<FavcRole | 'all'>('all');
-  const [teamFilter, setTeamFilter] = useState('Tutte');
-  const [priceFilter, setPriceFilter] = useState<PriceFilter>('all');
-  const [performanceFilter, setPerformanceFilter] = useState<PerformanceFilter>('all');
-  const [search, setSearch] = useState('');
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerCardData | null>(null);
+  const [simulationNotice, setSimulationNotice] = useState('');
+  const [marketFilters, setMarketFilters] = useState<MarketFilterState>({
+    search: '',
+    role: 'all',
+    team: 'Tutte',
+    price: 'all',
+    trend: 'all',
+    onlyWithTrend: false,
+    sortBy: 'return',
+  });
 
   useEffect(() => {
     let mounted = true;
@@ -282,12 +310,8 @@ export default function ParticipantFavc() {
       const health = await api.health();
 
       if (!mounted) return;
-
       if (!health.ok) {
-        setBackendState({
-          mode: 'backend-unavailable',
-          message: 'Backend non disponibile: uso fallback demo/mock locale.',
-        });
+        setBackendState({ mode: 'backend-unavailable', message: 'Backend non disponibile: uso fallback demo/mock locale.' });
         return;
       }
 
@@ -306,41 +330,30 @@ export default function ParticipantFavc() {
       const teams = await authedApi.getMyTeams();
       if (!mounted) return;
 
-      if (!teams.ok) {
+      if (!teams.ok || teams.data.length === 0) {
         setBackendState({
-          mode: teams.status === 401 || teams.status === 403 ? 'missing-token' : 'backend-unavailable',
-          message: teams.status === 401 || teams.status === 403
-            ? 'Token non valido o scaduto: uso demo/mock.'
+          mode: teams.ok ? 'no-team' : 'backend-unavailable',
+          message: teams.ok
+            ? 'Backend collegato, ma nessuna squadra reale trovata: mostro la demo controllata.'
             : 'Errore nella lettura dei team: uso demo/mock.',
         });
         return;
       }
 
-      if (teams.data.length === 0) {
-        setBackendState({
-          mode: 'no-team',
-          message: 'Backend collegato, ma nessuna squadra reale trovata: mostro la demo controllata.',
-        });
-        return;
-      }
-
       const team = teams.data[0];
-      const [portfolio, players, quotes, votes, settlement, syntheticRows] = await Promise.all([
+      const [portfolio, players, quotes, votes, settlement, operationsResult, syntheticRows] = await Promise.all([
         authedApi.getTeamPortfolio(team.id),
         authedApi.getPlayers({ seasonId: team.seasonId }),
         authedApi.getQuotes({ seasonId: team.seasonId }),
         authedApi.getVotes({ seasonId: team.seasonId }),
         authedApi.getTeamFinalSettlement(team.id),
+        authedApi.getMarketOperations(team.id),
         loadSyntheticQuoteRows().catch(() => [] as RawSyntheticRoundQuote[]),
       ]);
 
       if (!mounted) return;
-
       if (!portfolio.ok) {
-        setBackendState({
-          mode: 'backend-unavailable',
-          message: 'Team trovato, ma il portafoglio non e leggibile: uso demo/mock.',
-        });
+        setBackendState({ mode: 'backend-unavailable', message: 'Team trovato, ma il portafoglio non e leggibile: uso demo/mock.' });
         return;
       }
 
@@ -353,7 +366,8 @@ export default function ParticipantFavc() {
 
       setPositions(normalizedPositions.length > 0 ? normalizedPositions : demoPositions);
       setMarketPlayers(normalizedMarket.length > 0 ? normalizedMarket : demoMarketPlayers);
-      setVirtualCashBalance(Number(portfolio.data.summary.virtualCashBalance ?? portfolio.data.summary.currentPortfolioValue ?? 0));
+      setOperations(operationsResult.ok && operationsResult.data.length > 0 ? backendOperationsToDemo(operationsResult.data) : initialOperations);
+      setVirtualCashBalance(Number(portfolio.data.summary.virtualCashBalance ?? 0));
       setFinancialSnapshot(buildFinancialSnapshot(portfolio.data, settlement.ok ? settlement.data : undefined));
       setDataSource(normalizedPositions.length > 0 ? 'backend' : 'mock');
       setBackendState({
@@ -371,29 +385,15 @@ export default function ParticipantFavc() {
     };
   }, []);
 
-  const activePositions = useMemo(
-    () => positions.filter(position => position.status === 'ACTIVE'),
-    [positions],
-  );
+  if (tab === null) {
+    return <Navigate to="/partecipante-favc/overview" replace />;
+  }
 
-  const counts = useMemo(() => roleCount(positions), [positions]);
-
-  const mockTotalCapitalDeposited = useMemo(
-    () => operations.reduce((sum, operation) => sum + operation.capitalAdded, 0),
-    [operations],
-  );
-
-  const calculatedPortfolioValue = useMemo(
-    () => activePositions.reduce((sum, position) => sum + calculatePositionValue(position), 0),
-    [activePositions],
-  );
-
-  const totalPlayerPL = useMemo(
-    () => activePositions.reduce((sum, position) => sum + getPositionPL(position), 0),
-    [activePositions],
-  );
-
-  const totalCapitalDeposited = financialSnapshot?.totalCapitalDeposited ?? mockTotalCapitalDeposited;
+  const activePositions = positions.filter(position => position.status === 'ACTIVE');
+  const counts = roleCount(positions);
+  const calculatedPortfolioValue = activePositions.reduce((sum, position) => sum + calculatePositionValue(position), 0);
+  const totalCapitalDeposited = financialSnapshot?.totalCapitalDeposited
+    ?? operations.reduce((sum, operation) => sum + operation.capitalAdded, 0);
   const currentPortfolioValue = financialSnapshot?.currentPortfolioValue && financialSnapshot.currentPortfolioValue > 0
     ? financialSnapshot.currentPortfolioValue
     : calculatedPortfolioValue;
@@ -405,574 +405,275 @@ export default function ParticipantFavc() {
     : netLiquidationValue + virtualCashBalance;
   const profitLoss = financialSnapshot?.profitLoss ?? finalLiquidationValue - totalCapitalDeposited;
   const roiPct = financialSnapshot?.roiPct ?? (totalCapitalDeposited > 0 ? (profitLoss / totalCapitalDeposited) * 100 : 0);
+  const teamTrend = buildTeamTrendFromPositions(positions, { virtualCashBalance, totalCapitalDeposited, lastRounds: 38 });
+  const latestTeamTrend = teamTrend.slice(-5);
+  const hasSyntheticTrend = positions.some(position => position.trend?.some(point => point.source === 'synthetic'));
+  const connectionBadges = [
+    backendState.mode === 'connected' ? 'Backend collegato' : backendState.mode === 'backend-unavailable' ? 'Backend non disponibile' : 'Demo backend',
+    dataSource === 'backend' ? 'Dati backend' : 'Fallback mock',
+    hasSyntheticTrend ? 'Trend synthetic' : 'Trend mock/official',
+    'Nessun payout reale',
+  ];
 
-  const chartData = useMemo(() => {
-    const today = {
-      label: dataSource === 'backend' ? 'Backend' : 'Live',
-      portfolioValue: Number(currentPortfolioValue.toFixed(2)),
-      roiPct: Number(roiPct.toFixed(2)),
-    };
-    return [...portfolioHistory.slice(0, -1), today];
-  }, [currentPortfolioValue, dataSource, roiPct]);
-
-  const rankingRows = useMemo(() => {
-    const liveRow = {
-      rank: 0,
-      team: dataSource === 'backend' ? 'Team reale read-only' : 'Alpha demo live',
-      totalCapitalDeposited: Number(totalCapitalDeposited.toFixed(2)),
-      finalValue: Number(finalLiquidationValue.toFixed(2)),
-      profitLoss: Number(profitLoss.toFixed(2)),
-      roiPct: Number(roiPct.toFixed(2)),
-    };
-
-    return [liveRow, ...rankingExample]
-      .sort((a, b) => b.roiPct - a.roiPct)
-      .map((row, index) => ({ ...row, rank: index + 1 }));
-  }, [dataSource, finalLiquidationValue, profitLoss, roiPct, totalCapitalDeposited]);
-
-  const liveTeamName = dataSource === 'backend' ? 'Team reale read-only' : 'Alpha demo live';
-  const liveRank = rankingRows.find(row => row.team === liveTeamName)?.rank ?? 0;
-  const sourceNote = dataSource === 'backend'
-    ? 'Dati team dal backend; trend round-by-round stimato da modello sintetico quando non esiste una serie ufficiale.'
-    : 'Modalita demo/mock: dati locali coerenti con FAVC, nessuna API richiesta.';
-
-  const connectionBadges = useMemo(() => {
-    if (backendState.mode === 'connected') return ['Backend collegato', 'Read-only', 'Nessun payout reale'];
-    if (backendState.mode === 'backend-unavailable') return ['Backend non disponibile', 'Modalita demo/mock', 'Nessun payout reale'];
-    if (backendState.mode === 'missing-token') return ['Backend collegato', 'Token mancante', 'Modalita demo/mock'];
-    if (backendState.mode === 'no-team') return ['Backend collegato', 'Nessuna squadra reale', 'Modalita demo/mock'];
-    return ['Verifica backend', 'Fallback mock pronto', 'Pilot virtuale'];
-  }, [backendState.mode]);
-
-  const marketRows = useMemo<MarketRow[]>(() => {
-    const ownedRows: MarketRow[] = activePositions.slice(0, 6).map(position => ({
-      id: `owned-${position.id}`,
-      playerId: position.playerId,
-      playerName: position.playerName,
-      realTeam: position.realTeam,
-      role: position.role,
-      quote: position.currentQuote,
-      trendPct: getPositionRoi(position),
-      performancePct: getPositionRoi(position) / 1.8,
-      mode: 'SELL',
-      positionId: position.id,
-      available: true,
-      trend: position.trend ?? createMockTrend(position.initialQuote, position.currentQuote, position.fantasyMultiplier),
-    }));
-
-    const buyRows: MarketRow[] = marketPlayers.map(player => ({
-      id: player.id,
-      playerId: player.playerId,
-      playerName: player.playerName,
-      realTeam: player.realTeam,
-      role: player.role,
-      quote: player.quote,
-      trendPct: player.trendPct,
-      performancePct: player.performancePct,
-      mode: 'BUY',
-      available: player.available,
-      trend: player.trend ?? createMockTrend(player.quote, player.quote * (1 + player.trendPct / 100)),
-    }));
-
-    return [...ownedRows, ...buyRows].filter(row => {
-      if (roleFilter !== 'all' && row.role !== roleFilter) return false;
-      if (teamFilter !== 'Tutte' && row.realTeam !== teamFilter) return false;
-      if (search && !row.playerName.toLowerCase().includes(search.toLowerCase())) return false;
-      if (performanceFilter === 'positive' && row.performancePct <= 0) return false;
-      if (performanceFilter === 'negative' && row.performancePct >= 0) return false;
-      if (priceFilter === 'low' && row.quote > 8) return false;
-      if (priceFilter === 'mid' && (row.quote < 9 || row.quote > 12)) return false;
-      if (priceFilter === 'high' && row.quote < 13) return false;
-      return true;
-    });
-  }, [activePositions, marketPlayers, performanceFilter, priceFilter, roleFilter, search, teamFilter]);
-
-  const availableTeams = useMemo(
-    () => ['Tutte', ...Array.from(new Set([...positions, ...marketPlayers].map(item => item.realTeam))).sort()],
-    [marketPlayers, positions],
-  );
-
-  const lastOperations = operations.slice(-10).reverse();
-
-  function addOperation(operation: Omit<DemoOperation, 'id'>) {
-    setOperations(current => [...current, { ...operation, id: `op-${current.length + 1}` }]);
-  }
-
-  function sellPosition(positionId: string) {
-    const position = positions.find(item => item.id === positionId && item.status === 'ACTIVE');
-    if (!position) return;
-
-    const grossAmount = calculatePositionValue(position);
-    const commission = sellCommission(grossAmount);
-    const netAmount = grossAmount - commission;
-    const cashBefore = virtualCashBalance;
-    const cashAfter = cashBefore + netAmount;
-
-    setPositions(current => current.map(item => item.id === positionId ? { ...item, status: 'SOLD' } : item));
-    setVirtualCashBalance(cashAfter);
-    addOperation({
-      type: 'SELL',
-      playerName: position.playerName,
-      grossAmount,
-      commission,
-      netAmount,
-      capitalAdded: 0,
-      cashBefore,
-      cashAfter,
-      round: 'Live',
-    });
-  }
-
-  function buyPlayer(playerId: string) {
-    const player = marketPlayers.find(item => item.id === playerId && item.available);
-    if (!player) return;
-
-    const canBuy = counts[player.role] < roleLimits[player.role];
-    if (!canBuy) return;
-
-    const grossAmount = player.quote;
-    const commission = buyCommission(grossAmount);
-    const netAmount = grossAmount + commission;
-    const cashBefore = virtualCashBalance;
-    const capitalAdded = Math.max(0, netAmount - cashBefore);
-    const cashAfter = cashBefore + capitalAdded - netAmount;
-
-    setPositions(current => [
-      ...current,
-      {
-        id: `position-${player.id}`,
-        playerId: player.playerId,
-        playerName: player.playerName,
-        realTeam: player.realTeam,
-        role: player.role,
-        initialQuote: player.quote,
-        currentQuote: player.quote,
-        fantasyMultiplier: 1,
-        status: 'ACTIVE',
-        trend: player.trend ?? createMockTrend(player.quote, player.quote),
-      },
-    ]);
-    setMarketPlayers(current => current.map(item => item.id === playerId ? { ...item, available: false } : item));
-    setVirtualCashBalance(cashAfter);
-    addOperation({
-      type: 'BUY',
-      playerName: player.playerName,
-      grossAmount,
-      commission,
-      netAmount,
-      capitalAdded,
-      cashBefore,
-      cashAfter,
-      round: 'Live',
-    });
-  }
-
-  function actionForRow(row: MarketRow) {
-    if (row.mode === 'SELL' && row.positionId) {
-      const gross = marketValue(row);
-      const commission = sellCommission(gross);
-      return {
-        label: 'Vendi',
-        disabled: dataSource === 'backend',
-        commission,
-        impact: virtualCashBalance + gross - commission,
-        onClick: () => sellPosition(row.positionId as string),
-      };
-    }
-
-    const commission = buyCommission(row.quote);
-    const totalCost = row.quote + commission;
-    const capitalAdded = Math.max(0, totalCost - virtualCashBalance);
-    const canBuy = row.available && counts[row.role] < roleLimits[row.role] && dataSource !== 'backend';
-
-    return {
-      label: dataSource === 'backend' ? 'Demo off' : canBuy ? 'Compra' : row.available ? 'Slot pieno' : 'Gia preso',
-      disabled: !canBuy,
-      commission,
-      impact: capitalAdded,
-      onClick: () => buyPlayer(row.id),
-    };
-  }
-
-  function marketRowToCard(row: MarketRow): PlayerCardData {
-    const action = actionForRow(row);
-    return {
-      id: row.mode === 'SELL' && row.positionId ? row.positionId : row.id,
-      playerName: row.playerName,
-      realTeam: row.realTeam,
-      role: row.role,
-      initialQuote: row.quote,
-      currentQuote: Number(marketValue(row).toFixed(2)),
-      fantasyMultiplier: 1,
-      status: row.mode === 'SELL' ? 'ACTIVE' : undefined,
-      trend: row.trend,
-      actionLabel: action.label,
-      actionDisabled: action.disabled,
-    };
-  }
+  const rankedPlayers = [...activePositions].sort((a, b) => getPositionRoi(b) - getPositionRoi(a));
+  const topPlayers = rankedPlayers.slice(0, 5);
+  const worstPlayers = rankedPlayers.slice(-5).reverse();
+  const availableTeams = ['Tutte', ...Array.from(new Set(marketPlayers.map(player => player.realTeam))).sort()];
+  const filteredMarket = filterAndSortMarketPlayers(marketPlayers, marketFilters);
+  const roleGroups: Array<{ role: FavcRole; title: string }> = [
+    { role: 'P', title: 'Portieri' },
+    { role: 'D', title: 'Difensori' },
+    { role: 'C', title: 'Centrocampisti' },
+    { role: 'A', title: 'Attaccanti' },
+  ];
+  const sellOperations = operations.filter(operation => operation.type === 'SELL');
 
   return (
     <>
-      <div className="participant-hero">
+      <div className="participant-hero compact-hero">
         <div>
           <StatusBadges items={connectionBadges} />
-          <h1>{dataSource === 'backend' ? 'Team reale read-only' : 'Alpha Trading Club'}</h1>
+          <h1>{dataSource === 'backend' ? 'Team demo backend' : 'Alpha Trading Club'}</h1>
           <p>
-            {backendState.message} {sourceNote} I crediti sono virtuali, il capitale non e denaro reale e il settlement e solo contabile.
+            {backendState.message} Modello FREE_ACCESS_VIRTUAL_CAPITAL: capitale virtuale, ranking ROI%, nessun payout reale.
           </p>
         </div>
         <div className="participant-hero-panel">
           <span>ROI live</span>
           <strong>{formatSignedPercent(roiPct, 2)}</strong>
-          <small>Ranking #{liveRank} per rendimento percentuale</small>
+          <small>{financialSnapshot?.rankByRoi ? `Ranking #${financialSnapshot.rankByRoi}` : 'Ranking ROI demo'}</small>
         </div>
       </div>
 
-      <div className={`backend-banner backend-${backendState.mode}`}>
-        <div>
-          <strong>{backendState.mode === 'connected' ? 'Backend collegato' : backendState.mode === 'backend-unavailable' ? 'Backend non disponibile' : 'Modalita demo/mock'}</strong>
-          <span>{backendState.message}</span>
-        </div>
-        {backendState.teamLabel && <span className="badge badge-blue">team {backendState.teamLabel}</span>}
-      </div>
+      <nav className="participant-tabs">
+        {TABS.map(item => (
+          <Link className={tab === item.id ? 'active' : ''} to={item.path} key={item.id}>{item.label}</Link>
+        ))}
+      </nav>
 
-      <Section title="Dashboard Partecipante">
-        <div className="metric-grid favc-metric-grid">
-          <MetricCard label="Capitale virtuale depositato" value={formatCredits(totalCapitalDeposited)} sub="cresce solo quando il cash non basta" color="var(--teal)" />
-          <MetricCard label="Valore rosa" value={formatCredits(currentPortfolioValue)} sub={`${activePositions.length} giocatori attivi`} color="var(--accent)" />
-          <MetricCard label="Cash virtuale" value={formatCredits(virtualCashBalance)} sub="saldo disponibile mock/read-only" color="var(--green)" />
-          <MetricCard label="Profit / loss" value={formatSignedCredits(profitLoss)} sub="settlement virtuale" color={profitLoss >= 0 ? 'var(--green)' : 'var(--red)'} />
-          <MetricCard label="ROI%" value={formatSignedPercent(roiPct)} sub="classifica principale" color={roiPct >= 0 ? 'var(--green)' : 'var(--red)'} />
-          <MetricCard label="Ranking ROI%" value={`#${liveRank}`} sub={`${rankingRows.length} team demo`} color="var(--amber)" />
-          <MetricCard label="Net liquidation" value={formatCredits(netLiquidationValue)} sub="valore rosa dopo fee vendita" color="var(--purple)" />
-          <MetricCard label="Final liquidation" value={formatCredits(finalLiquidationValue)} sub="net liquidation + cash" color="var(--accent)" />
-        </div>
-      </Section>
-
-      <div className="favc-dashboard-grid">
-        <Section title="Andamento valore portafoglio">
-          <div className="card chart-card">
-            <ResponsiveContainer width="100%" height={260}>
-              <AreaChart data={chartData} margin={{ top: 8, right: 16, left: 0, bottom: 4 }}>
-                <CartesianGrid {...GRID_STYLE} />
-                <XAxis dataKey="label" {...AXIS_STYLE} />
-                <YAxis {...AXIS_STYLE} />
-                <Tooltip {...TOOLTIP_STYLE} formatter={(value: number) => `${formatCredits(value)} cr`} />
-                <Area type="monotone" dataKey="portfolioValue" name="Valore rosa" stroke={COLORS.blue} fill="rgba(59,130,246,.18)" strokeWidth={2.5} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </Section>
-
-        <Section title="ROI nel tempo">
-          <div className="card chart-card">
-            <ResponsiveContainer width="100%" height={260}>
-              <LineChart data={chartData} margin={{ top: 8, right: 16, left: 0, bottom: 4 }}>
-                <CartesianGrid {...GRID_STYLE} />
-                <XAxis dataKey="label" {...AXIS_STYLE} />
-                <YAxis tickFormatter={(value: number) => `${value}%`} {...AXIS_STYLE} />
-                <Tooltip {...TOOLTIP_STYLE} formatter={(value: number) => formatPercent(value, 2)} />
-                <Line type="monotone" dataKey="roiPct" name="ROI%" stroke={COLORS.green} strokeWidth={2.5} dot={{ r: 4, fill: COLORS.green }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </Section>
-      </div>
-
-      <div className="favc-dashboard-grid favc-side-grid">
-        <Section title="Composizione rosa 3P/8D/8C/6A">
-          <div className="card">
-            <div className="favc-role-grid">
-              {(Object.keys(roleLimits) as FavcRole[]).map(role => (
-                <div className="favc-role-cell" key={role}>
-                  <span>{roleNames[role]}</span>
-                  <strong>{counts[role]}/{roleLimits[role]}</strong>
-                </div>
-              ))}
+      {tab === 'overview' && (
+        <>
+          <Section title="Sintesi partecipante">
+            <div className="metric-grid favc-metric-grid">
+              <MetricCard label="Capitale virtuale" value={formatCredits(totalCapitalDeposited)} sub="totalCapitalDeposited" color="var(--teal)" />
+              <MetricCard label="Cash virtuale" value={formatCredits(virtualCashBalance)} sub="virtualCashBalance" color="var(--green)" />
+              <MetricCard label="Net liquidation" value={formatCredits(netLiquidationValue)} sub="rosa dopo fee vendita" color="var(--purple)" />
+              <MetricCard label="Final liquidation" value={formatCredits(finalLiquidationValue)} sub="net + cash" color="var(--accent)" />
+              <MetricCard label="Profit / loss" value={formatSignedCredits(profitLoss)} sub="settlement virtuale" color={profitLoss >= 0 ? 'var(--green)' : 'var(--red)'} />
+              <MetricCard label="ROI%" value={formatSignedPercent(roiPct)} sub="classifica principale" color={roiPct >= 0 ? 'var(--green)' : 'var(--red)'} />
+              <MetricCard label="Ranking ROI%" value={financialSnapshot?.rankByRoi ? `#${financialSnapshot.rankByRoi}` : 'Demo'} sub="ordinamento percentuale" color="var(--amber)" />
+              <MetricCard label="Rosa" value={`${activePositions.length}/25`} sub={`${counts.P}/3 P, ${counts.D}/8 D, ${counts.C}/8 C, ${counts.A}/6 A`} color="var(--accent)" />
             </div>
-            <div className="table-note">
-              La rosa attiva resta valida. Vendere libera uno slot; comprare usa prima il cash virtuale e aggiunge capitale solo sul deficit.
-            </div>
+          </Section>
+
+          <div className="favc-dashboard-grid">
+            <Section title="Andamento squadra">
+              <div className="card chart-card">
+                <TeamTrendChart data={teamTrend} valueKey="totalValue" />
+              </div>
+            </Section>
+            <Section title="ROI squadra">
+              <div className="card chart-card">
+                <TeamTrendChart data={teamTrend} valueKey="roiPct" />
+              </div>
+            </Section>
           </div>
-        </Section>
 
-        <Section title="Ranking ROI demo">
-          <div className="card table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>Pos.</th>
-                  <th>Team</th>
-                  <th>Capitale</th>
-                  <th>Valore finale</th>
-                  <th>P/L</th>
-                  <th>ROI%</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rankingRows.map(row => (
-                  <tr key={row.team} className={row.team === liveTeamName || row.rank === 1 ? 'rec-row' : undefined}>
-                    <td><strong>#{row.rank}</strong></td>
-                    <td>{row.team}</td>
-                    <td>{formatCredits(row.totalCapitalDeposited)}</td>
-                    <td>{formatCredits(row.finalValue)}</td>
-                    <td className={valueTone(row.profitLoss)}>{formatSignedCredits(row.profitLoss)}</td>
-                    <td><strong>{formatSignedPercent(row.roiPct)}</strong></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <div className="table-note">
-              Esempio chiave: Team A 150 -&gt; 180 = +20%, Team B 600 -&gt; 660 = +10%. Team A sta sopra Team B.
-            </div>
+          <div className="favc-dashboard-grid">
+            <PlayerListPanel title="Top 5 migliori" players={topPlayers} onSelect={player => setSelectedPlayer(positionToCard(player))} />
+            <PlayerListPanel title="Top 5 peggiori" players={worstPlayers} onSelect={player => setSelectedPlayer(positionToCard(player))} />
           </div>
-        </Section>
-      </div>
+        </>
+      )}
 
-      <Section title="Carte giocatore">
-        <div className="player-card-grid">
-          {positions.map(position => (
-            <PlayerCard
-              key={position.id}
-              player={positionToCard(position)}
-              compact
-              onSelect={setSelectedPlayer}
-            />
-          ))}
-        </div>
-      </Section>
-
-      <Section title="Portafoglio finanziario">
-        <div className="card table-scroll">
-          <table className="portfolio-table">
-            <thead>
-              <tr>
-                <th>Trend</th>
-                <th>Giocatore</th>
-                <th>Squadra</th>
-                <th>Ruolo</th>
-                <th>Qt. iniziale</th>
-                <th>Qt. corrente</th>
-                <th>Valore</th>
-                <th>Net liquidabile</th>
-                <th>P/L</th>
-                <th>ROI</th>
-                <th>Multiplier</th>
-                <th>Stato</th>
-              </tr>
-            </thead>
-            <tbody>
-              {positions.map(position => {
-                const value = calculatePositionValue(position);
-                const netValue = value * (1 - SELL_COMMISSION_RATE);
-                const pl = getPositionPL(position);
-                const singleRoi = getPositionRoi(position);
-                return (
-                  <tr key={position.id} className="clickable-row" onClick={() => setSelectedPlayer(positionToCard(position))}>
-                    <td className="mini-trend-cell">
-                      <PlayerTrendChart data={position.trend ?? []} mode="mini" />
-                    </td>
-                    <td><strong>{position.playerName}</strong></td>
-                    <td>{position.realTeam}</td>
-                    <td><span className="role-badge">{position.role}</span></td>
-                    <td>{formatCredits(position.initialQuote)}</td>
-                    <td>{formatCredits(position.currentQuote)}</td>
-                    <td>{formatCredits(value)}</td>
-                    <td>{formatCredits(netValue)}</td>
-                    <td className={valueTone(pl)}>{formatSignedCredits(pl)}</td>
-                    <td className={valueTone(singleRoi)}>{formatSignedPercent(singleRoi)}</td>
-                    <td>{position.fantasyMultiplier.toFixed(2)}</td>
-                    <td><span className={`badge ${position.status === 'ACTIVE' ? 'badge-green' : 'badge-red'}`}>{position.status}</span></td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          <div className="portfolio-summary-bar">
-            <span>P/L giocatori: <strong className={valueTone(totalPlayerPL)}>{formatSignedCredits(totalPlayerPL)}</strong></span>
-            <span>Valore corrente: <strong>{formatCredits(currentPortfolioValue)}</strong></span>
-            <span>Posizioni attive: <strong>{activePositions.length}/25</strong></span>
+      {tab === 'mercato' && (
+        <Section title="Mercato demo">
+          <div className="market-filters extended-filters">
+            <label>Search nome<input value={marketFilters.search} onChange={event => setMarketFilters({ ...marketFilters, search: event.target.value })} placeholder="Cerca giocatore" /></label>
+            <label>Ruolo<select value={marketFilters.role} onChange={event => setMarketFilters({ ...marketFilters, role: event.target.value as FavcRole | 'all' })}><option value="all">Tutti</option><option value="P">Portieri</option><option value="D">Difensori</option><option value="C">Centrocampisti</option><option value="A">Attaccanti</option></select></label>
+            <label>Squadra<select value={marketFilters.team} onChange={event => setMarketFilters({ ...marketFilters, team: event.target.value })}>{availableTeams.map(team => <option value={team} key={team}>{team}</option>)}</select></label>
+            <label>Prezzo<select value={marketFilters.price} onChange={event => setMarketFilters({ ...marketFilters, price: event.target.value as MarketPriceFilter })}><option value="all">Tutti</option><option value="low">fino a 8</option><option value="mid">9 - 12</option><option value="high">13+</option></select></label>
+            <label>Trend<select value={marketFilters.trend} onChange={event => setMarketFilters({ ...marketFilters, trend: event.target.value as MarketTrendFilter })}><option value="all">Tutti</option><option value="up">rialzo</option><option value="stable">stabile</option><option value="down">ribasso</option></select></label>
+            <label>Ordina<select value={marketFilters.sortBy} onChange={event => setMarketFilters({ ...marketFilters, sortBy: event.target.value as MarketSortKey })}><option value="return">rendimento stimato</option><option value="price">prezzo</option><option value="name">nome</option><option value="role">ruolo</option><option value="quoteChange">variazione quota</option></select></label>
+            <label className="checkbox-filter"><input type="checkbox" checked={marketFilters.onlyWithTrend} onChange={event => setMarketFilters({ ...marketFilters, onlyWithTrend: event.target.checked })} /> Solo con trend</label>
           </div>
-        </div>
-      </Section>
 
-      <Section title="Mercato demo trading">
-        <div className="market-filters">
-          <label>
-            Search nome
-            <input value={search} onChange={event => setSearch(event.target.value)} placeholder="Cerca giocatore" />
-          </label>
-          <label>
-            Ruolo
-            <select value={roleFilter} onChange={event => setRoleFilter(event.target.value as FavcRole | 'all')}>
-              <option value="all">Tutti</option>
-              <option value="P">Portieri</option>
-              <option value="D">Difensori</option>
-              <option value="C">Centrocampisti</option>
-              <option value="A">Attaccanti</option>
-            </select>
-          </label>
-          <label>
-            Squadra
-            <select value={teamFilter} onChange={event => setTeamFilter(event.target.value)}>
-              {availableTeams.map(team => <option value={team} key={team}>{team}</option>)}
-            </select>
-          </label>
-          <label>
-            Prezzo
-            <select value={priceFilter} onChange={event => setPriceFilter(event.target.value as PriceFilter)}>
-              <option value="all">Tutti</option>
-              <option value="low">fino a 8</option>
-              <option value="mid">9 - 12</option>
-              <option value="high">13+</option>
-            </select>
-          </label>
-          <label>
-            Trend
-            <select value={performanceFilter} onChange={event => setPerformanceFilter(event.target.value as PerformanceFilter)}>
-              <option value="all">Tutti</option>
-              <option value="positive">rialzo</option>
-              <option value="negative">ribasso</option>
-            </select>
-          </label>
-        </div>
+          {simulationNotice && <div className="backend-banner backend-no-team"><strong>Simulazione</strong><span>{simulationNotice}</span></div>}
 
-        {marketRows.length === 0 ? (
-          <EmptyState title="Nessun giocatore trovato" text="Modifica filtri o ricerca per vedere altri asset virtuali." />
-        ) : (
           <div className="player-card-grid market-card-grid">
-            {marketRows.map(row => {
-              const action = actionForRow(row);
-              const card = marketRowToCard(row);
-              return (
-                <PlayerCard
-                  key={row.id}
-                  player={card}
-                  compact
-                  onSelect={setSelectedPlayer}
-                  onAction={() => action.onClick()}
-                />
-              );
-            })}
+            {filteredMarket.map(player => (
+              <PlayerCard
+                key={player.id}
+                player={marketToCard(player)}
+                compact
+                onSelect={setSelectedPlayer}
+                onAction={() => setSimulationNotice('Compra demo e solo simulata: non modifica il database. Usa Simula cambio per vedere impatto su cash, capitale e ROI.')}
+              />
+            ))}
           </div>
-        )}
-        <div className="table-note">
-          Buy/sell restano mock o disabilitati in read-only backend. Nessun ordine reale e nessun pagamento reale.
-        </div>
-      </Section>
+          {filteredMarket.length === 0 && <EmptyState title="Nessun giocatore trovato" text="Modifica filtri o ricerca per vedere altri asset virtuali." />}
+          <div className="table-note">Compra demo non scrive sul database e non attiva ordini reali.</div>
+        </Section>
+      )}
 
-      <Section title="Storico operazioni">
-        <div className="card table-scroll">
-          <table>
-            <thead>
-              <tr>
-                <th>Round</th>
-                <th>Tipo</th>
-                <th>Giocatore</th>
-                <th>Gross amount</th>
-                <th>Commissione</th>
-                <th>Net amount</th>
-                <th>Capital added</th>
-                <th>Cash before</th>
-                <th>Cash after</th>
-              </tr>
-            </thead>
-            <tbody>
-              {lastOperations.map(operation => (
-                <tr key={operation.id}>
-                  <td>{operation.round}</td>
-                  <td><span className={`badge ${operation.type === 'BUY' ? 'badge-blue' : 'badge-amber'}`}>{operation.type}</span></td>
-                  <td><strong>{operation.playerName}</strong></td>
-                  <td>{formatCredits(operation.grossAmount)}</td>
-                  <td>{formatCredits(operation.commission)}</td>
-                  <td>{formatCredits(operation.netAmount)}</td>
-                  <td>{formatCredits(operation.capitalAdded)}</td>
-                  <td>{formatCredits(operation.cashBefore)}</td>
-                  <td>{formatCredits(operation.cashAfter)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <div className="table-note">
-            Il buy successivo usa prima il cash virtuale; solo l'eventuale deficit aumenta totalCapitalDeposited.
-          </div>
-        </div>
-      </Section>
-
-      <Section title="Settlement finale virtuale">
-        <div className="favc-settlement-grid">
-          <div className="card">
-            <div className="doc-title">Formula</div>
-            <div className="settlement-formula">
-              <div><span>Valore rosa lordo</span><strong>{formatCredits(currentPortfolioValue)}</strong></div>
-              <div><span>Net liquidation value</span><strong>{formatCredits(netLiquidationValue)}</strong></div>
-              <div><span>Cash virtuale</span><strong>{formatCredits(virtualCashBalance)}</strong></div>
-              <div><span>Final liquidation value</span><strong>{formatCredits(finalLiquidationValue)}</strong></div>
-              <div><span>Profit/Loss</span><strong className={valueTone(profitLoss)}>{formatSignedCredits(profitLoss)}</strong></div>
-              <div><span>ROI%</span><strong className={valueTone(roiPct)}>{formatSignedPercent(roiPct)}</strong></div>
-            </div>
-            <div className="table-note">
-              finalLiquidationValue = netLiquidationValue + virtualCashBalance. Il ROI non viene aggiunto una seconda volta.
-            </div>
+      {tab === 'rosa' && (
+        <>
+          <div className="favc-dashboard-grid">
+            <Section title="Andamento rosa">
+              <div className="card chart-card"><TeamTrendChart data={teamTrend} valueKey="portfolioValue" /></div>
+            </Section>
+            <Section title="Ultimi 5 round">
+              <div className="card table-scroll">
+                <table>
+                  <thead><tr><th>Round</th><th>Valore rosa</th><th>Valore squadra</th><th>ROI</th></tr></thead>
+                  <tbody>{latestTeamTrend.map(point => <tr key={point.round}><td>G{point.round}</td><td>{formatCredits(point.portfolioValue)}</td><td>{formatCredits(point.totalValue)}</td><td className={valueTone(point.roiPct)}>{formatSignedPercent(point.roiPct)}</td></tr>)}</tbody>
+                </table>
+              </div>
+            </Section>
           </div>
 
-          <div className="notice-card settlement-notice">
-            <span className="badge badge-amber">Pilot virtuale</span>
-            <strong>Nessun payout reale nel pilot</strong>
-            <p>
-              Il credito virtuale non rappresenta denaro reale. Il modello riscattabile e stato analizzato come variante separata,
-              ma non e incluso in questa versione.
-            </p>
-          </div>
-        </div>
-      </Section>
+          {roleGroups.map(group => {
+            const players = activePositions.filter(position => position.role === group.role);
+            const value = players.reduce((sum, player) => sum + calculatePositionValue(player), 0);
+            const pl = players.reduce((sum, player) => sum + getPositionPL(player), 0);
+            const initial = players.reduce((sum, player) => sum + player.initialQuote, 0);
+            const roi = initial > 0 ? (pl / initial) * 100 : 0;
+            return (
+              <Section title={`${group.title} ${players.length}/${roleLimits[group.role]}`} key={group.role}>
+                <div className="role-summary-row">
+                  <span>Valore reparto <strong>{formatCredits(value)}</strong></span>
+                  <span>P/L <strong className={valueTone(pl)}>{formatSignedCredits(pl)}</strong></span>
+                  <span>ROI <strong className={valueTone(roi)}>{formatSignedPercent(roi)}</strong></span>
+                </div>
+                <RosterTable players={players} onSelect={player => setSelectedPlayer(positionToCard(player))} />
+              </Section>
+            );
+          })}
+        </>
+      )}
 
-      {selectedPlayer && (
-        <div className="player-drawer-backdrop" onClick={() => setSelectedPlayer(null)}>
-          <aside className="player-drawer" onClick={event => event.stopPropagation()}>
-            <button className="drawer-close" type="button" onClick={() => setSelectedPlayer(null)}>Chiudi</button>
-            <div className="drawer-header">
-              <span className="role-badge">{selectedPlayer.role}</span>
-              <h2>{selectedPlayer.playerName}</h2>
-              <p>{selectedPlayer.realTeam}</p>
-            </div>
-
-            <PlayerTrendChart data={selectedPlayer.trend} mode="full" valueKey="quote" />
-
+      {tab === 'operazioni' && (
+        <>
+          <Section title="Operazioni">
             <div className="card table-scroll">
               <table>
                 <thead>
-                  <tr>
-                    <th>Round</th>
-                    <th>Quote</th>
-                    <th>Quote change</th>
-                    <th>FT return</th>
-                    <th>Vote</th>
-                    <th>Bonus/malus</th>
-                    <th>Estimated value</th>
-                  </tr>
+                  <tr><th>Data/Round</th><th>Tipo</th><th>Giocatore</th><th>Gross</th><th>Commissione</th><th>Net</th><th>Capital added</th><th>Cash before</th><th>Cash after</th></tr>
                 </thead>
                 <tbody>
-                  {selectedPlayer.trend.map(point => (
-                    <tr key={point.round}>
-                      <td>G{point.round}</td>
-                      <td>{formatCredits(point.quote)}</td>
-                      <td className={valueTone(point.quoteChange)}>{formatSignedCredits(point.quoteChange)}</td>
-                      <td className={valueTone(point.fantaTradingReturnPct)}>{formatSignedPercent(point.fantaTradingReturnPct)}</td>
-                      <td>{point.vote ?? 'n.d.'}</td>
-                      <td className={valueTone(point.fantasyBonusPct ?? 0)}>{formatSignedPercent(point.fantasyBonusPct ?? 0)}</td>
-                      <td>{formatCredits(point.estimatedValue)}</td>
+                  {operations.map(operation => (
+                    <tr key={operation.id}>
+                      <td>{operation.round}</td>
+                      <td><span className={`badge ${operation.type === 'BUY' ? 'badge-blue' : 'badge-amber'}`}>{operation.type}</span></td>
+                      <td><strong>{operation.playerName}</strong></td>
+                      <td>{formatCredits(operation.grossAmount)}</td>
+                      <td>{formatCredits(operation.commission)}</td>
+                      <td>{formatCredits(operation.netAmount)}</td>
+                      <td>{formatCredits(operation.capitalAdded)}</td>
+                      <td>{formatCredits(operation.cashBefore)}</td>
+                      <td>{formatCredits(operation.cashAfter)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-              <div className="table-note">
-                Andamento stimato nel pilot, non quotazione ufficiale Fantacalcio round-by-round. Quando saranno disponibili dati ufficiali giornata per giornata, questa vista potra usare quelli.
-              </div>
             </div>
-          </aside>
-        </div>
+            {sellOperations.length === 0 && (
+              <EmptyState title="Nessuna vendita reale nel team demo" text="Il team demo contiene solo acquisti iniziali. Le vendite saranno abilitate nella simulazione cambio." />
+            )}
+          </Section>
+          <TradeSimulationPanel
+            positions={positions}
+            marketPlayers={marketPlayers}
+            virtualCashBalance={virtualCashBalance}
+            totalCapitalDeposited={totalCapitalDeposited}
+            currentPortfolioValue={currentPortfolioValue}
+          />
+        </>
       )}
+
+      {tab === 'settlement' && (
+        <Section title="Settlement finale virtuale">
+          <div className="favc-settlement-grid">
+            <div className="card">
+              <div className="settlement-formula">
+                <div><span>Total capital deposited</span><strong>{formatCredits(totalCapitalDeposited)}</strong></div>
+                <div><span>Net liquidation value</span><strong>{formatCredits(netLiquidationValue)}</strong></div>
+                <div><span>Virtual cash balance</span><strong>{formatCredits(virtualCashBalance)}</strong></div>
+                <div><span>Final liquidation value</span><strong>{formatCredits(finalLiquidationValue)}</strong></div>
+                <div><span>Profit/Loss</span><strong className={valueTone(profitLoss)}>{formatSignedCredits(profitLoss)}</strong></div>
+                <div><span>ROI%</span><strong className={valueTone(roiPct)}>{formatSignedPercent(roiPct)}</strong></div>
+              </div>
+              <div className="table-note">finalLiquidationValue = netLiquidationValue + virtualCashBalance. Il ROI non si aggiunge una seconda volta al valore finale.</div>
+            </div>
+            <div className="notice-card settlement-notice">
+              <span className="badge badge-amber">Settlement virtuale</span>
+              <strong>Nessun pagamento reale</strong>
+              <p>Il settlement e solo contabile per il pilot FREE_ACCESS_VIRTUAL_CAPITAL. Non esiste payout reale o credito riscattabile.</p>
+            </div>
+          </div>
+        </Section>
+      )}
+
+      <PlayerDetailDrawer player={selectedPlayer} onClose={() => setSelectedPlayer(null)} />
     </>
+  );
+}
+
+function PlayerListPanel({ title, players, onSelect }: { title: string; players: DemoPosition[]; onSelect: (player: DemoPosition) => void }) {
+  return (
+    <Section title={title}>
+      <div className="card table-scroll">
+        <table>
+          <thead><tr><th>Giocatore</th><th>Club</th><th>Ruolo</th><th>P/L</th><th>ROI</th></tr></thead>
+          <tbody>
+            {players.map(player => (
+              <tr key={player.id} className="clickable-row" onClick={() => onSelect(player)}>
+                <td><strong>{player.playerName}</strong></td>
+                <td>{player.realTeam}</td>
+                <td><span className="role-badge">{player.role}</span></td>
+                <td className={valueTone(getPositionPL(player))}>{formatSignedCredits(getPositionPL(player))}</td>
+                <td className={valueTone(getPositionRoi(player))}>{formatSignedPercent(getPositionRoi(player))}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Section>
+  );
+}
+
+function RosterTable({ players, onSelect }: { players: DemoPosition[]; onSelect: (player: DemoPosition) => void }) {
+  return (
+    <div className="card table-scroll">
+      <table className="portfolio-table compact-table">
+        <thead>
+          <tr><th>Trend</th><th>Giocatore</th><th>Club</th><th>Ruolo</th><th>Qt. iniz.</th><th>Qt. corr.</th><th>Valore</th><th>P/L</th><th>ROI</th><th>Azioni</th></tr>
+        </thead>
+        <tbody>
+          {players.map(player => {
+            const value = calculatePositionValue(player);
+            const pl = getPositionPL(player);
+            const roi = getPositionRoi(player);
+            return (
+              <tr key={player.id}>
+                <td className="mini-trend-cell"><PlayerTrendChart data={player.trend ?? []} mode="mini" /></td>
+                <td><strong>{player.playerName}</strong></td>
+                <td>{player.realTeam}</td>
+                <td><span className="role-badge">{player.role}</span></td>
+                <td>{formatCredits(player.initialQuote)}</td>
+                <td>{formatCredits(player.currentQuote)}</td>
+                <td>{formatCredits(value)}</td>
+                <td className={valueTone(pl)}>{formatSignedCredits(pl)}</td>
+                <td className={valueTone(roi)}>{formatSignedPercent(roi)}</td>
+                <td className="row-actions">
+                  <button className="favc-action" type="button" onClick={() => onSelect(player)}>Dettaglio</button>
+                  <button className="favc-action favc-action-sell" type="button" disabled>Vendi demo</button>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 }

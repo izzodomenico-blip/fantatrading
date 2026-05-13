@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 
@@ -14,7 +15,8 @@ async function bootstrap() {
     }),
   );
 
-  const corsOrigins = process.env.CORS_ORIGINS?.split(',') ?? ['http://localhost:5173'];
+  const configService = app.get(ConfigService);
+  const corsOrigins = configService.get<string[]>('app.corsOrigins') ?? [];
   app.enableCors({ origin: corsOrigins, credentials: true });
 
   const config = new DocumentBuilder()
@@ -26,7 +28,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
-  const port = process.env.PORT ?? 3000;
+  const port = configService.get<number>('app.port') ?? 3000;
   await app.listen(port);
   console.log(`FantaTrading backend listening on port ${port}`);
 }

@@ -103,9 +103,16 @@ npm run backend:dev        # Hot reload, porta 3000
 | `JWT_SECRET` | stringa ≥ 32 caratteri | Sì (in prod) |
 | `JWT_ACCESS_EXPIRES_IN` | `15m` | No |
 | `JWT_REFRESH_EXPIRES_IN` | `7d` | No |
-| `CORS_ORIGINS` | `http://localhost:5173` | No |
+| `CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | No |
 
 Il file `.env` va creato in `apps/backend/.env` (non nella radice). Non committare mai il `.env` reale.
+
+In `NODE_ENV=development`, se `CORS_ORIGINS` non e valorizzata, il backend abilita automaticamente solo:
+
+- `http://localhost:5173`
+- `http://127.0.0.1:5173`
+
+In `NODE_ENV=production`, il default resta restrittivo: nessuna origin browser viene abilitata se `CORS_ORIGINS` non e configurata esplicitamente.
 
 ---
 

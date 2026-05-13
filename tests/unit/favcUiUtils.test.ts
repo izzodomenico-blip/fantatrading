@@ -1,6 +1,7 @@
 import { buildTeamTrendFromPositions } from '../../app/web/src/utils/teamTrend';
 import { simulateTradeChange } from '../../app/web/src/utils/tradeSimulation';
 import { filterAndSortMarketPlayers } from '../../app/web/src/utils/marketFilters';
+import { buildBuyConfirmation, buildSellConfirmation } from '../../app/web/src/utils/tradeConfirmation';
 import type { DemoMarketPlayer, DemoPosition } from '../../app/web/src/mock/favcDemoData';
 
 const position: DemoPosition = {
@@ -79,5 +80,35 @@ describe('FAVC UI utilities', () => {
 
     expect(filtered).toHaveLength(1);
     expect(filtered[0].playerName).toBe('Retegui');
+  });
+
+  it('builds buy confirmation without mutating data and blocks a full roster', () => {
+    const fullRoster = Array.from({ length: 25 }, (_, index) => ({
+      ...position,
+      id: `pos-${index}`,
+      playerId: `owned-${index}`,
+      role: index < 3 ? 'P' : index < 11 ? 'D' : index < 19 ? 'C' : 'A',
+    })) as DemoPosition[];
+    const beforeRoster = JSON.stringify(fullRoster);
+    const beforeMarket = JSON.stringify(marketPlayer);
+
+    const confirmation = buildBuyConfirmation(marketPlayer, fullRoster, 4, 100);
+
+    expect(confirmation.canConfirm).toBe(false);
+    expect(confirmation.isRosterFull).toBe(true);
+    expect(confirmation.capitalAdded).toBeGreaterThan(0);
+    expect(JSON.stringify(fullRoster)).toBe(beforeRoster);
+    expect(JSON.stringify(marketPlayer)).toBe(beforeMarket);
+  });
+
+  it('builds sell confirmation without mutating data', () => {
+    const before = JSON.stringify(position);
+    const confirmation = buildSellConfirmation(position, [position], 3);
+
+    expect(confirmation.grossAmount).toBeGreaterThan(0);
+    expect(confirmation.netAmount).toBeLessThan(confirmation.grossAmount);
+    expect(confirmation.cashAfter).toBeGreaterThan(confirmation.cashBefore);
+    expect(confirmation.leavesRoleShort).toBe(true);
+    expect(JSON.stringify(position)).toBe(before);
   });
 });

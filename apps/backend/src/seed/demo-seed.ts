@@ -73,6 +73,7 @@ type DemoRosterPlayer = ProcessedQuoteSeedRow & {
 };
 
 type SeedSummary = {
+  resetApplied?: boolean;
   playersImported: number;
   quotesImported: number;
   votesImported: number;
@@ -180,13 +181,17 @@ export function countComposition(players: Array<{ mappedRole: PlayerRole }>) {
   };
 }
 
-async function seedDemo() {
+async function seedDemo(options: { reset?: boolean } = {}) {
   loadEnvFiles();
 
   const prisma = new PrismaService();
   await prisma.$connect();
 
   try {
+    if (options.reset) {
+      await resetDemoTeam(prisma);
+    }
+
     const marketService = new MarketService(prisma, new TeamsService(prisma));
     const settlementService = new SettlementService(prisma);
 
@@ -241,6 +246,7 @@ async function seedDemo() {
 
     const buysAfter = await prisma.marketOperation.count({ where: { teamId: team.id, type: 'BUY' } });
     const summary = await buildSummary(prisma, season.id, team.id, roster, playerIdByExternalId, {
+      resetApplied: Boolean(options.reset),
       playersImported: playerIdByExternalId.size,
       quotesImported: quoteRows.length,
       votesImported,
@@ -251,6 +257,28 @@ async function seedDemo() {
   } finally {
     await prisma.$disconnect();
   }
+}
+
+async function resetDemoTeam(prisma: PrismaClient) {
+  const participant = await prisma.user.findUnique({ where: { email: DEMO_USER_EMAIL } });
+  const season = await prisma.season.findFirst({ where: { footballSeason: DEMO_SEASON } });
+  if (!participant || !season) return;
+
+  const team = await prisma.team.findUnique({
+    where: { userId_seasonId: { userId: participant.id, seasonId: season.id } },
+  });
+  if (!team) return;
+
+  await prisma.$transaction([
+    prisma.platformFee.deleteMany({ where: { teamId: team.id } }),
+    prisma.finalSettlement.deleteMany({ where: { teamId: team.id } }),
+    prisma.prizeAward.deleteMany({ where: { teamId: team.id } }),
+    prisma.ranking.deleteMany({ where: { teamId: team.id } }),
+    prisma.roundPlayerResult.deleteMany({ where: { teamId: team.id } }),
+    prisma.marketOperation.deleteMany({ where: { teamId: team.id } }),
+    prisma.portfolioPosition.deleteMany({ where: { teamId: team.id } }),
+    prisma.team.delete({ where: { id: team.id } }),
+  ]);
 }
 
 async function upsertDemoUser(
@@ -448,6 +476,7 @@ async function buildSummary(
   roster: DemoRosterPlayer[],
   playerIdByExternalId: Map<string, string>,
   counts: {
+    resetApplied?: boolean;
     playersImported: number;
     quotesImported: number;
     votesImported: number;
@@ -532,7 +561,7 @@ function loadEnvFiles() {
 }
 
 if (require.main === module) {
-  seedDemo().catch((error) => {
+  seedDemo({ reset: process.argv.includes('--reset') }).catch((error) => {
     process.stderr.write(`${error instanceof Error ? error.stack ?? error.message : String(error)}\n`);
     process.exit(1);
   });

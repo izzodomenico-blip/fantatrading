@@ -99,6 +99,12 @@ export type BackendMarketOperation = {
   executedAt?: string;
 };
 
+export type BackendMarketTradeResponse = {
+  operation: BackendMarketOperation;
+  position?: BackendPortfolio['positions'][number];
+  portfolio?: BackendPortfolio;
+};
+
 export type BackendFinalSettlement = {
   teamId: string;
   totalCapitalDeposited: number;
@@ -221,6 +227,14 @@ export class FantaTradingApi {
     return this.request<BackendMarketOperation[]>('/market/operations', { teamId });
   }
 
+  buyPlayer(teamId: string, playerId: string) {
+    return this.post<BackendMarketTradeResponse>('/market/buy', { teamId, playerId });
+  }
+
+  sellPlayer(teamId: string, input: { playerId?: string; positionId?: string }) {
+    return this.post<BackendMarketTradeResponse>('/market/sell', { teamId, ...input });
+  }
+
   private async post<T>(path: string, body: unknown): Promise<ApiResult<T>> {
     try {
       const response = await fetch(`${this.baseUrl}${path}`, {
@@ -233,10 +247,11 @@ export class FantaTradingApi {
       });
 
       if (!response.ok) {
+        const message = await readErrorMessage(response);
         return {
           ok: false,
           status: response.status,
-          error: `Backend request failed (${response.status})`,
+          error: message ?? `Backend request failed (${response.status})`,
         };
       }
 
@@ -254,6 +269,16 @@ export class FantaTradingApi {
   }
 }
 
+async function readErrorMessage(response: Response) {
+  try {
+    const payload = await response.json() as { message?: string | string[]; error?: string };
+    if (Array.isArray(payload.message)) return payload.message.join(', ');
+    return payload.message ?? payload.error ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export function getStoredAccessToken() {
   if (typeof window === 'undefined') return null;
   return (
@@ -267,9 +292,9 @@ export function createFantaTradingApi() {
   return new FantaTradingApi({ token: getStoredAccessToken() });
 }
 
-export async function getOrCreateDemoAccessToken(baseUrl?: string) {
+export async function getOrCreateDemoAccessToken(baseUrl?: string, options: { forceRefresh?: boolean } = {}) {
   const existing = getStoredAccessToken();
-  if (existing || !import.meta.env.DEV) return existing;
+  if (existing && !options.forceRefresh || !import.meta.env.DEV) return existing;
 
   const api = new FantaTradingApi({ baseUrl });
   const login = await api.login('demo@fantatrading.local', 'password');

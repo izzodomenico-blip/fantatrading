@@ -1,11 +1,27 @@
 import { registerAs } from '@nestjs/config';
 
+export const DEV_CORS_ORIGINS = [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+];
+
+export function parseCorsOrigins(value: string | undefined, nodeEnv = process.env.NODE_ENV ?? 'development') {
+  if (value?.trim()) {
+    return value
+      .split(',')
+      .map((origin) => origin.trim())
+      .filter(Boolean);
+  }
+
+  return nodeEnv === 'production' ? [] : DEV_CORS_ORIGINS;
+}
+
 export default registerAs('app', () => ({
   port: parseInt(process.env.PORT ?? '3000', 10),
   nodeEnv: process.env.NODE_ENV ?? 'development',
   jwtSecret: process.env.JWT_SECRET ?? 'dev_secret_change_in_production',
   jwtAccessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN ?? '15m',
   jwtRefreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN ?? '7d',
-  corsOrigins: (process.env.CORS_ORIGINS ?? 'http://localhost:5173').split(','),
+  corsOrigins: parseCorsOrigins(process.env.CORS_ORIGINS, process.env.NODE_ENV),
   databaseUrl: process.env.DATABASE_URL ?? '',
 }));

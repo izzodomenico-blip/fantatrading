@@ -17,6 +17,7 @@ import PlayerCard, { type PlayerCardData } from '../components/PlayerCard';
 import PlayerDetailDrawer from '../components/PlayerDetailDrawer';
 import PlayerTrendChart from '../components/PlayerTrendChart';
 import TeamTrendChart from '../components/TeamTrendChart';
+import TradeConfirmModal from '../components/TradeConfirmModal';
 import TradeSimulationPanel from '../components/TradeSimulationPanel';
 import {
   SELL_COMMISSION_RATE,
@@ -67,6 +68,15 @@ type FinancialSnapshot = {
   profitLoss?: number;
   roiPct?: number;
   rankByRoi?: number | null;
+};
+
+type TradeDialog =
+  | { type: 'buy'; player: DemoMarketPlayer }
+  | { type: 'sell'; position: DemoPosition };
+
+type TradeStatus = {
+  tone: 'success' | 'error' | 'info';
+  message: string;
 };
 
 const TABS: Array<{ id: ParticipantTab; label: string; path: string }> = [
@@ -167,7 +177,7 @@ function normalizeMarketPlayers(
   syntheticRows: RawSyntheticRoundQuote[],
   voteRows: RawVoteRow[],
 ) {
-  const ownedIds = new Set(currentPositions.map(position => position.playerId).filter(Boolean));
+  const ownedIds = new Set(currentPositions.filter(position => position.status === 'ACTIVE').map(position => position.playerId).filter(Boolean));
   return players
     .filter(player => !ownedIds.has(player.externalId ?? player.id))
     .slice(0, 80)
@@ -285,6 +295,8 @@ export default function ParticipantFavc() {
   const [operations, setOperations] = useState<DemoOperation[]>(() => initialOperations);
   const [virtualCashBalance, setVirtualCashBalance] = useState(0);
   const [financialSnapshot, setFinancialSnapshot] = useState<FinancialSnapshot | null>(null);
+  const [teamId, setTeamId] = useState<string | null>(null);
+  const [reloadNonce, setReloadNonce] = useState(0);
   const [backendState, setBackendState] = useState<BackendUiState>({
     mode: 'checking',
     message: 'Verifica connessione backend in corso...',
@@ -292,6 +304,10 @@ export default function ParticipantFavc() {
   const [dataSource, setDataSource] = useState<DataSource>('mock');
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerCardData | null>(null);
   const [simulationNotice, setSimulationNotice] = useState('');
+  const [tradeDialog, setTradeDialog] = useState<TradeDialog | null>(null);
+  const [tradeSubmitting, setTradeSubmitting] = useState(false);
+  const [tradeError, setTradeError] = useState('');
+  const [tradeStatus, setTradeStatus] = useState<TradeStatus | null>(null);
   const [marketFilters, setMarketFilters] = useState<MarketFilterState>({
     search: '',
     role: 'all',
@@ -312,6 +328,8 @@ export default function ParticipantFavc() {
       if (!mounted) return;
       if (!health.ok) {
         setBackendState({ mode: 'backend-unavailable', message: 'Backend non disponibile: uso fallback demo/mock locale.' });
+        setTeamId(null);
+        setDataSource('mock');
         return;
       }
 
@@ -323,11 +341,19 @@ export default function ParticipantFavc() {
             ? 'Backend raggiungibile, ma login demo non disponibile: esegui il seed demo o imposta un token JWT locale.'
             : 'Backend raggiungibile, ma manca un token JWT locale: uso demo/mock read-only.',
         });
+        setTeamId(null);
         return;
       }
 
-      const authedApi = createFantaTradingApi();
-      const teams = await authedApi.getMyTeams();
+      let authedApi = createFantaTradingApi();
+      let teams = await authedApi.getMyTeams();
+      if (!teams.ok && import.meta.env.DEV && (teams.status === 401 || teams.status === 403)) {
+        const refreshedToken = await getOrCreateDemoAccessToken(undefined, { forceRefresh: true });
+        if (refreshedToken) {
+          authedApi = createFantaTradingApi();
+          teams = await authedApi.getMyTeams();
+        }
+      }
       if (!mounted) return;
 
       if (!teams.ok || teams.data.length === 0) {
@@ -337,10 +363,12 @@ export default function ParticipantFavc() {
             ? 'Backend collegato, ma nessuna squadra reale trovata: mostro la demo controllata.'
             : 'Errore nella lettura dei team: uso demo/mock.',
         });
+        setTeamId(null);
         return;
       }
 
       const team = teams.data[0];
+      setTeamId(team.id);
       const [portfolio, players, quotes, votes, settlement, operationsResult, syntheticRows] = await Promise.all([
         authedApi.getTeamPortfolio(team.id),
         authedApi.getPlayers({ seasonId: team.seasonId }),
@@ -354,6 +382,7 @@ export default function ParticipantFavc() {
       if (!mounted) return;
       if (!portfolio.ok) {
         setBackendState({ mode: 'backend-unavailable', message: 'Team trovato, ma il portafoglio non e leggibile: uso demo/mock.' });
+        setTeamId(null);
         return;
       }
 
@@ -373,7 +402,7 @@ export default function ParticipantFavc() {
       setBackendState({
         mode: 'connected',
         message: normalizedPositions.length > 0
-          ? 'Backend collegato: dati team e portafoglio letti in modalita read-only.'
+          ? 'Backend collegato: dati team e portafoglio letti dalla demo. BUY/SELL reali demo richiedono conferma.'
           : 'Backend collegato, ma il portafoglio e vuoto: mostro la demo controllata.',
         teamLabel: team.id,
       });
@@ -383,7 +412,7 @@ export default function ParticipantFavc() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [reloadNonce]);
 
   if (tab === null) {
     return <Navigate to="/partecipante-favc/overview" replace />;
@@ -411,6 +440,7 @@ export default function ParticipantFavc() {
   const connectionBadges = [
     backendState.mode === 'connected' ? 'Backend collegato' : backendState.mode === 'backend-unavailable' ? 'Backend non disponibile' : 'Demo backend',
     dataSource === 'backend' ? 'Dati backend' : 'Fallback mock',
+    backendState.mode === 'connected' && dataSource === 'backend' ? 'Operazioni reali demo backend' : 'Operazioni simulate/mock',
     hasSyntheticTrend ? 'Trend synthetic' : 'Trend mock/official',
     'Nessun payout reale',
   ];
@@ -427,6 +457,67 @@ export default function ParticipantFavc() {
     { role: 'A', title: 'Attaccanti' },
   ];
   const sellOperations = operations.filter(operation => operation.type === 'SELL');
+  const realDemoActionsEnabled = backendState.mode === 'connected' && dataSource === 'backend' && Boolean(teamId);
+
+  async function confirmTrade() {
+    if (!tradeDialog) return;
+
+    if (!realDemoActionsEnabled || !teamId) {
+      setTradeDialog(null);
+      setTradeStatus({
+        tone: 'info',
+        message: 'Backend demo non collegato: operazione non inviata. Usa la simulazione locale per stimare cambio, cash e ROI.',
+      });
+      return;
+    }
+
+    setTradeSubmitting(true);
+    setTradeError('');
+    const api = createFantaTradingApi();
+    const result = tradeDialog.type === 'buy'
+      ? await api.buyPlayer(teamId, tradeDialog.player.id)
+      : await api.sellPlayer(teamId, { positionId: tradeDialog.position.id });
+
+    setTradeSubmitting(false);
+    if (!result.ok) {
+      setTradeError(result.status ? `${result.error} (${result.status})` : result.error);
+      return;
+    }
+
+    setTradeDialog(null);
+    setTradeStatus({
+      tone: 'success',
+      message: tradeDialog.type === 'buy'
+        ? `${tradeDialog.player.playerName} acquistato nella demo backend. Portafoglio aggiornato.`
+        : `${tradeDialog.position.playerName} venduto nella demo backend. Portafoglio aggiornato.`,
+    });
+    setReloadNonce(value => value + 1);
+  }
+
+  function requestBuy(player: DemoMarketPlayer) {
+    setSimulationNotice('');
+    setTradeError('');
+    if (!realDemoActionsEnabled) {
+      setTradeStatus({
+        tone: 'info',
+        message: 'Backend offline o fallback mock attivo: acquisto non inviato. La simulazione locale resta disponibile nella pagina Operazioni.',
+      });
+      return;
+    }
+    setTradeDialog({ type: 'buy', player });
+  }
+
+  function requestSell(position: DemoPosition) {
+    setTradeError('');
+    if (!realDemoActionsEnabled) {
+      setTradeStatus({
+        tone: 'info',
+        message: 'Backend offline o fallback mock attivo: vendita non inviata. La simulazione locale resta disponibile nella pagina Operazioni.',
+      });
+      return;
+    }
+    setTradeDialog({ type: 'sell', position });
+  }
 
   return (
     <>
@@ -450,6 +541,13 @@ export default function ParticipantFavc() {
           <Link className={tab === item.id ? 'active' : ''} to={item.path} key={item.id}>{item.label}</Link>
         ))}
       </nav>
+
+      {tradeStatus && (
+        <div className={`backend-banner trade-status trade-status-${tradeStatus.tone}`}>
+          <strong>{tradeStatus.tone === 'success' ? 'Operazione completata' : tradeStatus.tone === 'error' ? 'Errore operazione' : 'Modalita demo'}</strong>
+          <span>{tradeStatus.message}</span>
+        </div>
+      )}
 
       {tab === 'overview' && (
         <>
@@ -501,18 +599,28 @@ export default function ParticipantFavc() {
           {simulationNotice && <div className="backend-banner backend-no-team"><strong>Simulazione</strong><span>{simulationNotice}</span></div>}
 
           <div className="player-card-grid market-card-grid">
-            {filteredMarket.map(player => (
-              <PlayerCard
-                key={player.id}
-                player={marketToCard(player)}
-                compact
-                onSelect={setSelectedPlayer}
-                onAction={() => setSimulationNotice('Compra demo e solo simulata: non modifica il database. Usa Simula cambio per vedere impatto su cash, capitale e ROI.')}
-              />
-            ))}
+            {filteredMarket.map(player => {
+              const card = {
+                ...marketToCard(player),
+                actionLabel: realDemoActionsEnabled ? 'Compra' : 'Compra demo',
+              };
+              return (
+                <PlayerCard
+                  key={player.id}
+                  player={card}
+                  compact
+                  onSelect={setSelectedPlayer}
+                  onAction={() => requestBuy(player)}
+                />
+              );
+            })}
           </div>
           {filteredMarket.length === 0 && <EmptyState title="Nessun giocatore trovato" text="Modifica filtri o ricerca per vedere altri asset virtuali." />}
-          <div className="table-note">Compra demo non scrive sul database e non attiva ordini reali.</div>
+          <div className="table-note">
+            {realDemoActionsEnabled
+              ? 'Compra modifica il team demo backend solo dopo conferma. Nessun denaro reale.'
+              : 'Compra demo resta simulata quando il backend non e collegato.'}
+          </div>
         </Section>
       )}
 
@@ -545,7 +653,7 @@ export default function ParticipantFavc() {
                   <span>P/L <strong className={valueTone(pl)}>{formatSignedCredits(pl)}</strong></span>
                   <span>ROI <strong className={valueTone(roi)}>{formatSignedPercent(roi)}</strong></span>
                 </div>
-                <RosterTable players={players} onSelect={player => setSelectedPlayer(positionToCard(player))} />
+                <RosterTable players={players} onSelect={player => setSelectedPlayer(positionToCard(player))} onSell={requestSell} realActionsEnabled={realDemoActionsEnabled} />
               </Section>
             );
           })}
@@ -615,6 +723,23 @@ export default function ParticipantFavc() {
       )}
 
       <PlayerDetailDrawer player={selectedPlayer} onClose={() => setSelectedPlayer(null)} />
+      {tradeDialog && (
+        <TradeConfirmModal
+          {...(tradeDialog.type === 'buy'
+            ? { type: 'buy' as const, player: tradeDialog.player }
+            : { type: 'sell' as const, position: tradeDialog.position })}
+          positions={positions}
+          virtualCashBalance={virtualCashBalance}
+          totalCapitalDeposited={totalCapitalDeposited}
+          submitting={tradeSubmitting}
+          error={tradeError}
+          onCancel={() => {
+            setTradeDialog(null);
+            setTradeError('');
+          }}
+          onConfirm={confirmTrade}
+        />
+      )}
     </>
   );
 }
@@ -642,7 +767,17 @@ function PlayerListPanel({ title, players, onSelect }: { title: string; players:
   );
 }
 
-function RosterTable({ players, onSelect }: { players: DemoPosition[]; onSelect: (player: DemoPosition) => void }) {
+function RosterTable({
+  players,
+  onSelect,
+  onSell,
+  realActionsEnabled,
+}: {
+  players: DemoPosition[];
+  onSelect: (player: DemoPosition) => void;
+  onSell: (player: DemoPosition) => void;
+  realActionsEnabled: boolean;
+}) {
   return (
     <div className="card table-scroll">
       <table className="portfolio-table compact-table">
@@ -667,7 +802,9 @@ function RosterTable({ players, onSelect }: { players: DemoPosition[]; onSelect:
                 <td className={valueTone(roi)}>{formatSignedPercent(roi)}</td>
                 <td className="row-actions">
                   <button className="favc-action" type="button" onClick={() => onSelect(player)}>Dettaglio</button>
-                  <button className="favc-action favc-action-sell" type="button" disabled>Vendi demo</button>
+                  <button className="favc-action favc-action-sell" type="button" onClick={() => onSell(player)}>
+                    {realActionsEnabled ? 'Vendi' : 'Vendi demo'}
+                  </button>
                 </td>
               </tr>
             );

@@ -98,6 +98,17 @@ export type BackendFinalSettlement = {
   stable?: boolean;
 };
 
+export type LoginResponse = {
+  accessToken: string;
+  user: {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    role: string;
+  };
+};
+
 type QueryValue = string | number | boolean | undefined | null;
 
 export class FantaTradingApi {
@@ -152,6 +163,10 @@ export class FantaTradingApi {
     return this.request<{ status: string; appName?: string; version?: string }>('/health');
   }
 
+  login(email: string, password: string) {
+    return this.post<LoginResponse>('/auth/login', { email, password });
+  }
+
   getMyTeams() {
     return this.request<BackendTeam[]>('/teams/my');
   }
@@ -187,6 +202,38 @@ export class FantaTradingApi {
   getVotes(filters: { seasonId?: string; round?: number; playerId?: string } = {}) {
     return this.request<BackendVote[]>('/votes', filters);
   }
+
+  private async post<T>(path: string, body: unknown): Promise<ApiResult<T>> {
+    try {
+      const response = await fetch(`${this.baseUrl}${path}`, {
+        method: 'POST',
+        headers: {
+          ...this.headers(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        return {
+          ok: false,
+          status: response.status,
+          error: `Backend request failed (${response.status})`,
+        };
+      }
+
+      return {
+        ok: true,
+        status: response.status,
+        data: await response.json() as T,
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        error: error instanceof Error ? error.message : 'Backend non disponibile',
+      };
+    }
+  }
 }
 
 export function getStoredAccessToken() {
@@ -200,4 +247,16 @@ export function getStoredAccessToken() {
 
 export function createFantaTradingApi() {
   return new FantaTradingApi({ token: getStoredAccessToken() });
+}
+
+export async function getOrCreateDemoAccessToken(baseUrl?: string) {
+  const existing = getStoredAccessToken();
+  if (existing || !import.meta.env.DEV) return existing;
+
+  const api = new FantaTradingApi({ baseUrl });
+  const login = await api.login('demo@fantatrading.local', 'password');
+  if (!login.ok) return null;
+
+  window.localStorage.setItem('fantatrading_access_token', login.data.accessToken);
+  return login.data.accessToken;
 }

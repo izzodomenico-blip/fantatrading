@@ -12,6 +12,7 @@ import {
 } from 'recharts';
 import {
   createFantaTradingApi,
+  getOrCreateDemoAccessToken,
   getStoredAccessToken,
   type ApiMode,
   type BackendPlayer,
@@ -290,16 +291,19 @@ export default function ParticipantFavc() {
         return;
       }
 
-      const token = getStoredAccessToken();
+      const token = getStoredAccessToken() ?? await getOrCreateDemoAccessToken();
       if (!token) {
         setBackendState({
           mode: 'missing-token',
-          message: 'Backend raggiungibile, ma manca un token JWT locale: uso demo/mock read-only.',
+          message: import.meta.env.DEV
+            ? 'Backend raggiungibile, ma login demo non disponibile: esegui il seed demo o imposta un token JWT locale.'
+            : 'Backend raggiungibile, ma manca un token JWT locale: uso demo/mock read-only.',
         });
         return;
       }
 
-      const teams = await api.getMyTeams();
+      const authedApi = createFantaTradingApi();
+      const teams = await authedApi.getMyTeams();
       if (!mounted) return;
 
       if (!teams.ok) {
@@ -322,11 +326,11 @@ export default function ParticipantFavc() {
 
       const team = teams.data[0];
       const [portfolio, players, quotes, votes, settlement, syntheticRows] = await Promise.all([
-        api.getTeamPortfolio(team.id),
-        api.getPlayers({ seasonId: team.seasonId }),
-        api.getQuotes({ seasonId: team.seasonId }),
-        api.getVotes({ seasonId: team.seasonId }),
-        api.getTeamFinalSettlement(team.id),
+        authedApi.getTeamPortfolio(team.id),
+        authedApi.getPlayers({ seasonId: team.seasonId }),
+        authedApi.getQuotes({ seasonId: team.seasonId }),
+        authedApi.getVotes({ seasonId: team.seasonId }),
+        authedApi.getTeamFinalSettlement(team.id),
         loadSyntheticQuoteRows().catch(() => [] as RawSyntheticRoundQuote[]),
       ]);
 

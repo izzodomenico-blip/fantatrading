@@ -7,6 +7,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@reports': path.resolve(__dirname, '../../reports'),
+      '@data': path.resolve(__dirname, '../../data'),
     },
   },
 });

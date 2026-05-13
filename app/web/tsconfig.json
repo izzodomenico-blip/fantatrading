@@ -14,7 +14,8 @@
     "strict": true,
     "baseUrl": ".",
     "paths": {
-      "@reports/*": ["../../reports/*"]
+      "@reports/*": ["../../reports/*"],
+      "@data/*": ["../../data/*"]
     }
   },
   "include": ["src", "vite.config.ts"]

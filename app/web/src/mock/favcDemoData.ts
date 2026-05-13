@@ -2,8 +2,11 @@ export type FavcRole = 'P' | 'D' | 'C' | 'A';
 export type FavcStatus = 'ACTIVE' | 'SOLD';
 export type OperationType = 'BUY' | 'SELL';
 
+import { createMockTrend, type PlayerTrendPoint } from '../utils/playerTrend';
+
 export type DemoPosition = {
   id: string;
+  playerId?: string;
   playerName: string;
   realTeam: string;
   role: FavcRole;
@@ -11,10 +14,12 @@ export type DemoPosition = {
   currentQuote: number;
   fantasyMultiplier: number;
   status: FavcStatus;
+  trend?: PlayerTrendPoint[];
 };
 
 export type DemoMarketPlayer = {
   id: string;
+  playerId?: string;
   playerName: string;
   realTeam: string;
   role: FavcRole;
@@ -22,6 +27,7 @@ export type DemoMarketPlayer = {
   trendPct: number;
   performancePct: number;
   available: boolean;
+  trend?: PlayerTrendPoint[];
 };
 
 export type DemoOperation = {
@@ -128,6 +134,19 @@ export function calculatePositionValue(position: Pick<DemoPosition, 'initialQuot
   const returnPct = (position.currentQuote - position.initialQuote) * 5;
   return Math.max(0, position.initialQuote * position.fantasyMultiplier * (1 + returnPct / 100));
 }
+
+export function withMockTrend<T extends DemoPosition | DemoMarketPlayer>(item: T): T {
+  const initialQuote = 'initialQuote' in item ? item.initialQuote : item.quote;
+  const currentQuote = 'currentQuote' in item ? item.currentQuote : item.quote * (1 + item.trendPct / 100);
+  const fantasyMultiplier = 'fantasyMultiplier' in item ? item.fantasyMultiplier : 1;
+  return {
+    ...item,
+    trend: item.trend ?? createMockTrend(initialQuote, currentQuote, fantasyMultiplier),
+  };
+}
+
+export const demoPositions = initialPositions.map(withMockTrend);
+export const demoMarketPlayers = initialMarketPlayers.map(withMockTrend);
 
 export const initialOperations: DemoOperation[] = [
   ...originalRoster.map((position, index) => {

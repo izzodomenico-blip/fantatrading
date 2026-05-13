@@ -21,7 +21,7 @@ import appConfig from './config/app.config';
     ConfigModule.forRoot({
       isGlobal: true,
       load: [appConfig],
-      envFilePath: '.env',
+      envFilePath: ['apps/backend/.env', '.env', '../../.env'],
     }),
     PrismaModule,
     AuthModule,

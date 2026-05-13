@@ -200,3 +200,189 @@ tr:hover td { background: var(--surface2); }
   font-size: 13px;
   line-height: 1.5;
 }
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.favc-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(135deg, rgba(20,184,166,.14), rgba(245,158,11,.10));
+  border: 1px solid rgba(20,184,166,.35);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  margin-bottom: 24px;
+  color: var(--text2);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.favc-banner strong {
+  color: var(--text);
+}
+
+.favc-metric-grid {
+  grid-template-columns: repeat(4, minmax(170px, 1fr));
+}
+
+.favc-two-col {
+  align-items: start;
+}
+
+.favc-role-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.favc-role-cell {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 52px;
+  background: #0d1a2e;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.favc-role-cell span {
+  color: var(--text2);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.favc-role-cell strong {
+  color: var(--text);
+  font-size: 18px;
+}
+
+.favc-market-grid,
+.favc-settlement-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.favc-action {
+  min-width: 86px;
+  height: 32px;
+  border: 1px solid rgba(59,130,246,.45);
+  border-radius: 6px;
+  background: rgba(59,130,246,.15);
+  color: var(--text);
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.favc-action:hover:not(:disabled) {
+  background: rgba(59,130,246,.25);
+}
+
+.favc-action:disabled {
+  color: var(--text3);
+  border-color: var(--border);
+  background: rgba(100,116,139,.10);
+  cursor: not-allowed;
+}
+
+.favc-action-sell {
+  border-color: rgba(245,158,11,.45);
+  background: rgba(245,158,11,.15);
+}
+
+.favc-action-sell:hover:not(:disabled) {
+  background: rgba(245,158,11,.25);
+}
+
+.favc-check-list {
+  display: grid;
+  gap: 12px;
+}
+
+.favc-check-list div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.favc-check-list div:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.favc-check-list strong {
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+@media (max-width: 1120px) {
+  .metric-grid,
+  .favc-metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .two-col,
+  .three-col,
+  .favc-market-grid,
+  .favc-settlement-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .layout {
+    display: block;
+  }
+
+  .sidebar {
+    position: relative;
+    width: 100%;
+    height: auto;
+  }
+
+  .nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px;
+    padding: 10px;
+  }
+
+  .nav-link {
+    border-left: 0;
+    border-radius: 6px;
+    padding: 10px 12px;
+  }
+
+  .nav-link.active {
+    border-left-color: transparent;
+  }
+
+  .main {
+    max-width: none;
+    padding: 20px 14px;
+  }
+
+  .metric-grid,
+  .favc-metric-grid,
+  .favc-role-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .favc-banner {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .metric-value {
+    font-size: 24px;
+  }
+}

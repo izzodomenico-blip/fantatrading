@@ -180,7 +180,7 @@ export default function FullRulesV1() {
           <MetricCard label="Vendita" value="2%" sub="Commissione vendita V1" color="var(--green)" />
           <MetricCard label="Ranking" value="ROI%" sub="classifica principale" color="var(--amber)" />
           <MetricCard label="Commissioni" value="100%" sub="Trattenute dal sistema" color="var(--accent)" />
-          <MetricCard label="Settlement" value="Virtuale" sub="nessuna riscossione reale" color="var(--accent)" />
+          <MetricCard label="Settlement" value="Virtuale" sub="nessun pagamento reale" color="var(--accent)" />
           <MetricCard label="Payout reali" value="No" sub="non inclusi nel pilot" color="var(--red)" />
         </div>
         <div className="card" style={{ marginTop: 16 }}>
@@ -198,7 +198,7 @@ export default function FullRulesV1() {
               <span className="config-val">liquidazione finale virtuale per ROI e classifica</span>
             </div>
             <div>
-              <span className="config-key">Riscossione:  </span>
+              <span className="config-key">Pagamenti:    </span>
               <span className="config-val">nessun pagamento reale nel pilot</span>
             </div>
             <div>
@@ -323,7 +323,7 @@ export default function FullRulesV1() {
         )}
       </Section>
 
-      <Section title="Riscossione reale: non inclusa nel pilot">
+      <Section title="Modello riscattabile non incluso nel pilot">
         <div className="metric-grid">
           <MetricCard label="Modello base" value="Virtuale" sub="FREE_ACCESS_VIRTUAL_CAPITAL" color="var(--teal)" />
           <MetricCard label="Settlement" value="Virtuale" sub="calcolo ROI e classifica" color="var(--purple)" />
@@ -335,7 +335,7 @@ export default function FullRulesV1() {
           <div className="doc-title">SINTESI AUDIT SOLVIBILITA</div>
           <div className="table-note">
             Il report real_money_redeemable_portfolio_audit valuta una variante diversa dal pilot: un portafoglio
-            riscattabile fisicamente. La raccomandazione e non procedere con payout reale immediato.
+            riscattabile fisicamente. La raccomandazione e restare su settlement virtuale nel pilot.
           </div>
           <div className="config-box" style={{ marginTop: 12 }}>
             <div><span className="config-key">scenario:      </span><span className="config-val">REAL_MONEY_REDEEMABLE_PORTFOLIO_MODEL, non incluso nel pilot</span></div>
@@ -355,7 +355,7 @@ export default function FullRulesV1() {
             </div>
           </div>
           <div className="card-sm risk-card">
-            <div className="risk-title">Riscossione reale</div>
+            <div className="risk-title">Modello riscattabile</div>
             <div className="risk-text">
               Sarebbe un prodotto separato: il valore finale diventerebbe un uscita di cassa e richiederebbe riserve.
             </div>

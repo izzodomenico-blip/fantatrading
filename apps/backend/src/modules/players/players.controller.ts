@@ -21,6 +21,12 @@ export class PlayersController {
     return this.playersService.list(query);
   }
 
+  @Get(':id/trend')
+  @ApiOperation({ summary: 'Get player quote/value trend, official when available or synthetic pilot fallback' })
+  getTrend(@Param('id') id: string, @Query('seasonId') seasonId?: string) {
+    return this.playersService.getTrend(id, seasonId);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get player by id' })
   getById(@Param('id') id: string) {

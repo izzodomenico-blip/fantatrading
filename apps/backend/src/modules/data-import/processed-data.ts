@@ -32,6 +32,7 @@ export type ProcessedDataFile<T> = {
 
 export const DEFAULT_QUOTES_PATH = 'data/real/processed/fantacalcio_quotes_history.json';
 export const DEFAULT_VOTES_PATH = 'data/real/processed/votes/fantacalcio_votes_history.json';
+export const DEFAULT_SYNTHETIC_ROUND_QUOTES_PATH = 'data/real/processed/round-quotes/synthetic_round_quotes_history.json';
 
 const roleMap: Record<string, PlayerRole> = {
   P: PlayerRole.GK,

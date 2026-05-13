@@ -46,6 +46,17 @@ export type BackendVote = {
   played?: boolean;
 };
 
+export type BackendPlayerTrendPoint = {
+  round: number;
+  quote: number;
+  quoteChange: number;
+  fantaTradingReturnPct: number;
+  estimatedValue: number;
+  vote?: number | null;
+  fantasyBonusPct?: number;
+  source: 'official' | 'synthetic' | 'mock';
+};
+
 export type BackendPortfolio = {
   team: BackendTeam;
   positions: Array<{
@@ -159,6 +170,14 @@ export class FantaTradingApi {
 
   getPlayers(filters: { seasonId?: string; role?: string; club?: string; search?: string } = {}) {
     return this.request<BackendPlayer[]>('/players', filters);
+  }
+
+  getPlayer(id: string) {
+    return this.request<BackendPlayer>(`/players/${id}`);
+  }
+
+  getPlayerTrend(id: string, filters: { seasonId?: string } = {}) {
+    return this.request<BackendPlayerTrendPoint[]>(`/players/${id}/trend`, filters);
   }
 
   getQuotes(filters: { seasonId?: string; role?: string; club?: string } = {}) {

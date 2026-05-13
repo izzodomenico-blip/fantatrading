@@ -15,8 +15,10 @@ import {
   getStoredAccessToken,
   type ApiMode,
   type BackendPlayer,
+  type BackendFinalSettlement,
   type BackendPortfolio,
   type BackendQuote,
+  type BackendVote,
 } from '../api';
 import { EmptyState, MetricCard, Section, StatusBadges } from '../components';
 import PlayerCard, { type PlayerCardData } from '../components/PlayerCard';
@@ -40,9 +42,11 @@ import {
 import { AXIS_STYLE, COLORS, GRID_STYLE, TOOLTIP_STYLE } from '../data';
 import {
   createMockTrend,
+  mergeVotesIntoTrend,
   normalizeSyntheticTrend,
   type PlayerTrendPoint,
   type RawSyntheticRoundQuote,
+  type RawVoteRow,
 } from '../utils/playerTrend';
 import { formatCredits, formatPercent, formatSignedCredits, formatSignedPercent, valueTone } from '../utils/format';
 
@@ -69,6 +73,16 @@ type BackendUiState = {
   mode: ApiMode | 'checking';
   message: string;
   teamLabel?: string;
+};
+
+type FinancialSnapshot = {
+  totalCapitalDeposited?: number;
+  virtualCashBalance?: number;
+  currentPortfolioValue?: number;
+  netLiquidationValue?: number;
+  finalLiquidationValue?: number;
+  profitLoss?: number;
+  roiPct?: number;
 };
 
 const syntheticQuoteModules = import.meta.glob<{ rows: RawSyntheticRoundQuote[] }>(
@@ -112,6 +126,28 @@ function getPositionRoi(position: DemoPosition) {
   return (getPositionPL(position) / position.initialQuote) * 100;
 }
 
+function votesToRows(votes: BackendVote[]): RawVoteRow[] {
+  return votes.map(vote => ({
+    round: vote.round,
+    playerId: vote.playerId,
+    vote: vote.vote ?? null,
+    fantasyVote: vote.fantasyVote ?? null,
+  }));
+}
+
+function buildFinancialSnapshot(portfolio: BackendPortfolio, settlement?: BackendFinalSettlement): FinancialSnapshot {
+  const summary = portfolio.summary;
+  return {
+    totalCapitalDeposited: Number(settlement?.totalCapitalDeposited ?? summary.totalCapitalDeposited ?? 0),
+    virtualCashBalance: Number(settlement?.virtualCashBalance ?? summary.virtualCashBalance ?? 0),
+    currentPortfolioValue: Number(summary.currentPortfolioValue ?? 0),
+    netLiquidationValue: Number(settlement?.netLiquidationValue ?? summary.netLiquidationValue ?? 0),
+    finalLiquidationValue: Number(settlement?.finalLiquidationValue ?? summary.finalLiquidationValue ?? 0),
+    profitLoss: Number(settlement?.profitLoss ?? summary.profitLoss ?? 0),
+    roiPct: Number(settlement?.roiPct ?? summary.roiPct ?? summary.currentRoi ?? 0),
+  };
+}
+
 function roleCount(positions: DemoPosition[]) {
   return positions
     .filter(position => position.status === 'ACTIVE')
@@ -129,6 +165,7 @@ function normalizePortfolioPositions(
   portfolio: BackendPortfolio,
   players: BackendPlayer[],
   syntheticRows: RawSyntheticRoundQuote[],
+  voteRows: RawVoteRow[],
 ) {
   return portfolio.positions.map<DemoPosition>(position => {
     const player = players.find(item => item.id === position.playerId);
@@ -147,12 +184,16 @@ function normalizePortfolioPositions(
       currentQuote,
       fantasyMultiplier,
       status: position.isActive ? 'ACTIVE' : 'SOLD',
-      trend: normalizeSyntheticTrend(syntheticRows, player?.externalId ?? position.playerId, {
-        initialQuote,
-        currentQuote,
-        fantasyMultiplier,
-        playerName,
-      }),
+      trend: mergeVotesIntoTrend(
+        normalizeSyntheticTrend(syntheticRows, player?.externalId ?? position.playerId, {
+          initialQuote,
+          currentQuote,
+          fantasyMultiplier,
+          playerName,
+        }),
+        voteRows,
+        position.playerId,
+      ),
     };
   });
 }
@@ -162,6 +203,7 @@ function normalizeMarketPlayers(
   quotes: BackendQuote[],
   currentPositions: DemoPosition[],
   syntheticRows: RawSyntheticRoundQuote[],
+  voteRows: RawVoteRow[],
 ) {
   const ownedIds = new Set(currentPositions.map(position => position.playerId).filter(Boolean));
   return players
@@ -184,11 +226,15 @@ function normalizeMarketPlayers(
         trendPct,
         performancePct: trendPct,
         available: true,
-        trend: normalizeSyntheticTrend(syntheticRows, player.externalId ?? player.id, {
-          initialQuote,
-          currentQuote,
-          playerName,
-        }),
+        trend: mergeVotesIntoTrend(
+          normalizeSyntheticTrend(syntheticRows, player.externalId ?? player.id, {
+            initialQuote,
+            currentQuote,
+            playerName,
+          }),
+          voteRows,
+          player.id,
+        ),
       };
     });
 }
@@ -214,6 +260,7 @@ export default function ParticipantFavc() {
   const [marketPlayers, setMarketPlayers] = useState<DemoMarketPlayer[]>(() => demoMarketPlayers);
   const [operations, setOperations] = useState<DemoOperation[]>(() => initialOperations);
   const [virtualCashBalance, setVirtualCashBalance] = useState(0);
+  const [financialSnapshot, setFinancialSnapshot] = useState<FinancialSnapshot | null>(null);
   const [backendState, setBackendState] = useState<BackendUiState>({
     mode: 'checking',
     message: 'Verifica connessione backend in corso...',
@@ -274,10 +321,12 @@ export default function ParticipantFavc() {
       }
 
       const team = teams.data[0];
-      const [portfolio, players, quotes, syntheticRows] = await Promise.all([
+      const [portfolio, players, quotes, votes, settlement, syntheticRows] = await Promise.all([
         api.getTeamPortfolio(team.id),
         api.getPlayers({ seasonId: team.seasonId }),
         api.getQuotes({ seasonId: team.seasonId }),
+        api.getVotes({ seasonId: team.seasonId }),
+        api.getTeamFinalSettlement(team.id),
         loadSyntheticQuoteRows().catch(() => [] as RawSyntheticRoundQuote[]),
       ]);
 
@@ -293,12 +342,15 @@ export default function ParticipantFavc() {
 
       const backendPlayers = players.ok ? players.data : [];
       const backendQuotes = quotes.ok ? quotes.data : [];
-      const normalizedPositions = normalizePortfolioPositions(portfolio.data, backendPlayers, syntheticRows);
-      const normalizedMarket = normalizeMarketPlayers(backendPlayers, backendQuotes, normalizedPositions, syntheticRows);
+      const backendVotes = votes.ok ? votes.data : [];
+      const voteRows = votesToRows(backendVotes);
+      const normalizedPositions = normalizePortfolioPositions(portfolio.data, backendPlayers, syntheticRows, voteRows);
+      const normalizedMarket = normalizeMarketPlayers(backendPlayers, backendQuotes, normalizedPositions, syntheticRows, voteRows);
 
       setPositions(normalizedPositions.length > 0 ? normalizedPositions : demoPositions);
       setMarketPlayers(normalizedMarket.length > 0 ? normalizedMarket : demoMarketPlayers);
       setVirtualCashBalance(Number(portfolio.data.summary.virtualCashBalance ?? portfolio.data.summary.currentPortfolioValue ?? 0));
+      setFinancialSnapshot(buildFinancialSnapshot(portfolio.data, settlement.ok ? settlement.data : undefined));
       setDataSource(normalizedPositions.length > 0 ? 'backend' : 'mock');
       setBackendState({
         mode: 'connected',
@@ -322,12 +374,12 @@ export default function ParticipantFavc() {
 
   const counts = useMemo(() => roleCount(positions), [positions]);
 
-  const totalCapitalDeposited = useMemo(
+  const mockTotalCapitalDeposited = useMemo(
     () => operations.reduce((sum, operation) => sum + operation.capitalAdded, 0),
     [operations],
   );
 
-  const currentPortfolioValue = useMemo(
+  const calculatedPortfolioValue = useMemo(
     () => activePositions.reduce((sum, position) => sum + calculatePositionValue(position), 0),
     [activePositions],
   );
@@ -337,10 +389,18 @@ export default function ParticipantFavc() {
     [activePositions],
   );
 
-  const netLiquidationValue = currentPortfolioValue * (1 - SELL_COMMISSION_RATE);
-  const finalLiquidationValue = netLiquidationValue + virtualCashBalance;
-  const profitLoss = finalLiquidationValue - totalCapitalDeposited;
-  const roiPct = totalCapitalDeposited > 0 ? (profitLoss / totalCapitalDeposited) * 100 : 0;
+  const totalCapitalDeposited = financialSnapshot?.totalCapitalDeposited ?? mockTotalCapitalDeposited;
+  const currentPortfolioValue = financialSnapshot?.currentPortfolioValue && financialSnapshot.currentPortfolioValue > 0
+    ? financialSnapshot.currentPortfolioValue
+    : calculatedPortfolioValue;
+  const netLiquidationValue = financialSnapshot?.netLiquidationValue && financialSnapshot.netLiquidationValue > 0
+    ? financialSnapshot.netLiquidationValue
+    : currentPortfolioValue * (1 - SELL_COMMISSION_RATE);
+  const finalLiquidationValue = financialSnapshot?.finalLiquidationValue && financialSnapshot.finalLiquidationValue > 0
+    ? financialSnapshot.finalLiquidationValue
+    : netLiquidationValue + virtualCashBalance;
+  const profitLoss = financialSnapshot?.profitLoss ?? finalLiquidationValue - totalCapitalDeposited;
+  const roiPct = financialSnapshot?.roiPct ?? (totalCapitalDeposited > 0 ? (profitLoss / totalCapitalDeposited) * 100 : 0);
 
   const chartData = useMemo(() => {
     const today = {

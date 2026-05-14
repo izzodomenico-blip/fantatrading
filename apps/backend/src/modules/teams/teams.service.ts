@@ -1,6 +1,7 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { PlayerRole, PositionStatus, Prisma, TeamStatus, UserRole } from '@prisma/client';
+import { OperationType, PlayerRole, PositionStatus, Prisma, TeamStatus, UserRole } from '@prisma/client';
 import {
+  calculateBuyCost,
   calculateNetLiquidationValue,
   calculatePositionValue,
   calculateVariableCapitalROI,
@@ -8,6 +9,7 @@ import {
 } from '@shared';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateTeamDto } from './dto/create-team.dto';
+import { CreateTeamWithRosterDto } from './dto/create-team-with-roster.dto';
 
 type AuthUser = { userId: string; email: string; role: UserRole };
 
@@ -51,7 +53,7 @@ export class TeamsService {
 
     // FAVC virtuale: nessun budget fisso assegnato all'iscrizione.
     // Il capitale depositato cresce automaticamente al primo acquisto e ai successivi deficit di liquidità.
-    const initialBudget = 0;
+    const initialBudget = dto.initialVirtualCapital ?? 0;
     const team = await this.prisma.team.create({
       data: {
         userId: user.userId,
@@ -67,6 +69,152 @@ export class TeamsService {
     });
 
     return this.serializeTeam(team);
+  }
+
+  async createTeamWithRoster(user: AuthUser, dto: CreateTeamWithRosterDto) {
+    if (user.role !== UserRole.PARTICIPANT) {
+      throw new ForbiddenException('Only participants can create teams');
+    }
+
+    const uniquePlayerIds = new Set(dto.playerIds);
+    if (dto.playerIds.length !== V1_ROSTER_COMPOSITION.total || uniquePlayerIds.size !== dto.playerIds.length) {
+      throw new BadRequestException('Roster must contain 25 unique players');
+    }
+
+    const season = await this.prisma.season.findUnique({ where: { id: dto.seasonId } });
+    if (!season) {
+      throw new NotFoundException('Season not found');
+    }
+
+    const existing = await this.prisma.team.findUnique({
+      where: { userId_seasonId: { userId: user.userId, seasonId: dto.seasonId } },
+    });
+    if (existing && !dto.resetExistingDemoTeam) {
+      throw new ConflictException('User already has a team for this season');
+    }
+    if (existing && !this.canResetDemoTeam(user)) {
+      throw new ForbiddenException('Demo roster reset is available only for local demo users');
+    }
+
+    const quotes = await this.prisma.quote.findMany({
+      where: {
+        seasonId: dto.seasonId,
+        playerId: { in: dto.playerIds },
+      },
+      include: { player: true },
+    });
+    if (quotes.length !== dto.playerIds.length) {
+      throw new BadRequestException('One or more players do not belong to this season');
+    }
+
+    const quoteByPlayerId = new Map(quotes.map((quote) => [quote.playerId, quote]));
+    const composition = compositionByRole(quotes.map((quote) => quote.player.role));
+    const compositionValid = Object.entries(ROLE_LIMITS).every(([role, limit]) => composition[role as PlayerRole] === limit);
+    if (!compositionValid) {
+      throw new BadRequestException('Roster composition must be 3 GK / 8 DEF / 8 MID / 6 FWD');
+    }
+
+    const teamId = await this.prisma.$transaction(async (tx) => {
+      let team = existing;
+      if (team) {
+        await this.clearTeamTradingData(tx, team.id);
+        team = await tx.team.update({
+          where: { id: team.id },
+          data: {
+            status: TeamStatus.ROSA_INCOMPLETA,
+            initialBudget: dto.initialVirtualCapital,
+            availableBudget: dto.initialVirtualCapital,
+            totalCommissionsPaid: 0,
+            currentPortfolioValue: 0,
+            currentRoi: 0,
+          },
+        });
+      } else {
+        team = await tx.team.create({
+          data: {
+            userId: user.userId,
+            seasonId: dto.seasonId,
+            status: TeamStatus.ROSA_INCOMPLETA,
+            initialBudget: dto.initialVirtualCapital,
+            availableBudget: dto.initialVirtualCapital,
+            totalCommissionsPaid: 0,
+            currentPortfolioValue: 0,
+            currentRoi: 0,
+          },
+        });
+      }
+
+      let virtualCashBalance = dto.initialVirtualCapital;
+      let totalCapitalDeposited = dto.initialVirtualCapital;
+      let totalCommissionsPaid = 0;
+      let currentPortfolioValue = 0;
+
+      for (const playerId of dto.playerIds) {
+        const quote = quoteByPlayerId.get(playerId);
+        if (!quote) {
+          throw new BadRequestException('One or more players do not belong to this season');
+        }
+
+        const buyCommissionRate = toNumber(season.buyCommissionRate);
+        const grossAmount = toNumber(quote.currentQuote);
+        const buyCost = calculateBuyCost(grossAmount, buyCommissionRate);
+        const budgetBefore = virtualCashBalance;
+        const capitalToAdd = Math.max(0, buyCost.totalCost - budgetBefore);
+        totalCapitalDeposited += capitalToAdd;
+        virtualCashBalance = budgetBefore + capitalToAdd - buyCost.totalCost;
+        totalCommissionsPaid += buyCost.commission;
+
+        const currentSellValue = calculatePositionValue(grossAmount, toNumber(quote.currentQuote), 1);
+        currentPortfolioValue += currentSellValue;
+        const position = await tx.portfolioPosition.create({
+          data: {
+            teamId: team.id,
+            playerId: quote.playerId,
+            quoteId: quote.id,
+            initialQuote: grossAmount,
+            buyValue: buyCost.grossValue,
+            buyCommission: buyCost.commission,
+            totalBuyCost: buyCost.totalCost,
+            fantasyMultiplier: 1,
+            currentSellValue,
+            status: PositionStatus.ACTIVE,
+          },
+        });
+
+        await tx.marketOperation.create({
+          data: {
+            teamId: team.id,
+            playerId: quote.playerId,
+            positionId: position.id,
+            type: OperationType.BUY,
+            valueAtOperation: buyCost.grossValue,
+            commissionRate: buyCommissionRate,
+            commissionAmount: buyCost.commission,
+            netAmount: buyCost.totalCost,
+            budgetBefore,
+            budgetAfter: virtualCashBalance,
+          },
+        });
+      }
+
+      const netLiquidationValue = calculateNetLiquidationValue(currentPortfolioValue, toNumber(season.sellCommissionRate));
+      const currentRoi = calculateVariableCapitalROI(netLiquidationValue, virtualCashBalance, totalCapitalDeposited);
+      await tx.team.update({
+        where: { id: team.id },
+        data: {
+          status: TeamStatus.ROSA_ATTIVA,
+          initialBudget: totalCapitalDeposited,
+          availableBudget: virtualCashBalance,
+          totalCommissionsPaid,
+          currentPortfolioValue,
+          currentRoi,
+        },
+      });
+
+      return team.id;
+    });
+
+    return this.getPortfolio(teamId, user);
   }
 
   async listMyTeams(user: AuthUser) {
@@ -163,6 +311,20 @@ export class TeamsService {
     if (teamUserId !== user.userId) {
       throw new ForbiddenException('Cannot access another user team');
     }
+  }
+
+  private canResetDemoTeam(user: AuthUser) {
+    return process.env.NODE_ENV !== 'production' && user.email.endsWith('@fantatrading.local');
+  }
+
+  private async clearTeamTradingData(tx: Prisma.TransactionClient, teamId: string) {
+    await tx.platformFee.deleteMany({ where: { teamId } });
+    await tx.finalSettlement.deleteMany({ where: { teamId } });
+    await tx.prizeAward.deleteMany({ where: { teamId } });
+    await tx.ranking.deleteMany({ where: { teamId } });
+    await tx.roundPlayerResult.deleteMany({ where: { teamId } });
+    await tx.marketOperation.deleteMany({ where: { teamId } });
+    await tx.portfolioPosition.deleteMany({ where: { teamId } });
   }
 
   private buildPortfolioSummary(team: TeamWithRelations) {

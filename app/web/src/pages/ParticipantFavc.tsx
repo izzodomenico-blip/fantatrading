@@ -1,4 +1,4 @@
-import { Link, Navigate, useLocation } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import {
   createFantaTradingApi,
@@ -16,6 +16,7 @@ import { EmptyState, MetricCard, Section, StatusBadges } from '../components';
 import PlayerCard, { type PlayerCardData } from '../components/PlayerCard';
 import PlayerDetailDrawer from '../components/PlayerDetailDrawer';
 import PlayerTrendChart from '../components/PlayerTrendChart';
+import TeamBuilderPanel from '../components/TeamBuilderPanel';
 import TeamTrendChart from '../components/TeamTrendChart';
 import TradeConfirmModal from '../components/TradeConfirmModal';
 import TradeSimulationPanel from '../components/TradeSimulationPanel';
@@ -50,7 +51,7 @@ import {
 } from '../utils/marketFilters';
 import { formatCredits, formatSignedCredits, formatSignedPercent, valueTone } from '../utils/format';
 
-type ParticipantTab = 'overview' | 'mercato' | 'rosa' | 'operazioni' | 'settlement';
+type ParticipantTab = 'overview' | 'mercato' | 'rosa' | 'operazioni' | 'settlement' | 'crea-squadra';
 type DataSource = 'mock' | 'backend';
 
 type BackendUiState = {
@@ -83,6 +84,7 @@ const TABS: Array<{ id: ParticipantTab; label: string; path: string }> = [
   { id: 'overview', label: 'Overview', path: '/partecipante-favc/overview' },
   { id: 'mercato', label: 'Mercato', path: '/partecipante-favc/mercato' },
   { id: 'rosa', label: 'La mia rosa', path: '/partecipante-favc/rosa' },
+  { id: 'crea-squadra', label: 'Crea squadra', path: '/partecipante-favc/crea-squadra' },
   { id: 'operazioni', label: 'Operazioni', path: '/partecipante-favc/operazioni' },
   { id: 'settlement', label: 'Settlement', path: '/partecipante-favc/settlement' },
 ];
@@ -176,11 +178,12 @@ function normalizeMarketPlayers(
   currentPositions: DemoPosition[],
   syntheticRows: RawSyntheticRoundQuote[],
   voteRows: RawVoteRow[],
+  limit = 80,
 ) {
   const ownedIds = new Set(currentPositions.filter(position => position.status === 'ACTIVE').map(position => position.playerId).filter(Boolean));
   return players
     .filter(player => !ownedIds.has(player.externalId ?? player.id))
-    .slice(0, 80)
+    .slice(0, limit)
     .map<DemoMarketPlayer>(player => {
       const quote = quotes.find(item => item.playerId === player.id) ?? player.quotes?.[0];
       const initialQuote = Number(quote?.initialQuote ?? 6);
@@ -289,13 +292,16 @@ function tabFromPath(pathname: string): ParticipantTab | null {
 
 export default function ParticipantFavc() {
   const location = useLocation();
+  const navigate = useNavigate();
   const tab = tabFromPath(location.pathname);
   const [positions, setPositions] = useState<DemoPosition[]>(() => demoPositions);
   const [marketPlayers, setMarketPlayers] = useState<DemoMarketPlayer[]>(() => demoMarketPlayers);
+  const [builderPlayers, setBuilderPlayers] = useState<DemoMarketPlayer[]>(() => demoMarketPlayers);
   const [operations, setOperations] = useState<DemoOperation[]>(() => initialOperations);
   const [virtualCashBalance, setVirtualCashBalance] = useState(0);
   const [financialSnapshot, setFinancialSnapshot] = useState<FinancialSnapshot | null>(null);
   const [teamId, setTeamId] = useState<string | null>(null);
+  const [seasonId, setSeasonId] = useState<string | null>(null);
   const [reloadNonce, setReloadNonce] = useState(0);
   const [backendState, setBackendState] = useState<BackendUiState>({
     mode: 'checking',
@@ -329,6 +335,7 @@ export default function ParticipantFavc() {
       if (!health.ok) {
         setBackendState({ mode: 'backend-unavailable', message: 'Backend non disponibile: uso fallback demo/mock locale.' });
         setTeamId(null);
+        setSeasonId(null);
         setDataSource('mock');
         return;
       }
@@ -342,6 +349,7 @@ export default function ParticipantFavc() {
             : 'Backend raggiungibile, ma manca un token JWT locale: uso demo/mock read-only.',
         });
         setTeamId(null);
+        setSeasonId(null);
         return;
       }
 
@@ -364,11 +372,13 @@ export default function ParticipantFavc() {
             : 'Errore nella lettura dei team: uso demo/mock.',
         });
         setTeamId(null);
+        setSeasonId(null);
         return;
       }
 
       const team = teams.data[0];
       setTeamId(team.id);
+      setSeasonId(team.seasonId);
       const [portfolio, players, quotes, votes, settlement, operationsResult, syntheticRows] = await Promise.all([
         authedApi.getTeamPortfolio(team.id),
         authedApi.getPlayers({ seasonId: team.seasonId }),
@@ -383,6 +393,7 @@ export default function ParticipantFavc() {
       if (!portfolio.ok) {
         setBackendState({ mode: 'backend-unavailable', message: 'Team trovato, ma il portafoglio non e leggibile: uso demo/mock.' });
         setTeamId(null);
+        setSeasonId(null);
         return;
       }
 
@@ -392,9 +403,11 @@ export default function ParticipantFavc() {
       const voteRows = votesToRows(backendVotes);
       const normalizedPositions = normalizePortfolioPositions(portfolio.data, backendPlayers, syntheticRows, voteRows);
       const normalizedMarket = normalizeMarketPlayers(backendPlayers, backendQuotes, normalizedPositions, syntheticRows, voteRows);
+      const normalizedBuilderMarket = normalizeMarketPlayers(backendPlayers, backendQuotes, [], syntheticRows, voteRows, 240);
 
       setPositions(normalizedPositions.length > 0 ? normalizedPositions : demoPositions);
       setMarketPlayers(normalizedMarket.length > 0 ? normalizedMarket : demoMarketPlayers);
+      setBuilderPlayers(normalizedBuilderMarket.length > 0 ? normalizedBuilderMarket : demoMarketPlayers);
       setOperations(operationsResult.ok && operationsResult.data.length > 0 ? backendOperationsToDemo(operationsResult.data) : initialOperations);
       setVirtualCashBalance(Number(portfolio.data.summary.virtualCashBalance ?? 0));
       setFinancialSnapshot(buildFinancialSnapshot(portfolio.data, settlement.ok ? settlement.data : undefined));
@@ -658,6 +671,20 @@ export default function ParticipantFavc() {
             );
           })}
         </>
+      )}
+
+      {tab === 'crea-squadra' && (
+        <TeamBuilderPanel
+          players={builderPlayers}
+          seasonId={seasonId}
+          existingTeamId={teamId}
+          backendConnected={backendState.mode === 'connected' && dataSource === 'backend'}
+          onContinueExisting={() => navigate('/partecipante-favc/rosa')}
+          onCreated={() => {
+            setReloadNonce(value => value + 1);
+            navigate('/partecipante-favc/rosa');
+          }}
+        />
       )}
 
       {tab === 'operazioni' && (

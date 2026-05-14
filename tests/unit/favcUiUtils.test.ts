@@ -2,6 +2,7 @@ import { buildTeamTrendFromPositions } from '../../app/web/src/utils/teamTrend';
 import { simulateTradeChange } from '../../app/web/src/utils/tradeSimulation';
 import { filterAndSortMarketPlayers } from '../../app/web/src/utils/marketFilters';
 import { buildBuyConfirmation, buildSellConfirmation } from '../../app/web/src/utils/tradeConfirmation';
+import { buildRosterDraftSummary, canAddPlayerToDraft } from '../../app/web/src/utils/teamBuilder';
 import type { DemoMarketPlayer, DemoPosition } from '../../app/web/src/mock/favcDemoData';
 
 const position: DemoPosition = {
@@ -110,5 +111,35 @@ describe('FAVC UI utilities', () => {
     expect(confirmation.cashAfter).toBeGreaterThan(confirmation.cashBefore);
     expect(confirmation.leavesRoleShort).toBe(true);
     expect(JSON.stringify(position)).toBe(before);
+  });
+
+  it('builds roster draft summary with initial cash, 2% fees and extra virtual capital', () => {
+    const roster = [
+      ...Array.from({ length: 3 }, (_, index) => ({ ...marketPlayer, id: `gk-${index}`, playerId: `gk-${index}`, role: 'P' as const, quote: 10 })),
+      ...Array.from({ length: 8 }, (_, index) => ({ ...marketPlayer, id: `def-${index}`, playerId: `def-${index}`, role: 'D' as const, quote: 10 })),
+      ...Array.from({ length: 8 }, (_, index) => ({ ...marketPlayer, id: `mid-${index}`, playerId: `mid-${index}`, role: 'C' as const, quote: 10 })),
+      ...Array.from({ length: 6 }, (_, index) => ({ ...marketPlayer, id: `fwd-${index}`, playerId: `fwd-${index}`, role: 'A' as const, quote: 10 })),
+    ];
+
+    const summary = buildRosterDraftSummary(roster, 200);
+
+    expect(summary.isValid).toBe(true);
+    expect(summary.playerCost).toBe(250);
+    expect(summary.buyCommissions).toBeCloseTo(5);
+    expect(summary.extraCapitalAdded).toBeCloseTo(55);
+    expect(summary.residualCash).toBe(0);
+    expect(summary.status).toBe('completa');
+  });
+
+  it('blocks duplicate and role-exceeding additions in draft builder', () => {
+    const goalkeepers = Array.from({ length: 3 }, (_, index) => ({
+      ...marketPlayer,
+      id: `gk-${index}`,
+      playerId: `gk-${index}`,
+      role: 'P' as const,
+    }));
+
+    expect(canAddPlayerToDraft(goalkeepers[0], goalkeepers).ok).toBe(false);
+    expect(canAddPlayerToDraft({ ...marketPlayer, id: 'gk-4', playerId: 'gk-4', role: 'P' }, goalkeepers).ok).toBe(false);
   });
 });

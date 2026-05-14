@@ -191,6 +191,20 @@ export class FantaTradingApi {
     return this.request<BackendTeam[]>('/teams/my');
   }
 
+  createTeam(input: { seasonId: string; initialVirtualCapital?: number; teamName?: string }) {
+    return this.post<BackendTeam>('/teams', input);
+  }
+
+  createTeamWithRoster(input: {
+    seasonId: string;
+    initialVirtualCapital: number;
+    playerIds: string[];
+    teamName?: string;
+    resetExistingDemoTeam?: boolean;
+  }) {
+    return this.post<BackendPortfolio>('/teams/create-with-roster', input);
+  }
+
   getTeam(id: string) {
     return this.request<BackendTeam>(`/teams/${id}`);
   }

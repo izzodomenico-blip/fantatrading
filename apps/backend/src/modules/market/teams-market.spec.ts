@@ -75,7 +75,10 @@ const createPrismaMock = () => {
     { id: 'gk-2', firstName: 'Gk', lastName: 'Two', role: PlayerRole.GK, realTeam: 'Club' },
     { id: 'gk-3', firstName: 'Gk', lastName: 'Three', role: PlayerRole.GK, realTeam: 'Club' },
     { id: 'gk-4', firstName: 'Gk', lastName: 'Four', role: PlayerRole.GK, realTeam: 'Club' },
+    ...Array.from({ length: 8 }, (_, index) => ({ id: `def-${index + 1}`, firstName: 'Def', lastName: `${index + 1}`, role: PlayerRole.DEF, realTeam: 'Club' })),
+    ...Array.from({ length: 8 }, (_, index) => ({ id: `mid-${index + 1}`, firstName: 'Mid', lastName: `${index + 1}`, role: PlayerRole.MID, realTeam: 'Club' })),
     { id: 'fwd-1', firstName: 'Forward', lastName: 'One', role: PlayerRole.FWD, realTeam: 'Club' },
+    ...Array.from({ length: 5 }, (_, index) => ({ id: `fwd-${index + 2}`, firstName: 'Forward', lastName: `${index + 2}`, role: PlayerRole.FWD, realTeam: 'Club' })),
     // Giocatore costoso per test FAVC: quota > initialBudget della stagione (500)
     { id: 'fwd-expensive', firstName: 'Forward', lastName: 'Expensive', role: PlayerRole.FWD, realTeam: 'Club' },
   ];
@@ -104,7 +107,8 @@ const createPrismaMock = () => {
       })),
   });
 
-  const prisma = {
+  let prisma: any;
+  prisma = {
     season: {
       findUnique: jest.fn(async ({ where }) => (where.id === season.id ? season : null)),
     },
@@ -153,6 +157,11 @@ const createPrismaMock = () => {
         if (!quote) return null;
         return { ...quote, player: players.find((player) => player.id === quote.playerId) };
       }),
+      findMany: jest.fn(async ({ where }) =>
+        quotes
+          .filter((quote) => quote.seasonId === where.seasonId && where.playerId.in.includes(quote.playerId))
+          .map((quote) => ({ ...quote, player: players.find((player) => player.id === quote.playerId) })),
+      ),
     },
     portfolioPosition: {
       create: jest.fn(async ({ data }) => {
@@ -174,6 +183,13 @@ const createPrismaMock = () => {
         Object.assign(position, data);
         return position;
       }),
+      deleteMany: jest.fn(async ({ where }) => {
+        const before = positions.length;
+        for (let index = positions.length - 1; index >= 0; index -= 1) {
+          if (positions[index].teamId === where.teamId) positions.splice(index, 1);
+        }
+        return { count: before - positions.length };
+      }),
     },
     marketOperation: {
       create: jest.fn(async ({ data }) => {
@@ -189,7 +205,20 @@ const createPrismaMock = () => {
             player: players.find((player) => player.id === operation.playerId),
           })),
       ),
+      deleteMany: jest.fn(async ({ where }) => {
+        const before = operations.length;
+        for (let index = operations.length - 1; index >= 0; index -= 1) {
+          if (operations[index].teamId === where.teamId) operations.splice(index, 1);
+        }
+        return { count: before - operations.length };
+      }),
     },
+    platformFee: { deleteMany: jest.fn(async () => ({ count: 0 })) },
+    finalSettlement: { deleteMany: jest.fn(async () => ({ count: 0 })) },
+    prizeAward: { deleteMany: jest.fn(async () => ({ count: 0 })) },
+    ranking: { deleteMany: jest.fn(async () => ({ count: 0 })) },
+    roundPlayerResult: { deleteMany: jest.fn(async () => ({ count: 0 })) },
+    $transaction: jest.fn(async (callback) => callback(prisma)),
   };
 
   return { prisma, teams, positions, operations };
@@ -249,6 +278,15 @@ describe('Teams, portfolio and market', () => {
     return response.body;
   }
 
+  const fullRosterIds = [
+    'gk-1',
+    'gk-2',
+    'gk-3',
+    ...Array.from({ length: 8 }, (_, index) => `def-${index + 1}`),
+    ...Array.from({ length: 8 }, (_, index) => `mid-${index + 1}`),
+    ...Array.from({ length: 6 }, (_, index) => `fwd-${index + 1}`),
+  ];
+
   it('creates a team and prevents duplicate team in the same season', async () => {
     const team = await createTeam();
 
@@ -262,6 +300,52 @@ describe('Teams, portfolio and market', () => {
       .set('Authorization', `Bearer ${participantToken}`)
       .send({ seasonId: 'season-1' })
       .expect(409);
+  });
+
+  it('creates a team with initial virtual capital', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/teams')
+      .set('Authorization', `Bearer ${participantToken}`)
+      .send({ seasonId: 'season-1', initialVirtualCapital: 300 })
+      .expect(201);
+
+    expect(response.body.initialBudget).toBe(300);
+    expect(response.body.availableBudget).toBe(300);
+  });
+
+  it('creates a complete roster with initial capital and 2% buy commissions', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/teams/create-with-roster')
+      .set('Authorization', `Bearer ${participantToken}`)
+      .send({ seasonId: 'season-1', initialVirtualCapital: 500, playerIds: fullRosterIds })
+      .expect(201);
+
+    expect(response.body.positions).toHaveLength(25);
+    expect(response.body.summary.isRosterComplete).toBe(true);
+    expect(response.body.summary.composition.GK).toBe(3);
+    expect(response.body.summary.composition.DEF).toBe(8);
+    expect(response.body.summary.composition.MID).toBe(8);
+    expect(response.body.summary.composition.FWD).toBe(6);
+    expect(response.body.summary.initialRosterCost).toBe(340);
+    expect(response.body.summary.totalBuyCommissions).toBeCloseTo(6.8);
+    expect(response.body.summary.totalCapitalDeposited).toBe(500);
+    expect(response.body.summary.virtualCashBalance).toBeCloseTo(153.2);
+    expect(state.operations).toHaveLength(25);
+    expect(state.operations.every((operation) => operation.type === OperationType.BUY)).toBe(true);
+  });
+
+  it('blocks duplicate players and invalid role composition in create-with-roster', async () => {
+    await request(app.getHttpServer())
+      .post('/teams/create-with-roster')
+      .set('Authorization', `Bearer ${participantToken}`)
+      .send({ seasonId: 'season-1', initialVirtualCapital: 500, playerIds: [...fullRosterIds.slice(0, 24), 'gk-1'] })
+      .expect(400);
+
+    await request(app.getHttpServer())
+      .post('/teams/create-with-roster')
+      .set('Authorization', `Bearer ${participantToken}`)
+      .send({ seasonId: 'season-1', initialVirtualCapital: 500, playerIds: [...fullRosterIds.slice(0, 24), 'gk-4'] })
+      .expect(400);
   });
 
   it('buys a player with 2% commission and records a market operation', async () => {

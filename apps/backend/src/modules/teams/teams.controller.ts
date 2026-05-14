@@ -4,6 +4,7 @@ import { UserRole } from '@prisma/client';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateTeamDto } from './dto/create-team.dto';
+import { CreateTeamWithRosterDto } from './dto/create-team-with-roster.dto';
 import { TeamsService } from './teams.service';
 
 type AuthUser = { userId: string; email: string; role: UserRole };
@@ -19,6 +20,12 @@ export class TeamsController {
   @ApiOperation({ summary: 'Create my team for a season' })
   create(@Body() dto: CreateTeamDto, @CurrentUser() user: AuthUser) {
     return this.teamsService.createTeam(user, dto);
+  }
+
+  @Post('create-with-roster')
+  @ApiOperation({ summary: 'Create or rebuild demo team with a complete FAVC roster' })
+  createWithRoster(@Body() dto: CreateTeamWithRosterDto, @CurrentUser() user: AuthUser) {
+    return this.teamsService.createTeamWithRoster(user, dto);
   }
 
   @Get('my')

@@ -93,7 +93,32 @@ Con backend acceso e seed eseguito, `/partecipante-favc` mostra:
 - dettaglio player con storico round-by-round;
 - settlement finale virtuale, contabile, senza payout reale.
 - BUY/SELL reali demo backend solo dopo conferma esplicita nella UI.
+- creazione squadra da `/partecipante-favc/crea-squadra` con capitale virtuale iniziale libero e rosa completa 3/8/8/6.
 - se il backend non e disponibile, la UI resta su fallback mock/simulazione locale.
+
+## Creazione Squadra Dalla UI
+
+Apri:
+
+```text
+http://localhost:5173/partecipante-favc/crea-squadra
+```
+
+Il flusso usa:
+
+- `POST /teams` per creare un team vuoto con `initialVirtualCapital`, quando non esiste gia un team per stagione.
+- `POST /teams/create-with-roster` per confermare in modo atomico una rosa completa dalla UI.
+- `POST /market/buy` resta usato dalle operazioni mercato su team gia creato.
+
+Se il team demo esiste gia, la UI mostra la scelta tra continuare la squadra esistente oppure ricostruire/reset demo alla conferma finale. Il reset UI e limitato alla demo locale e non parte mai prima della conferma.
+
+La commissione acquisto e il 2%:
+
+```text
+costo totale = quotazione + (quotazione * 0,02)
+```
+
+Esempio: quota 34, commissione 0,68, costo totale 34,68. Se il cash virtuale iniziale non basta, la UI mostra il capitale virtuale extra che verra aggiunto solo dopo conferma.
 
 Se manca `QuoteHistory` ufficiale, il trend usa `synthetic_round_quotes_history.json` ed e mostrato come andamento stimato nel pilot, non quotazione ufficiale Fantacalcio round-by-round.
 
@@ -119,3 +144,4 @@ Poi salva `accessToken` in `localStorage` con chiave `fantatrading_access_token`
 - Ranking principale su ROI%.
 - Fallback mock frontend invariato quando backend, token, database o team non sono disponibili.
 - Le operazioni reali demo modificano il database solo dopo conferma; la sezione `Simula cambio` resta locale e non scrive sul database.
+- La creazione squadra non comporta pagamenti reali: `initialVirtualCapital` e l'eventuale extra sono solo capitale virtuale.

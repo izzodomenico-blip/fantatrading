@@ -1391,6 +1391,54 @@ tr:hover td { background: rgba(255,255,255,.035); }
   background: rgba(77, 166, 255, .1);
 }
 
+.team-builder-step {
+  margin-top: 18px;
+}
+
+.team-builder-step h3,
+.builder-market-card h3 {
+  margin-top: 0;
+}
+
+.capital-picker,
+.builder-inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.capital-picker button:not(.button) {
+  min-height: 38px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(255,255,255,.04);
+  color: var(--text);
+  padding: 0 14px;
+  font-weight: 800;
+}
+
+.capital-picker button.active {
+  border-color: rgba(77,166,255,.5);
+  background: rgba(77,166,255,.16);
+}
+
+.capital-picker input {
+  width: 140px;
+}
+
+.builder-market-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.builder-market-card > span {
+  color: var(--text2);
+  font-size: 12px;
+  padding: 0 4px;
+}
+
 @media (max-width: 1220px) {
   .metric-grid,
   .favc-metric-grid {

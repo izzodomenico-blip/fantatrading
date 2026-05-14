@@ -567,21 +567,39 @@ export default function ParticipantFavc() {
     setTradeDialog({ type: 'sell', position });
   }
 
+  const hasActiveTeam = dataSource === 'backend' && Boolean(teamId);
+  const hasRoster = activePositions.length > 0;
+  const heroTitle = tab === 'crea-squadra'
+    ? 'Crea la tua squadra 2025/26'
+    : tab === 'simulazione-stagione'
+      ? hasActiveTeam ? 'La mia simulazione 2025/26' : 'Simulazione 2025/26'
+      : hasActiveTeam ? 'La mia rosa FAVC' : 'Alpha Trading Club';
+  const heroSubtitle = tab === 'crea-squadra'
+    ? 'Capitale virtuale, 25 giocatori reali, commissione acquisto 2%. Nessun pagamento reale, nessun payout reale.'
+    : `${backendState.message} Modello FREE_ACCESS_VIRTUAL_CAPITAL: capitale virtuale, ranking ROI%, nessun payout reale.`;
+
   return (
     <>
       <div className="participant-hero compact-hero">
         <div>
           <StatusBadges items={connectionBadges} />
-          <h1>{dataSource === 'backend' ? 'Team demo backend' : 'Alpha Trading Club'}</h1>
-          <p>
-            {backendState.message} Modello FREE_ACCESS_VIRTUAL_CAPITAL: capitale virtuale, ranking ROI%, nessun payout reale.
-          </p>
+          <h1>{heroTitle}</h1>
+          <p>{heroSubtitle}</p>
         </div>
-        <div className="participant-hero-panel">
-          <span>{tab === 'simulazione-stagione' ? 'Replay storico' : 'ROI live'}</span>
-          <strong>{tab === 'simulazione-stagione' ? 'G1-G36' : formatSignedPercent(roiPct, 2)}</strong>
-          <small>{tab === 'simulazione-stagione' ? 'Guadagno % aggiornato nella pagina' : financialSnapshot?.rankByRoi ? `Ranking #${financialSnapshot.rankByRoi}` : 'Ranking ROI demo'}</small>
-        </div>
+        {tab === 'simulazione-stagione' && !hasActiveTeam ? (
+          <div className="participant-hero-panel participant-hero-cta">
+            <span>Nessuna rosa attiva</span>
+            <strong>Crea squadra</strong>
+            <small>Costruisci 25 giocatori 3/8/8/6 e avvia la simulazione storica.</small>
+            <Link className="button button-primary" to="/partecipante-favc/crea-squadra" style={{ marginTop: 12 }}>Vai a Crea squadra</Link>
+          </div>
+        ) : (
+          <div className="participant-hero-panel">
+            <span>{tab === 'simulazione-stagione' ? 'Guadagno % stimato' : 'Guadagno % / ROI'}</span>
+            <strong className={roiPct >= 0 ? 'positive' : 'negative'}>{tab === 'simulazione-stagione' && !hasRoster ? 'n.d.' : formatSignedPercent(roiPct, 2)}</strong>
+            <small>{tab === 'simulazione-stagione' ? `Aggiornato dentro la pagina · stagione 2025/26` : financialSnapshot?.rankByRoi ? `Ranking ROI #${financialSnapshot.rankByRoi}` : 'Settlement virtuale · nessun payout reale'}</small>
+          </div>
+        )}
       </div>
 
       <nav className="participant-tabs">

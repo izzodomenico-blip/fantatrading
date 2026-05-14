@@ -1810,9 +1810,304 @@ tr:hover td { background: rgba(91,145,255,.045); }
   width: min(720px, 100%);
 }
 
+/* Simulation Info Card */
+.sim-info-card {
+  display: grid;
+  gap: 18px;
+  padding: 22px 24px;
+  background:
+    linear-gradient(135deg, rgba(91,145,255,.10), rgba(44,201,183,.04) 60%, rgba(0,0,0,0)),
+    rgba(21,25,34,.94);
+  border: 1px solid rgba(91,145,255,.22);
+}
+
+.sim-info-headline {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.sim-info-headline h3 {
+  margin: 4px 0 6px;
+  font-size: clamp(22px, 2.6vw, 30px);
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.sim-info-headline p {
+  color: var(--text2);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+.sim-info-headline p strong {
+  color: var(--accent);
+  font-weight: 850;
+}
+
+.sim-info-eyebrow {
+  display: block;
+  color: var(--text3);
+  font-size: 10.5px;
+  font-weight: 850;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.sim-info-round {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  padding: 14px 18px;
+  min-width: 140px;
+  border: 1px solid rgba(91,145,255,.28);
+  border-radius: 8px;
+  background: rgba(91,145,255,.10);
+  text-align: right;
+}
+
+.sim-info-round strong {
+  font-size: clamp(28px, 3.2vw, 38px);
+  font-weight: 900;
+  color: #e6efff;
+  line-height: 1;
+}
+
+.sim-info-round small {
+  color: var(--text3);
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.sim-info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.sim-info-grid > div {
+  display: grid;
+  gap: 4px;
+  padding: 12px 13px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(255,255,255,.03);
+}
+
+.sim-info-grid span {
+  color: var(--text3);
+  font-size: 10.5px;
+  font-weight: 850;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.sim-info-grid strong {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 850;
+  overflow-wrap: anywhere;
+}
+
+.sim-info-grid code {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 12.5px;
+  color: #b9d4ff;
+}
+
+/* Empty state CTA when no active team */
+.sim-empty-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  padding: 26px 28px;
+  border: 1px dashed rgba(244,183,64,.38);
+  background:
+    linear-gradient(135deg, rgba(244,183,64,.10), rgba(255,255,255,0) 60%),
+    rgba(21,25,34,.92);
+}
+
+.sim-empty-cta h3 {
+  margin: 8px 0 6px;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.sim-empty-cta p {
+  color: var(--text2);
+  font-size: 14px;
+  line-height: 1.6;
+  max-width: 620px;
+}
+
+/* Primary KPI grid - 7 cards in 4-col, wrap to 2 */
+.kpi-primary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.kpi-primary-grid .metric-card {
+  min-height: 130px;
+}
+
+.kpi-primary-grid .metric-value {
+  font-size: clamp(24px, 2.6vw, 34px);
+}
+
+.kpi-secondary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 26px;
+}
+
+.kpi-secondary-grid .metric-card {
+  min-height: 110px;
+  border-top-width: 2px;
+}
+
+.kpi-secondary-grid .metric-value {
+  font-size: clamp(18px, 1.8vw, 22px);
+  font-weight: 850;
+}
+
+.kpi-secondary-grid .metric-label {
+  min-height: auto;
+}
+
+/* Voti e bonus summary */
+.vote-summary-card {
+  padding: 20px 22px;
+}
+
+.vote-summary-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+.vote-summary-row > div {
+  display: grid;
+  gap: 5px;
+  padding: 14px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(255,255,255,.03);
+}
+
+.vote-summary-label {
+  color: var(--text3);
+  font-size: 10.5px;
+  font-weight: 850;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.vote-summary-value {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--text);
+}
+
+.vote-summary-row .badge {
+  width: fit-content;
+}
+
+.vote-summary-row small {
+  color: var(--text3);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.vote-summary-note {
+  margin-top: 4px;
+  color: var(--text3);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+/* Primary action button (Avanza giornata) */
+.favc-action.favc-action-primary {
+  background: linear-gradient(135deg, #5b91ff, #2cc9b7);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 10px 24px rgba(91,145,255,.22);
+  font-weight: 900;
+  letter-spacing: .01em;
+}
+
+.favc-action.favc-action-primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+/* Builder step heading row */
+.builder-step-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.builder-step-head h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+/* Hero ROI: enlarged + tone */
+.participant-hero-panel strong.positive {
+  color: var(--green);
+}
+
+.participant-hero-panel strong.negative {
+  color: var(--red);
+}
+
+.participant-hero-cta {
+  background: rgba(244,183,64,.10);
+  border-color: rgba(244,183,64,.32);
+  color: var(--text);
+}
+
+.participant-hero-cta span,
+.participant-hero-cta small {
+  color: #f3d59a;
+}
+
+.participant-hero-cta strong {
+  color: var(--amber);
+  font-size: 28px;
+}
+
+.participant-hero-cta .button {
+  width: 100%;
+}
+
 @media (max-width: 1220px) {
   .metric-grid,
   .favc-metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .kpi-primary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .kpi-secondary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sim-info-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -1956,8 +2251,25 @@ tr:hover td { background: rgba(91,145,255,.045); }
   .favc-role-grid,
   .market-filters,
   .player-card-grid,
-  .market-card-grid {
+  .market-card-grid,
+  .kpi-primary-grid,
+  .kpi-secondary-grid,
+  .sim-info-grid {
     grid-template-columns: 1fr;
+  }
+
+  .sim-empty-cta {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sim-info-headline {
+    flex-direction: column;
+  }
+
+  .sim-info-round {
+    text-align: left;
+    width: 100%;
   }
 
   .backend-banner,

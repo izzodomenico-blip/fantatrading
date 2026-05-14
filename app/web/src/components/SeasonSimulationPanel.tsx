@@ -235,6 +235,20 @@ export default function SeasonSimulationPanel({ seasonId, seasonLabel = '2025/26
   const [message, setMessage] = useState('Carico replay storico 2025/26...');
   const [graphRange, setGraphRange] = useState<'5' | '10' | 'all'>('all');
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerCardData | null>(null);
+  const [justCreatedBanner, setJustCreatedBanner] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const teamId = window.sessionStorage.getItem('fantatrading.justCreatedTeamId');
+      if (teamId) {
+        window.sessionStorage.removeItem('fantatrading.justCreatedTeamId');
+        window.sessionStorage.removeItem('fantatrading.justCreatedAt');
+        return teamId;
+      }
+    } catch {
+      // sessionStorage not available
+    }
+    return null;
+  });
 
   useEffect(() => {
     const stored = readReplayState(typeof window === 'undefined' ? undefined : window.localStorage, STORAGE_KEY);
@@ -266,7 +280,18 @@ export default function SeasonSimulationPanel({ seasonId, seasonLabel = '2025/26
       const loaded: LoadedDemoTeam[] = [];
       const activeFromStorage = readActiveSimulationTeam(typeof window === 'undefined' ? undefined : window.localStorage);
       const query = typeof window === 'undefined' ? new URLSearchParams() : new URLSearchParams(window.location.search);
-      const activeTeamId = query.get('teamId') ?? activeFromStorage?.teamId ?? null;
+      let activeTeamId: string | null = query.get('teamId') ?? activeFromStorage?.teamId ?? null;
+
+      if (!activeTeamId) {
+        const fallbackTeams = await createFantaTradingApi().getMyTeams();
+        if (fallbackTeams.ok) {
+          const candidate = fallbackTeams.data.find(team => team.seasonId === replaySeasonId) ?? fallbackTeams.data[0];
+          if (candidate) {
+            activeTeamId = candidate.id;
+            setActiveSimulationTeam(typeof window === 'undefined' ? undefined : window.localStorage, candidate.id, candidate.seasonId, activeFromStorage?.round ?? 1);
+          }
+        }
+      }
 
       async function buildLoadedTeam(config: DemoTeamConfig, api: FantaTradingApi, teamId: string) {
         if (sharedPlayers.length === 0) {
@@ -392,11 +417,12 @@ export default function SeasonSimulationPanel({ seasonId, seasonLabel = '2025/26
   }, [roundByTeam, selectedKey, teams]);
 
   const activeTeam = teams.find(team => team.key === ACTIVE_TEAM_KEY);
-  const selectedTeam = teams.find(team => team.key === selectedKey) ?? activeTeam ?? teams[0];
+  const selectedTeam = activeTeam ?? null;
   const maxRound = selectedTeam?.maxRound ?? TARGET_MAX_ROUND;
   const selectedRound = selectedTeam ? clampRound(roundByTeam[selectedTeam.key] ?? 1, selectedTeam.maxRound) : 1;
   const selectedSnapshot = selectedTeam ? snapshotAt(selectedTeam, selectedRound) : null;
   const demoTeams = teams.filter(team => team.kind !== 'active');
+  const hasDemoComparison = demoTeams.length > 0;
   const ranking = useMemo(() => rankTeamsByRoi(
     demoTeams
       .map(team => ({ team, snapshot: snapshotAt(team, roundByTeam[team.key] ?? 1) }))
@@ -438,48 +464,52 @@ export default function SeasonSimulationPanel({ seasonId, seasonLabel = '2025/26
 
   return (
     <>
+      {justCreatedBanner && (
+        <div className="backend-banner trade-status trade-status-success" role="status">
+          <strong>Rosa salvata correttamente</strong>
+          <span>
+            La simulazione storica 2025/26 usa la tua nuova squadra dalla giornata 1.
+            Team ID <code>{justCreatedBanner.slice(0, 8)}...</code> salvato in localStorage come <code>fantatrading.activeTeamId</code>.
+            <button type="button" className="favc-action muted" onClick={() => setJustCreatedBanner(null)} style={{ marginLeft: 12 }}>OK</button>
+          </span>
+        </div>
+      )}
+
       <Section title="Simulazione storica 2025/26">
         <div className="backend-banner trade-status trade-status-info">
-          <strong>{status === 'ready' ? `Giornata corrente ${selectedRound} / ${maxRound}` : 'Stato replay'}</strong>
+          <strong>{status === 'ready' && selectedTeam ? `Giornata corrente G${selectedRound} di G${maxRound}` : 'Stato replay'}</strong>
           <span>{message}</span>
         </div>
 
         <div className="simulation-toolbar">
           <StatusBadges items={[
             'Voti reali fino a G36',
-            quoteSynthetic ? 'Quote sintetiche' : 'Quote official/mock',
+            quoteSynthetic ? 'Quote sintetiche pilot' : 'Quote official/mock',
+            'Capitale virtuale',
             'Ranking ROI%',
             'Nessun payout reale',
           ]} />
           <div className="simulation-controls replay-controls">
-            <label>
-              Team attivo
-              <select
-                value={selectedTeam?.key ?? selectedKey}
-                onChange={event => setSelectedKey(event.target.value)}
-                disabled={teams.length === 0}
-              >
-                {teams.map(team => <option value={team.key} key={team.key}>{team.shortLabel}</option>)}
-              </select>
-            </label>
-            <Link className="favc-action" to="/partecipante-favc/crea-squadra">Torna a crea squadra</Link>
-            <button type="button" className="favc-action" onClick={() => updateSelectedRound(1)} disabled={!selectedTeam}>
-              Avvia simulazione
+            <button type="button" className="favc-action favc-action-primary" onClick={advanceSelected} disabled={!selectedTeam || selectedRound >= maxRound}>
+              {selectedTeam ? `Avanza a G${Math.min(selectedRound + 1, maxRound)}` : 'Avanza giornata'}
             </button>
             <button type="button" className="favc-action" onClick={previousSelected} disabled={!selectedTeam || selectedRound <= 1}>
-              Torna indietro
+              Giornata precedente
             </button>
-            <button type="button" className="favc-action" onClick={advanceSelected} disabled={!selectedTeam || selectedRound >= maxRound}>
-              Avanza giornata
-            </button>
-            <button type="button" className="favc-action" onClick={advanceAll} disabled={teams.length === 0}>
-              Avanza tutte le squadre
-            </button>
-            <button type="button" className="favc-action muted" onClick={resetRounds} disabled={teams.length === 0}>
+            <button type="button" className="favc-action muted" onClick={() => updateSelectedRound(1)} disabled={!selectedTeam || selectedRound === 1}>
               Reset G1
             </button>
+            <button type="button" className="favc-action muted" onClick={() => updateSelectedRound(maxRound)} disabled={!selectedTeam || selectedRound >= maxRound}>
+              Vai a G{maxRound}
+            </button>
+            {hasDemoComparison && (
+              <button type="button" className="favc-action muted" onClick={advanceAll} disabled={teams.length === 0}>
+                Avanza demo confronto
+              </button>
+            )}
+            <Link className="favc-action muted" to="/partecipante-favc/crea-squadra">Modifica rosa</Link>
             <label className="round-slider-label">
-              Giornata {selectedRound}
+              Vai a giornata <strong>G{selectedRound}</strong>
               <input
                 type="range"
                 min="1"
@@ -491,48 +521,69 @@ export default function SeasonSimulationPanel({ seasonId, seasonLabel = '2025/26
             </label>
           </div>
           <div className="table-note">
-            Andamento quote stimato nel pilot. Voti e presenze reali fino alla giornata 36. La simulazione e visuale e non modifica database, MarketOperation, cash o roster.
+            La simulazione e visuale: usa quote stimate e voti reali 2025/26, non modifica database, MarketOperation, cash o roster reali.
           </div>
         </div>
 
         {status !== 'ready' && (
           <EmptyState
             title="Replay storico non pronto"
-            text="Il confronto multi-team richiede il seed 2025/26 multi e backend acceso."
+            text="Il replay 2025/26 richiede backend acceso e dati 2025/26 caricati."
           />
         )}
         {status === 'ready' && !activeTeam && (
-          <EmptyState
-            title="Crea o seleziona prima una rosa"
-            text="La mia simulazione usa il teamId salvato dopo la creazione squadra. Il confronto demo resta disponibile sotto."
-          />
+          <div className="sim-empty-cta card">
+            <div>
+              <span className="badge badge-amber">Squadra attiva mancante</span>
+              <h3>Crea o seleziona prima una rosa</h3>
+              <p>La simulazione storica 2025/26 lavora sulla tua rosa salvata. Costruisci 25 giocatori (3 P, 8 D, 8 C, 6 A) e torna qui per vedere giornata per giornata valore rosa, budget residuo, voti, fascia e bonus/malus.</p>
+            </div>
+            <Link className="button button-primary" to="/partecipante-favc/crea-squadra">Vai a Crea squadra</Link>
+          </div>
         )}
       </Section>
 
       {selectedTeam && selectedSnapshot && (
         <>
-          <Section title={selectedTeam.kind === 'active' ? 'La mia simulazione' : 'Replay squadra demo'}>
-            <div className="active-team-card card">
-              <div><span>Squadra attiva</span><strong>{selectedTeam.label}</strong></div>
-              <div><span>Stagione</span><strong>{seasonLabel}</strong></div>
-              <div><span>Team ID</span><strong>{selectedTeam.teamId.slice(0, 8)}...</strong></div>
-              <div><span>Giocatori</span><strong>{selectedTeam.positions.filter(player => player.status === 'ACTIVE').length}/25</strong></div>
-              <div><span>Composizione</span><strong>{selectedCounts.P}/3 P, {selectedCounts.D}/8 D, {selectedCounts.C}/8 C, {selectedCounts.A}/6 A</strong></div>
+          <Section title="La mia simulazione">
+            <div className="sim-info-card card">
+              <div className="sim-info-headline">
+                <div>
+                  <span className="sim-info-eyebrow">Squadra attiva</span>
+                  <h3>{selectedTeam.label}</h3>
+                  <p>Stagione {seasonLabel} - giornata <strong>G{selectedRound}</strong> di G{selectedTeam.maxRound}</p>
+                </div>
+                <div className="sim-info-round">
+                  <span className="sim-info-eyebrow">Giornata corrente</span>
+                  <strong>G{selectedRound}<small>/G{selectedTeam.maxRound}</small></strong>
+                </div>
+              </div>
+              <div className="sim-info-grid">
+                <div><span>Giocatori caricati</span><strong>{selectedTeam.positions.filter(player => player.status === 'ACTIVE').length}/25</strong></div>
+                <div><span>Composizione</span><strong>{selectedCounts.P}/3 P · {selectedCounts.D}/8 D · {selectedCounts.C}/8 C · {selectedCounts.A}/6 A</strong></div>
+                <div><span>Team ID</span><strong title={selectedTeam.teamId}><code>{selectedTeam.teamId.slice(0, 8)}...</code></strong></div>
+                <div><span>Season ID</span><strong title={seasonId ?? '-'}><code>{(seasonId ?? '').slice(0, 8) || '-'}...</code></strong></div>
+                <div><span>Quote source</span><strong>{selectedTeam.quoteSource === 'synthetic' ? 'Sintetiche pilot' : selectedTeam.quoteSource === 'official' ? 'Ufficiali' : 'Mock fallback'}</strong></div>
+                <div><span>Voti source</span><strong>{selectedTeam.voteMaxRound > 0 ? `Reali fino a G${selectedTeam.voteMaxRound}` : 'Mancanti'}</strong></div>
+              </div>
             </div>
           </Section>
 
-          <div className="metric-grid favc-metric-grid replay-metric-grid">
+          <div className="kpi-primary-grid">
             <MetricCard label="Capitale iniziale" value={formatCredits(selectedSnapshot.totalCapitalDeposited)} sub="virtuale depositato" color="var(--teal)" />
             <MetricCard label="Speso giocatori" value={formatCredits(selectedSnapshot.totalSpentPlayers)} sub="totale quote rosa" color="var(--accent)" />
-            <MetricCard label="Commissioni pagate" value={formatCredits(selectedSnapshot.buyCommissions + selectedSnapshot.sellCommissions)} sub="buy/sell fee" color="var(--amber)" />
-            <MetricCard label="Budget/Cash residuo" value={formatCredits(selectedSnapshot.virtualCashBalance)} sub="cash virtuale" color="var(--green)" />
-            <MetricCard label="Valore rosa" value={formatCredits(selectedSnapshot.grossPositionsValue)} sub="gross positions" color="var(--accent)" />
-            <MetricCard label="Guadagno/Perdita" value={formatSignedCredits(selectedSnapshot.profitLoss)} sub="progressivo stimato" color={selectedSnapshot.profitLoss >= 0 ? 'var(--green)' : 'var(--red)'} />
-            <MetricCard label="Guadagno %" value={formatSignedPercent(selectedSnapshot.roiPct)} sub="rendimento % stimato" color={selectedSnapshot.roiPct >= 0 ? 'var(--green)' : 'var(--red)'} />
-            <MetricCard label="Media voto" value={selectedSnapshot.teamVoteAverage === null ? 'n.d.' : selectedSnapshot.teamVoteAverage.toFixed(2)} sub={selectedSnapshot.teamBandLabel.replace('_', ' ')} color="var(--purple)" />
-            <MetricCard label="Con voto / SV" value={`${selectedSnapshot.playersWithVote}/${selectedSnapshot.svCount}`} sub="PLAYER_ZERO_TEAM_EXCLUDE" color="var(--amber)" />
-            <MetricCard label="Migliore" value={selectedSnapshot.bestPlayer?.name ?? 'n.d.'} sub={selectedSnapshot.bestPlayer ? formatSignedPercent(selectedSnapshot.bestPlayer.roiPct) : undefined} color="var(--green)" />
-            <MetricCard label="Peggiore" value={selectedSnapshot.worstPlayer?.name ?? 'n.d.'} sub={selectedSnapshot.worstPlayer ? formatSignedPercent(selectedSnapshot.worstPlayer.roiPct) : undefined} color="var(--red)" />
+            <MetricCard label="Commissioni pagate" value={formatCredits(selectedSnapshot.buyCommissions + selectedSnapshot.sellCommissions)} sub="2% acquisto + 1.25% vendita" color="var(--amber)" />
+            <MetricCard label="Budget/Cash residuo" value={formatCredits(selectedSnapshot.virtualCashBalance)} sub="cash virtuale disponibile" color="var(--green)" />
+            <MetricCard label="Valore rosa" value={formatCredits(selectedSnapshot.grossPositionsValue)} sub="gross positions stimate" color="var(--accent)" />
+            <MetricCard label="Guadagno / Perdita" value={formatSignedCredits(selectedSnapshot.profitLoss)} sub="progressivo stimato" color={selectedSnapshot.profitLoss >= 0 ? 'var(--green)' : 'var(--red)'} />
+            <MetricCard label="Guadagno % / ROI" value={formatSignedPercent(selectedSnapshot.roiPct)} sub="classifica principale" color={selectedSnapshot.roiPct >= 0 ? 'var(--green)' : 'var(--red)'} />
+          </div>
+
+          <div className="kpi-secondary-grid">
+            <MetricCard label="Media voto squadra" value={selectedSnapshot.teamVoteAverage === null ? 'n.d.' : selectedSnapshot.teamVoteAverage.toFixed(2)} sub={selectedSnapshot.teamBandLabel.replace('_', ' ')} color="var(--purple)" />
+            <MetricCard label="Con voto / SV" value={`${selectedSnapshot.playersWithVote} / ${selectedSnapshot.svCount}`} sub="SV escluso dalla media" color="var(--amber)" />
+            <MetricCard label="Miglior giocatore" value={selectedSnapshot.bestPlayer?.name ?? 'n.d.'} sub={selectedSnapshot.bestPlayer ? formatSignedPercent(selectedSnapshot.bestPlayer.roiPct) : undefined} color="var(--green)" />
+            <MetricCard label="Peggior giocatore" value={selectedSnapshot.worstPlayer?.name ?? 'n.d.'} sub={selectedSnapshot.worstPlayer ? formatSignedPercent(selectedSnapshot.worstPlayer.roiPct) : undefined} color="var(--red)" />
           </div>
 
           {selectedSnapshot.playersWithVote === 0 && selectedSnapshot.playerSnapshots.every(player => player.quoteChange === 0) && (
@@ -623,27 +674,32 @@ export default function SeasonSimulationPanel({ seasonId, seasonLabel = '2025/26
           </Section>
 
           <div className="favc-dashboard-grid">
-            <Section title="Confronto demo multi-squadra">
-              <div className="card table-scroll">
-                <table className="compact-table">
-                  <thead><tr><th>#</th><th>Team</th><th>Giornata</th><th>Valore rosa</th><th>P/L</th><th>ROI%</th><th>Media</th><th>SV</th></tr></thead>
-                  <tbody>
-                    {ranking.map((item, index) => (
-                      <tr key={item.team.key} className={item.team.key === selectedTeam.key ? 'selected-row' : ''}>
-                        <td>{index + 1}</td>
-                        <td><strong>{item.team.shortLabel}</strong><span className="table-subline">{item.team.description}</span></td>
-                        <td>G{item.snapshot.round}</td>
-                        <td>{formatCredits(item.snapshot.grossPositionsValue)}</td>
-                        <td className={valueTone(item.snapshot.profitLoss)}>{formatSignedCredits(item.snapshot.profitLoss)}</td>
-                        <td className={valueTone(item.snapshot.roiPct)}>{formatSignedPercent(item.snapshot.roiPct)}</td>
-                        <td>{item.snapshot.teamVoteAverage ?? 'n.d.'}</td>
-                        <td>{item.snapshot.svCount}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Section>
+            {hasDemoComparison && (
+              <Section title="Confronto demo multi-squadra (secondario)">
+                <div className="card table-scroll">
+                  <div className="table-note" style={{ marginBottom: 10 }}>
+                    Le squadre demo VALUE / LOW COST / TOP PLAYER / BALANCED sono solo riferimento di confronto. La tua rosa resta la simulazione principale qui sopra.
+                  </div>
+                  <table className="compact-table">
+                    <thead><tr><th>#</th><th>Team</th><th>Giornata</th><th>Valore rosa</th><th>P/L</th><th>ROI%</th><th>Media</th><th>SV</th></tr></thead>
+                    <tbody>
+                      {ranking.map((item, index) => (
+                        <tr key={item.team.key}>
+                          <td>{index + 1}</td>
+                          <td><strong>{item.team.shortLabel}</strong><span className="table-subline">{item.team.description}</span></td>
+                          <td>G{item.snapshot.round}</td>
+                          <td>{formatCredits(item.snapshot.grossPositionsValue)}</td>
+                          <td className={valueTone(item.snapshot.profitLoss)}>{formatSignedCredits(item.snapshot.profitLoss)}</td>
+                          <td className={valueTone(item.snapshot.roiPct)}>{formatSignedPercent(item.snapshot.roiPct)}</td>
+                          <td>{item.snapshot.teamVoteAverage ?? 'n.d.'}</td>
+                          <td>{item.snapshot.svCount}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </Section>
+            )}
 
             <Section title="Composizione selezionata">
               <div className="card composition-card">
@@ -661,10 +717,36 @@ export default function SeasonSimulationPanel({ seasonId, seasonLabel = '2025/26
             </Section>
           </div>
 
-          <Section title="Voti e bonus giornata">
-            <div className="notice-card replay-log">
-              <strong>Media squadra {selectedSnapshot.teamVoteAverage ?? 'n.d.'} {'->'} {selectedSnapshot.teamBandLabel.replace('_', ' ')}</strong>
-              <p>Somma voti {selectedSnapshot.teamVoteSum}. Bonus/malus medio applicato {formatSignedPercent(selectedSnapshot.teamBandBonusMalusPct)}. SV escluso dalla media squadra.</p>
+          <Section title={`Voti e bonus - G${selectedRound}`}>
+            <div className="vote-summary-card card">
+              <div className="vote-summary-row">
+                <div>
+                  <span className="vote-summary-label">Media squadra</span>
+                  <strong className="vote-summary-value">{selectedSnapshot.teamVoteAverage === null ? 'n.d.' : selectedSnapshot.teamVoteAverage.toFixed(2)}</strong>
+                  <span className="badge badge-blue">{selectedSnapshot.teamBandLabel.replace('_', ' ')}</span>
+                </div>
+                <div>
+                  <span className="vote-summary-label">Somma voti</span>
+                  <strong className="vote-summary-value">{selectedSnapshot.teamVoteSum}</strong>
+                  <small>{selectedSnapshot.playersWithVote} con voto, {selectedSnapshot.svCount} SV</small>
+                </div>
+                <div>
+                  <span className="vote-summary-label">Bonus/malus medio</span>
+                  <strong className={`vote-summary-value ${valueTone(selectedSnapshot.teamBandBonusMalusPct)}`}>{formatSignedPercent(selectedSnapshot.teamBandBonusMalusPct)}</strong>
+                  <small>fascia applicata</small>
+                </div>
+                <div>
+                  <span className="vote-summary-label">Miglior contributo</span>
+                  <strong className="vote-summary-value positive">{selectedSnapshot.bestPlayer?.name ?? 'n.d.'}</strong>
+                  <small>{selectedSnapshot.bestPlayer ? formatSignedPercent(selectedSnapshot.bestPlayer.roiPct) : ''}</small>
+                </div>
+                <div>
+                  <span className="vote-summary-label">Peggior contributo</span>
+                  <strong className="vote-summary-value negative">{selectedSnapshot.worstPlayer?.name ?? 'n.d.'}</strong>
+                  <small>{selectedSnapshot.worstPlayer ? formatSignedPercent(selectedSnapshot.worstPlayer.roiPct) : ''}</small>
+                </div>
+              </div>
+              <p className="vote-summary-note">SV escluso dalla media squadra e dal bonus individuale. Tabella fasce ufficiale gia presente nel motore.</p>
             </div>
             <div className="card table-scroll">
               <table className="portfolio-table compact-table simulation-player-table">

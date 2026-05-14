@@ -138,6 +138,14 @@ export default function TeamBuilderPanel({
 
     const createdTeamId = result.data.team.id;
     setActiveSimulationTeam(typeof window === 'undefined' ? undefined : window.localStorage, createdTeamId, seasonId, 1);
+    if (typeof window !== 'undefined') {
+      try {
+        window.sessionStorage.setItem('fantatrading.justCreatedTeamId', createdTeamId);
+        window.sessionStorage.setItem('fantatrading.justCreatedAt', String(Date.now()));
+      } catch {
+        // sessionStorage not available; non-blocking
+      }
+    }
     setMessage({ tone: 'success', text: 'Rosa salvata. La simulazione usera questa squadra dalla giornata 1.' });
     onCreated(createdTeamId, seasonId);
   }
@@ -173,8 +181,11 @@ export default function TeamBuilderPanel({
         )}
 
         <div className="team-builder-step">
-          <h3>STEP 1 - Capitale iniziale</h3>
-          <p>Imposta solo capitale virtuale. Non e un pagamento reale e non genera payout reale.</p>
+          <div className="builder-step-head">
+            <h3>STEP 1 - Capitale iniziale</h3>
+            <span className="badge badge-blue">Stagione {seasonLabel}</span>
+          </div>
+          <p>Imposta solo capitale virtuale. Non e un pagamento reale, non c'e payout reale e il capitale potra crescere automaticamente se la rosa selezionata costera di piu.</p>
           <div className="capital-picker">
             {PRESETS.map(value => (
               <button key={value} className={capital === value ? 'active' : ''} type="button" onClick={() => setCapital(value)}>{value}</button>

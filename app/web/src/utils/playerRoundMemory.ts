@@ -82,14 +82,25 @@ export function buildSinglePlayerRoundMemory(
   const playerKeys = [player.playerId, player.backendPlayerId, player.externalId]
     .filter((value): value is string => Boolean(value))
     .map(String);
+  const normalizedPlayerName = normalizeText(player.playerName);
+  const normalizedClub = normalizeText(player.club);
+  const normalizedRole = normalizeRole(player.role);
   const quoteRows = syntheticRows
     .filter(row => row.season === options.season || !row.season)
     .filter(row =>
       playerKeys.includes(String(row.playerId)) ||
-      row.playerName.toLowerCase() === player.playerName.toLowerCase(),
+      normalizeText(row.playerName) === normalizedPlayerName,
     )
     .sort((a, b) => a.round - b.round);
-  const voteRows = votes.filter(row => playerKeys.includes(String(row.playerId)));
+  const voteRows = votes.filter(row => {
+    if (row.season && row.season !== options.season) return false;
+    if (playerKeys.includes(String(row.playerId))) return true;
+    if (!row.playerName) return false;
+    const sameName = normalizeText(row.playerName) === normalizedPlayerName;
+    const sameClub = !row.club || !normalizedClub || normalizeText(row.club) === normalizedClub;
+    const sameRole = !row.role || normalizeRole(row.role) === normalizedRole;
+    return sameName && sameClub && sameRole;
+  });
   let previousQuote = player.initialQuote;
 
   const rounds = Array.from({ length: options.maxRound }, (_, index): PlayerRoundPoint => {
@@ -160,4 +171,22 @@ function interpolateQuote(initialQuote: number, currentQuote: number, round: num
   if (maxRound <= 1) return currentQuote;
   const progress = (round - 1) / (maxRound - 1);
   return initialQuote + (currentQuote - initialQuote) * progress;
+}
+
+function normalizeText(value?: string | null) {
+  return (value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+function normalizeRole(role?: string | null) {
+  const normalized = (role ?? '').toUpperCase();
+  if (normalized === 'GK') return 'P';
+  if (normalized === 'DEF') return 'D';
+  if (normalized === 'MID') return 'C';
+  if (normalized === 'FWD') return 'A';
+  return normalized;
 }

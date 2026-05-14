@@ -37,6 +37,10 @@ export type RawSyntheticRoundQuote = {
 export type RawVoteRow = {
   round: number;
   playerId: number | string;
+  playerName?: string;
+  club?: string;
+  role?: string;
+  season?: string;
   vote?: number | null;
   fantasyVote?: number | null;
   played?: boolean;

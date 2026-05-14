@@ -2549,7 +2549,8 @@ tr:hover td { background: rgba(91,145,255,.045); }
   max-width: 540px;
 }
 
-.trade-round-cash {
+.trade-round-cash,
+.trade-round-budget {
   display: grid;
   gap: 4px;
   padding: 12px 18px;
@@ -2560,10 +2561,47 @@ tr:hover td { background: rgba(91,145,255,.045); }
   min-width: 160px;
 }
 
-.trade-round-cash strong {
+.trade-round-cash strong,
+.trade-round-budget strong {
   font-size: 22px;
   font-weight: 900;
   color: var(--green);
+}
+
+.trade-round-budget small {
+  color: var(--text3);
+  font-size: 11.5px;
+}
+
+.trade-budget-strip {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(91,145,255,.22);
+  border-radius: 10px;
+  background: rgba(91,145,255,.07);
+}
+
+.trade-budget-strip div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.trade-budget-strip span {
+  color: var(--text3);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.trade-budget-strip strong {
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 900;
+  white-space: nowrap;
 }
 
 .trade-round-grid {
@@ -3103,6 +3141,7 @@ tr:hover td { background: rgba(91,145,255,.045); }
   .kpi-secondary-grid,
   .sim-info-grid,
   .trade-round-grid,
+  .trade-budget-strip,
   .fantalive-summary,
   .fantalive-grid-toplflop,
   .player-history-insights,
@@ -3130,7 +3169,8 @@ tr:hover td { background: rgba(91,145,255,.045); }
   }
 
   .trade-round-header,
-  .trade-round-cash {
+  .trade-round-cash,
+  .trade-round-budget {
     width: 100%;
   }
 

@@ -85,6 +85,19 @@ export default function FantacalcioLivePanel({ round, maxRound, snapshot, roster
       .filter(player => !player.isSv || (player.profitLoss && player.profitLoss !== 0))
       .sort((a, b) => b.profitLoss - a.profitLoss);
   }, [snapshot.playerSnapshots]);
+  const fantasyTotals = useMemo(() => {
+    const voted = snapshot.playerSnapshots.filter(player => !player.isSv);
+    const fantasyVotes = voted
+      .map(player => player.fantasyVote ?? player.vote)
+      .filter((value): value is number => typeof value === 'number');
+    return {
+      goals: snapshot.playerSnapshots.reduce((sum, player) => sum + (player.goals ?? 0), 0),
+      assists: snapshot.playerSnapshots.reduce((sum, player) => sum + (player.assists ?? 0), 0),
+      yellowCards: snapshot.playerSnapshots.reduce((sum, player) => sum + (player.yellowCards ?? 0), 0),
+      redCards: snapshot.playerSnapshots.reduce((sum, player) => sum + (player.redCards ?? 0), 0),
+      fantamedia: fantasyVotes.length ? Number((fantasyVotes.reduce((sum, value) => sum + value, 0) / fantasyVotes.length).toFixed(2)) : null,
+    };
+  }, [snapshot.playerSnapshots]);
 
   const top5 = sortedByContribution.slice(0, 5);
   const flop5 = sortedByContribution.slice(-5).reverse();
@@ -111,6 +124,10 @@ export default function FantacalcioLivePanel({ round, maxRound, snapshot, roster
         <SummaryCard label="Somma voti" value={String(snapshot.teamVoteSum.toFixed(2).replace('.', ','))} sub={`${snapshot.playersWithVote} con voto`} tone="neutral" />
         <SummaryCard label="Giocatori con voto" value={`${snapshot.playersWithVote}`} sub={`su ${snapshot.activePlayersCount} attivi`} tone="green" />
         <SummaryCard label="SV totali" value={`${snapshot.svCount}`} sub="esclusi dalla media" tone="amber" />
+        <SummaryCard label="Gol" value={`${fantasyTotals.goals}`} sub="eventi reali giornata" tone="green" />
+        <SummaryCard label="Assist" value={`${fantasyTotals.assists}`} sub="bonus fantacalcio" tone="blue" />
+        <SummaryCard label="Cartellini" value={`${fantasyTotals.yellowCards + fantasyTotals.redCards}`} sub={`${fantasyTotals.yellowCards} amm, ${fantasyTotals.redCards} esp`} tone="amber" />
+        <SummaryCard label="Fantamedia" value={fantasyTotals.fantamedia === null ? 'n.d.' : fantasyTotals.fantamedia.toFixed(2).replace('.', ',')} sub="sui giocatori con voto" tone="purple" />
         <SummaryCard label="Bonus/malus medio" value={formatSignedPercent(snapshot.teamBandBonusMalusPct, 2)} sub={`Fascia ${fasciaKey.replace('FASCIA_', '')}`} tone={snapshot.teamBandBonusMalusPct >= 0 ? 'green' : 'red'} />
         <SummaryCard label="Miglior contributo" value={snapshot.bestPlayer?.name ?? 'n.d.'} sub={snapshot.bestPlayer ? formatSignedCredits(snapshot.bestPlayer.profitLoss) : ''} tone="green" />
         <SummaryCard label="Peggior contributo" value={snapshot.worstPlayer?.name ?? 'n.d.'} sub={snapshot.worstPlayer ? formatSignedCredits(snapshot.worstPlayer.profitLoss) : ''} tone="red" />

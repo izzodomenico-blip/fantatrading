@@ -66,6 +66,7 @@ type Props = {
   seasonId?: string | null;
   seasonLabel?: string;
   marketPlayers?: DemoMarketPlayer[];
+  mode?: 'full' | 'fantacalcio';
 };
 
 type DemoTeamConfig = {
@@ -151,6 +152,9 @@ function votesToRows(votes: BackendVote[]): RawVoteRow[] {
   return votes.map(vote => ({
     round: vote.round,
     playerId: vote.playerId,
+    playerName: vote.player ? backendPlayerName(vote.player) : undefined,
+    club: vote.player?.realTeam,
+    role: vote.player?.role,
     vote: vote.vote ?? null,
     fantasyVote: vote.fantasyVote ?? null,
     played: vote.played,
@@ -375,7 +379,8 @@ function buildLocalLoadedTeam(
   };
 }
 
-export default function SeasonSimulationPanel({ seasonId, seasonLabel = '2025/26', marketPlayers = [] }: Props) {
+export default function SeasonSimulationPanel({ seasonId, seasonLabel = '2025/26', marketPlayers = [], mode = 'full' }: Props) {
+  const fantasyOnly = mode === 'fantacalcio';
   const [teams, setTeams] = useState<LoadedDemoTeam[]>([]);
   const [selectedKey, setSelectedKey] = useState<string>(ACTIVE_TEAM_KEY);
   const [roundByTeam, setRoundByTeam] = useState<Record<string, number>>({});
@@ -718,7 +723,7 @@ export default function SeasonSimulationPanel({ seasonId, seasonLabel = '2025/26
         </div>
       )}
 
-      <Section title="Simulazione storica 2025/26">
+      <Section title={fantasyOnly ? 'Dashboard Fantacalcio 2025/26' : 'Simulazione storica 2025/26'}>
         <div className="backend-banner trade-status trade-status-info">
           <strong>{status === 'ready' && selectedTeam ? `Giornata corrente G${selectedRound} di G${maxRound}` : 'Stato replay'}</strong>
           <span>{message}</span>
@@ -728,7 +733,7 @@ export default function SeasonSimulationPanel({ seasonId, seasonLabel = '2025/26
           <StatusBadges items={[
             'Voti reali fino a G36',
             quoteSynthetic ? 'Quote sintetiche pilot' : 'Quote official/mock',
-            'Capitale virtuale',
+            fantasyOnly ? 'Dashboard Fantacalcio' : 'Capitale virtuale',
             'Ranking ROI%',
             'Nessun payout reale',
           ]} />
@@ -840,7 +845,7 @@ export default function SeasonSimulationPanel({ seasonId, seasonLabel = '2025/26
           <div className="kpi-primary-grid">
             <MetricCard label="Capitale iniziale" value={formatCredits(selectedSnapshot.totalCapitalDeposited)} sub="virtuale depositato" color="var(--teal)" />
             <MetricCard label="Speso giocatori" value={formatCredits(selectedSnapshot.totalSpentPlayers)} sub="totale quote rosa" color="var(--accent)" />
-            <MetricCard label="Commissioni pagate" value={formatCredits(selectedSnapshot.buyCommissions + selectedSnapshot.sellCommissions)} sub="2% acquisto + 1.25% vendita" color="var(--amber)" />
+            <MetricCard label="Commissioni pagate" value={formatCredits(selectedSnapshot.buyCommissions + selectedSnapshot.sellCommissions)} sub="2% acquisto + 2% vendita" color="var(--amber)" />
             <MetricCard label="Budget/Cash residuo" value={formatCredits(selectedSnapshot.virtualCashBalance)} sub="cash virtuale disponibile" color="var(--green)" />
             <MetricCard label="Valore rosa" value={formatCredits(selectedSnapshot.grossPositionsValue)} sub="gross positions stimate" color="var(--accent)" />
             <MetricCard label="Guadagno / Perdita" value={formatSignedCredits(selectedSnapshot.profitLoss)} sub="progressivo stimato" color={selectedSnapshot.profitLoss >= 0 ? 'var(--green)' : 'var(--red)'} />
@@ -854,7 +859,7 @@ export default function SeasonSimulationPanel({ seasonId, seasonLabel = '2025/26
             <MetricCard label="Peggior giocatore" value={selectedSnapshot.worstPlayer?.name ?? 'n.d.'} sub={selectedSnapshot.worstPlayer ? formatSignedPercent(selectedSnapshot.worstPlayer.roiPct) : undefined} color="var(--red)" />
           </div>
 
-          {selectedRoster && (
+          {selectedRoster && !fantasyOnly && (
             <Section title={`Operazioni libere G${selectedRound}`}>
               <LocalRosterTradePanel
                 roster={selectedRoster}
@@ -889,6 +894,7 @@ export default function SeasonSimulationPanel({ seasonId, seasonLabel = '2025/26
             <button type="button" className={graphRange === 'all' ? 'active' : ''} onClick={() => setGraphRange('all')}>Tutte</button>
           </div>
 
+          {!fantasyOnly && (
           <div className="favc-dashboard-grid replay-chart-grid">
             <Section title="Andamento valore rosa">
               <div className="card chart-card">
@@ -906,7 +912,9 @@ export default function SeasonSimulationPanel({ seasonId, seasonLabel = '2025/26
               </div>
             </Section>
           </div>
+          )}
 
+          {!fantasyOnly && (
           <Section title="Andamento economico giornata per giornata">
             <div className="card table-scroll">
               <table className="compact-table economic-progress-table">
@@ -955,7 +963,9 @@ export default function SeasonSimulationPanel({ seasonId, seasonLabel = '2025/26
               </table>
             </div>
           </Section>
+          )}
 
+          {!fantasyOnly && (
           <div className="favc-dashboard-grid">
             {hasDemoComparison && (
               <Section title="Confronto demo multi-squadra (secondario)">
@@ -999,6 +1009,7 @@ export default function SeasonSimulationPanel({ seasonId, seasonLabel = '2025/26
               </div>
             </Section>
           </div>
+          )}
 
           <FantacalcioLivePanel
             round={selectedRound}
@@ -1008,6 +1019,7 @@ export default function SeasonSimulationPanel({ seasonId, seasonLabel = '2025/26
             onSelectPlayer={(player) => setSelectedPlayer(playerSnapshotToCard(player, selectedTeam.replay))}
           />
 
+          {!fantasyOnly && (
           <Section title="Andamento giocatori - trend rapido">
             <div className="card table-scroll">
               <table className="portfolio-table compact-table simulation-player-table">
@@ -1049,6 +1061,7 @@ export default function SeasonSimulationPanel({ seasonId, seasonLabel = '2025/26
               </div>
             </div>
           </Section>
+          )}
         </>
       )}
 

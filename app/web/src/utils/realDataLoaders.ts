@@ -129,6 +129,10 @@ export function realVoteToRawVote(row: RealVoteRow): RawVoteRow {
   return {
     round: row.round,
     playerId: row.playerId,
+    playerName: row.playerName,
+    club: row.club,
+    role: row.role,
+    season: row.season,
     vote: row.vote,
     fantasyVote: row.fantasyVote,
     played: row.played,

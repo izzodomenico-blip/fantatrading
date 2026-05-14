@@ -55,7 +55,7 @@ import {
 import { formatCredits, formatSignedCredits, formatSignedPercent, valueTone } from '../utils/format';
 import { computeRosterVoteStats, statusLabel } from '../utils/rosterVoteStats';
 
-type ParticipantTab = 'overview' | 'mercato' | 'rosa' | 'operazioni' | 'settlement' | 'crea-squadra' | 'simulazione-stagione';
+type ParticipantTab = 'overview' | 'mercato' | 'rosa' | 'operazioni' | 'settlement' | 'crea-squadra' | 'simulazione-stagione' | 'fantacalcio';
 type DataSource = 'mock' | 'backend';
 
 type BackendUiState = {
@@ -90,6 +90,7 @@ const TABS: Array<{ id: ParticipantTab; label: string; path: string }> = [
   { id: 'rosa', label: 'La mia rosa', path: '/partecipante-favc/rosa' },
   { id: 'crea-squadra', label: 'Crea squadra', path: '/partecipante-favc/crea-squadra' },
   { id: 'simulazione-stagione', label: 'Simulazione stagione', path: '/partecipante-favc/simulazione-stagione' },
+  { id: 'fantacalcio', label: 'Dashboard Fantacalcio', path: '/partecipante-favc/fantacalcio' },
   { id: 'operazioni', label: 'Operazioni', path: '/partecipante-favc/operazioni' },
   { id: 'settlement', label: 'Settlement', path: '/partecipante-favc/settlement' },
 ];
@@ -123,6 +124,9 @@ function votesToRows(votes: BackendVote[]): RawVoteRow[] {
   return votes.map(vote => ({
     round: vote.round,
     playerId: vote.playerId,
+    playerName: vote.player ? backendPlayerName(vote.player) : undefined,
+    club: vote.player?.realTeam,
+    role: vote.player?.role,
     vote: vote.vote ?? null,
     fantasyVote: vote.fantasyVote ?? null,
   }));
@@ -586,6 +590,8 @@ export default function ParticipantFavc() {
   const hasRoster = activePositions.length > 0;
   const heroTitle = tab === 'crea-squadra'
     ? 'Crea la tua squadra 2025/26'
+    : tab === 'fantacalcio'
+      ? 'Dashboard Fantacalcio 2025/26'
     : tab === 'simulazione-stagione'
       ? hasActiveTeam ? 'La mia simulazione 2025/26' : 'Simulazione 2025/26'
       : hasActiveTeam ? 'La mia rosa FAVC' : 'Alpha Trading Club';
@@ -601,7 +607,7 @@ export default function ParticipantFavc() {
           <h1>{heroTitle}</h1>
           <p>{heroSubtitle}</p>
         </div>
-        {tab === 'simulazione-stagione' && !hasActiveTeam ? (
+        {(tab === 'simulazione-stagione' || tab === 'fantacalcio') && !hasActiveTeam ? (
           <div className="participant-hero-panel participant-hero-cta">
             <span>Nessuna rosa attiva</span>
             <strong>Crea squadra</strong>
@@ -610,9 +616,9 @@ export default function ParticipantFavc() {
           </div>
         ) : (
           <div className="participant-hero-panel">
-            <span>{tab === 'simulazione-stagione' ? 'Guadagno % stimato' : 'Guadagno % / ROI'}</span>
-            <strong className={roiPct >= 0 ? 'positive' : 'negative'}>{tab === 'simulazione-stagione' && !hasRoster ? 'n.d.' : formatSignedPercent(roiPct, 2)}</strong>
-            <small>{tab === 'simulazione-stagione' ? `Aggiornato dentro la pagina · stagione 2025/26` : financialSnapshot?.rankByRoi ? `Ranking ROI #${financialSnapshot.rankByRoi}` : 'Settlement virtuale · nessun payout reale'}</small>
+            <span>{tab === 'fantacalcio' ? 'Focus giornata' : tab === 'simulazione-stagione' ? 'Guadagno % stimato' : 'Guadagno % / ROI'}</span>
+            <strong className={roiPct >= 0 ? 'positive' : 'negative'}>{(tab === 'simulazione-stagione' || tab === 'fantacalcio') && !hasRoster ? 'n.d.' : tab === 'fantacalcio' ? 'Voti + bonus' : formatSignedPercent(roiPct, 2)}</strong>
+            <small>{tab === 'fantacalcio' ? 'Gol, assist, cartellini, fantamedia e fascia squadra' : tab === 'simulazione-stagione' ? 'Aggiornato dentro la pagina - stagione 2025/26' : financialSnapshot?.rankByRoi ? `Ranking ROI #${financialSnapshot.rankByRoi}` : 'Settlement virtuale - nessun payout reale'}</small>
           </div>
         )}
       </div>
@@ -816,6 +822,15 @@ export default function ParticipantFavc() {
           seasonId={builderSeason?.id ?? seasonId}
           seasonLabel={builderSeason?.footballSeason ?? TEAM_BUILDER_SEASON}
           marketPlayers={builderPlayers}
+        />
+      )}
+
+      {tab === 'fantacalcio' && (
+        <SeasonSimulationPanel
+          seasonId={builderSeason?.id ?? seasonId}
+          seasonLabel={builderSeason?.footballSeason ?? TEAM_BUILDER_SEASON}
+          marketPlayers={builderPlayers}
+          mode="fantacalcio"
         />
       )}
 

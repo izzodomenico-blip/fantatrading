@@ -68,6 +68,38 @@ describe('season historical replay utilities', () => {
     expect(sv?.rounds[0].sourceVote).toBe('missing');
   });
 
+  it('matches real vote rows by player name, club and role when ids come from different sources', () => {
+    const memory = buildPlayerRoundMemory([{
+      playerId: 'external-4431',
+      backendPlayerId: 'backend-carnesecchi',
+      externalId: 'external-4431',
+      playerName: 'Carnesecchi',
+      role: 'P',
+      club: 'Atalanta',
+      season: '2025/26',
+      initialQuote: 12,
+      currentQuote: 13,
+    }], [{
+      season: '2025/26',
+      playerId: '4431',
+      playerName: 'Carnesecchi',
+      club: 'Atalanta',
+      role: 'P',
+      round: 1,
+      vote: 6.5,
+      fantasyVote: null,
+      played: true,
+      goals: 0,
+      assists: 0,
+      yellowCards: 0,
+      redCards: 0,
+    }], [], { season: '2025/26', maxRound: 36 });
+
+    expect(memory.get('external-4431')?.rounds[0].vote).toBe(6.5);
+    expect(memory.get('external-4431')?.rounds[0].sourceVote).toBe('official');
+    expect(memory.get('external-4431')?.rounds[0].isSv).toBe(false);
+  });
+
   it('uses +1 quote as +5% fanta trading return', () => {
     const memory = buildPlayerRoundMemory([{
       playerId: '10',

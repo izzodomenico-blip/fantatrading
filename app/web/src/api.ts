@@ -50,6 +50,7 @@ export type BackendVote = {
   seasonId?: string;
   round: number;
   playerId: string;
+  player?: BackendPlayer;
   vote?: number | null;
   fantasyVote?: number | null;
   played?: boolean;

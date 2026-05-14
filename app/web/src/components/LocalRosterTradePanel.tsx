@@ -19,11 +19,6 @@ type Props = {
   onUpdated: (next: LocalRoster) => void;
 };
 
-type TradeDraft =
-  | { kind: 'sell'; playerId: string }
-  | { kind: 'buy'; playerId: string }
-  | null;
-
 const ROLE_TONE: Record<FavcRole, 'amber' | 'blue' | 'purple' | 'red'> = {
   P: 'amber',
   D: 'blue',
@@ -32,13 +27,14 @@ const ROLE_TONE: Record<FavcRole, 'amber' | 'blue' | 'purple' | 'red'> = {
 };
 
 export default function LocalRosterTradePanel({ roster, round, marketPlayers, roundMemory, onUpdated }: Props) {
-  const [draft, setDraft] = useState<TradeDraft>(null);
+  const [sellPlayerId, setSellPlayerId] = useState('');
+  const [buyPlayerId, setBuyPlayerId] = useState('');
   const [roleFilter, setRoleFilter] = useState<FavcRole | 'all'>('all');
   const [message, setMessage] = useState<{ tone: 'success' | 'error' | 'info'; text: string } | null>(null);
 
   const { positions: positionStates, financials } = useMemo(() => buildLocalRosterStateAtRound(roster, round), [roster, round]);
   const activePositions = positionStates.filter(position => position.status === 'ACTIVE');
-  const heldIds = new Set(positionStates.map(position => position.playerId));
+  const activeHeldIds = new Set(activePositions.map(position => position.playerId));
 
   function quoteForPlayerAtRound(playerId: string, fallback: number) {
     const memory = roundMemory.get(playerId);
@@ -47,7 +43,7 @@ export default function LocalRosterTradePanel({ roster, round, marketPlayers, ro
     return point?.quote ?? fallback;
   }
 
-  const draftSell = draft?.kind === 'sell' ? activePositions.find(p => p.playerId === draft.playerId) : null;
+  const draftSell = sellPlayerId ? activePositions.find(p => p.playerId === sellPlayerId) : null;
   // When a sell is staged, buy options collapse to the SAME role to keep composition 3/8/8/6.
   const enforcedRole: FavcRole | null = draftSell?.role ?? (roleFilter === 'all' ? null : roleFilter);
 
@@ -55,14 +51,13 @@ export default function LocalRosterTradePanel({ roster, round, marketPlayers, ro
     return marketPlayers
       .filter(player => {
         const id = player.playerId ?? player.id;
-        if (heldIds.has(id)) return false;
+        if (activeHeldIds.has(id)) return false;
         if (enforcedRole && player.role !== enforcedRole) return false;
         return true;
-      })
-      .slice(0, 200);
-  }, [marketPlayers, heldIds, enforcedRole]);
+      });
+  }, [marketPlayers, activeHeldIds, enforcedRole]);
 
-  const draftBuy = draft?.kind === 'buy' ? buyableMarket.find(player => (player.playerId ?? player.id) === draft.playerId) : null;
+  const draftBuy = buyPlayerId ? buyableMarket.find(player => (player.playerId ?? player.id) === buyPlayerId) : null;
 
   const sellPreview = useMemo(() => {
     if (!draftSell) return null;
@@ -77,11 +72,13 @@ export default function LocalRosterTradePanel({ roster, round, marketPlayers, ro
     if (!draftBuy) return null;
     const playerId = draftBuy.playerId ?? draftBuy.id;
     const quote = quoteForPlayerAtRound(playerId, draftBuy.quote);
+    const cashBefore = sellPreview?.cashAfter ?? financials.cashBalance;
     return {
-      ...computeBuyTrade({ cashBefore: financials.cashBalance, quote }),
+      ...computeBuyTrade({ cashBefore, quote }),
       quote,
+      cashBefore,
     };
-  }, [draftBuy, financials.cashBalance, round, roundMemory]);
+  }, [draftBuy, financials.cashBalance, round, roundMemory, sellPreview]);
 
   // Net P/L if both sell + buy go through (with the same role)
   const netEffect = useMemo(() => {
@@ -126,7 +123,8 @@ export default function LocalRosterTradePanel({ roster, round, marketPlayers, ro
       updatedAt: new Date().toISOString(),
     };
     onUpdated(next);
-    setDraft(null);
+    setSellPlayerId('');
+    setBuyPlayerId('');
     setMessage({
       tone: 'success',
       text: `Venduto ${trade.playerName} a quota ${sellPreview.quote.toFixed(0)} (+${formatCredits(sellPreview.netAmount)} cash). Commissione 2% ${formatCredits(sellPreview.commission)}. Ora puoi comprare un altro ${roleNames[draftSell.role]} per ricomporre la rosa.`,
@@ -162,7 +160,8 @@ export default function LocalRosterTradePanel({ roster, round, marketPlayers, ro
       updatedAt: new Date().toISOString(),
     };
     onUpdated(next);
-    setDraft(null);
+    setBuyPlayerId('');
+    setSellPlayerId('');
     setRoleFilter('all');
     setMessage({
       tone: 'success',
@@ -198,9 +197,17 @@ export default function LocalRosterTradePanel({ roster, round, marketPlayers, ro
         </div>
         <div className="trade-round-budget">
           <span className="sim-info-eyebrow">Budget / Cash virtuale</span>
-          <strong>{formatCredits(financials.cashBalance)}</strong>
-          <small>{financials.cashBalance > 0 ? 'disponibile per acquisti' : 'esaurito - prossimo acquisto aggiunge capitale virtuale'}</small>
+            <strong>{formatCredits(financials.cashBalance)}</strong>
+            <small>{financials.cashBalance > 0 ? 'disponibile per acquisti' : 'esaurito - prossimo acquisto aggiunge capitale virtuale'}</small>
         </div>
+      </div>
+
+      <div className="trade-budget-strip">
+        <div><span>Cash ora</span><strong>{formatCredits(financials.cashBalance)}</strong></div>
+        <div><span>Dopo vendita selezionata</span><strong>{formatCredits(sellPreview?.cashAfter ?? financials.cashBalance)}</strong></div>
+        <div><span>Costo acquisto selezionato</span><strong>{buyPreview ? formatCredits(buyPreview.netAmount) : '-'}</strong></div>
+        <div><span>Cash finale stimato</span><strong>{buyPreview ? formatCredits(buyPreview.cashAfter) : '-'}</strong></div>
+        <div><span>Capitale extra</span><strong className={(buyPreview?.capitalAdded ?? 0) > 0 ? 'amber' : ''}>{buyPreview ? formatCredits(buyPreview.capitalAdded) : '-'}</strong></div>
       </div>
 
       <div className="trade-round-grid">
@@ -210,8 +217,14 @@ export default function LocalRosterTradePanel({ roster, round, marketPlayers, ro
             <span className="badge badge-amber">commissione 2%</span>
           </div>
           <select
-            value={draft?.kind === 'sell' ? draft.playerId : ''}
-            onChange={event => setDraft(event.target.value ? { kind: 'sell', playerId: event.target.value } : null)}
+            value={sellPlayerId}
+            onChange={event => {
+              const nextId = event.target.value;
+              setSellPlayerId(nextId);
+              setBuyPlayerId('');
+              const selectedSell = activePositions.find(position => position.playerId === nextId);
+              if (selectedSell) setRoleFilter(selectedSell.role);
+            }}
           >
             <option value="">Seleziona dalla rosa attiva</option>
             {(['P', 'D', 'C', 'A'] as FavcRole[]).map(role => {
@@ -254,7 +267,7 @@ export default function LocalRosterTradePanel({ roster, round, marketPlayers, ro
         <div className="trade-round-side trade-round-side-buy">
           <div className="trade-round-side-head">
             <h4>Compra un giocatore</h4>
-            <span className="badge badge-blue">commissione 2%</span>
+            <span className="badge badge-blue">{enforcedRole ? `${roleNames[enforcedRole]} disponibili` : 'commissione 2%'}</span>
           </div>
           <div className="trade-round-role-filter">
             <span>Ruolo</span>
@@ -266,7 +279,7 @@ export default function LocalRosterTradePanel({ roster, round, marketPlayers, ro
                   key={role}
                   className={`role-pill role-pill-${ROLE_TONE[role]} ${roleSelectorRole === role ? 'active' : ''}`}
                   onClick={() => !draftSell && setRoleFilter(role)}
-                  disabled={Boolean(draftSell) && draftSell.role !== role}
+                  disabled={Boolean(draftSell) && draftSell?.role !== role}
                 >
                   {roleNames[role]}
                 </button>
@@ -275,10 +288,10 @@ export default function LocalRosterTradePanel({ roster, round, marketPlayers, ro
           </div>
           <p className="trade-round-rule-note">{ruleNote}</p>
           <select
-            value={draft?.kind === 'buy' ? draft.playerId : ''}
-            onChange={event => setDraft(event.target.value ? { kind: 'buy', playerId: event.target.value } : null)}
+            value={buyPlayerId}
+            onChange={event => setBuyPlayerId(event.target.value)}
           >
-            <option value="">Seleziona dal mercato ({buyableMarket.length} disponibili)</option>
+            <option value="">Seleziona dal mercato ({buyableMarket.length} disponibili{enforcedRole ? ` - ${roleNames[enforcedRole]}` : ''})</option>
             {buyableMarket.map(player => {
               const id = player.playerId ?? player.id;
               const quote = quoteForPlayerAtRound(id, player.quote);
@@ -300,13 +313,16 @@ export default function LocalRosterTradePanel({ roster, round, marketPlayers, ro
                 </div>
               </div>
               <div><span>Quota G{round}</span><strong>{formatCredits(buyPreview.quote)}</strong></div>
+              <div><span>Cash usato per calcolo</span><strong>{formatCredits(buyPreview.cashBefore)}</strong></div>
               <div><span>Commissione 2%</span><strong>+{formatCredits(buyPreview.commission)}</strong></div>
               <div><span>Costo totale</span><strong className="negative">-{formatCredits(buyPreview.netAmount)}</strong></div>
               {buyPreview.capitalAdded > 0 && (
                 <div><span>Capitale extra virtuale</span><strong className="amber">{formatCredits(buyPreview.capitalAdded)}</strong></div>
               )}
               <div><span>Cash dopo</span><strong>{formatCredits(buyPreview.cashAfter)}</strong></div>
-              <button type="button" className="button button-primary trade-round-confirm" onClick={executeBuy}>Conferma acquisto {draftBuy.playerName}</button>
+              <button type="button" className="button button-primary trade-round-confirm" onClick={executeBuy} disabled={Boolean(draftSell)}>
+                {draftSell ? 'Conferma prima la vendita' : `Conferma acquisto ${draftBuy.playerName}`}
+              </button>
             </div>
           )}
         </div>

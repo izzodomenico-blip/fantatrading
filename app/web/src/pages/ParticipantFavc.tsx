@@ -43,6 +43,7 @@ import {
   type RawSyntheticRoundQuote,
   type RawVoteRow,
 } from '../utils/playerTrend';
+import { loadOfflineMarketAndVotes } from '../utils/realDataLoaders';
 import { buildTeamTrendFromPositions } from '../utils/teamTrend';
 import {
   filterAndSortMarketPlayers,
@@ -337,29 +338,44 @@ export default function ParticipantFavc() {
   useEffect(() => {
     let mounted = true;
 
+    async function applyOfflineFallback(message: string, mode: ApiMode) {
+      try {
+        const offline = await loadOfflineMarketAndVotes(TEAM_BUILDER_SEASON);
+        if (!mounted) return;
+        if (offline.marketPlayers.length > 0) {
+          setBuilderPlayers(offline.marketPlayers);
+          setMarketPlayers(offline.marketPlayers);
+          setBuilderVotesMaxRound(offline.votesMaxRound || null);
+          setBuilderTrendSource('synthetic');
+        }
+      } catch {
+        // best-effort: keep mock fallback
+      }
+      if (!mounted) return;
+      setBackendState({ mode, message });
+      setTeamId(null);
+      setSeasonId(null);
+      setDataSource('mock');
+    }
+
     async function loadBackendData() {
       const api = createFantaTradingApi();
       const health = await api.health();
 
       if (!mounted) return;
       if (!health.ok) {
-        setBackendState({ mode: 'backend-unavailable', message: 'Backend non disponibile: uso fallback demo/mock locale.' });
-        setTeamId(null);
-        setSeasonId(null);
-        setDataSource('mock');
+        await applyOfflineFallback('Backend offline: la dashboard Fantacalcio usa dati reali 2025/26 dai file JSON storici.', 'backend-unavailable');
         return;
       }
 
       const token = getStoredAccessToken() ?? await getOrCreateDemoAccessToken();
       if (!token) {
-        setBackendState({
-          mode: 'missing-token',
-          message: import.meta.env.DEV
-            ? 'Backend raggiungibile, ma login demo non disponibile: esegui il seed demo o imposta un token JWT locale.'
-            : 'Backend raggiungibile, ma manca un token JWT locale: uso demo/mock read-only.',
-        });
-        setTeamId(null);
-        setSeasonId(null);
+        await applyOfflineFallback(
+          import.meta.env.DEV
+            ? 'Backend raggiungibile, login demo mancante: la dashboard Fantacalcio usa dati reali 2025/26 dai JSON storici.'
+            : 'Backend senza token: uso dati reali 2025/26 locali.',
+          'missing-token',
+        );
         return;
       }
 
@@ -381,14 +397,12 @@ export default function ParticipantFavc() {
       if (!mounted) return;
 
       if (!teams.ok || teams.data.length === 0) {
-        setBackendState({
-          mode: teams.ok ? 'no-team' : 'backend-unavailable',
-          message: teams.ok
-            ? 'Backend collegato, ma nessuna squadra reale trovata: mostro la demo controllata.'
-            : 'Errore nella lettura dei team: uso demo/mock.',
-        });
-        setTeamId(null);
-        setSeasonId(null);
+        await applyOfflineFallback(
+          teams.ok
+            ? 'Backend collegato, nessuna squadra trovata: usa Crea squadra. Mercato 2025/26 reale caricato da JSON.'
+            : 'Errore lettura team: uso dati reali 2025/26 locali.',
+          teams.ok ? 'no-team' : 'backend-unavailable',
+        );
         return;
       }
 

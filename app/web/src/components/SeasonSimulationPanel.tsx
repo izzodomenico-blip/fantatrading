@@ -60,6 +60,7 @@ import { SELL_COMMISSION_RATE, type DemoMarketPlayer } from '../mock/favcDemoDat
 import { buildTeamRoundSnapshot } from '../utils/teamRoundSimulation';
 import LocalRosterTradePanel from './LocalRosterTradePanel';
 import FantacalcioLivePanel from './FantacalcioLivePanel';
+import { loadOfflineMarketAndVotes } from '../utils/realDataLoaders';
 
 type Props = {
   seasonId?: string | null;
@@ -428,16 +429,30 @@ export default function SeasonSimulationPanel({ seasonId, seasonLabel = '2025/26
 
       // Always try to load votes (best effort) so local rosters can use real votes + fascia.
       const replaySeasonId = seasonId;
+      let sharedVoteRows: RawVoteRow[] = [];
+      let votesMaxRound = 0;
       if (replaySeasonId) {
         try {
           const votesResult = await createFantaTradingApi().getVotes({ seasonId: replaySeasonId });
-          if (votesResult.ok) sharedVotes = votesResult.data;
+          if (votesResult.ok && votesResult.data.length > 0) {
+            sharedVotes = votesResult.data;
+            sharedVoteRows = votesToRows(sharedVotes);
+            votesMaxRound = Math.max(0, ...sharedVotes.map(vote => Number(vote.round)).filter(Number.isFinite));
+          }
         } catch {
           // best-effort
         }
       }
-      const sharedVoteRows = votesToRows(sharedVotes);
-      const votesMaxRound = Math.max(0, ...sharedVotes.map(vote => Number(vote.round)).filter(Number.isFinite));
+      // Fallback: real Fantacalcio votes 2025/26 from static JSON (works without backend).
+      if (sharedVoteRows.length === 0) {
+        try {
+          const offline = await loadOfflineMarketAndVotes(seasonLabel);
+          sharedVoteRows = offline.voteRows;
+          votesMaxRound = offline.votesMaxRound;
+        } catch {
+          // best-effort
+        }
+      }
 
       // Load local rosters first - they are the primary view.
       const localRostersList = readLocalRosters();

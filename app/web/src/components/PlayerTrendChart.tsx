@@ -127,9 +127,9 @@ export default function PlayerTrendChart({ data, mode = 'full', valueKey = 'quot
             dataKey={valueKey}
             name={valueKey === 'quote' ? 'Quotazione' : 'Valore stimato'}
             stroke={stroke}
-            strokeWidth={compact ? 2 : 2.5}
+            strokeWidth={compact ? 2.25 : 3}
             dot={compact ? false : <DetailDot markerRounds={markerRounds} />}
-            activeDot={{ r: compact ? 3 : 5 }}
+            activeDot={{ r: compact ? 3 : 4.5 }}
             isAnimationActive={false}
           />
         </LineChart>

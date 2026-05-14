@@ -14,15 +14,20 @@ const NAV_GROUPS = [
     title: 'Prodotto',
     items: [
       { path: '/', label: 'Home', icon: 'H', end: true },
-      { path: '/partecipante-favc', label: 'Partecipante FAVC', icon: 'F', end: false },
       { path: '/come-funziona', label: 'Come funziona', icon: 'R', end: false },
+      { path: '/full-rules-v1', label: 'Full Rules V1', icon: 'V1', end: false },
     ],
   },
   {
-    title: 'Analisi',
+    title: 'Partecipante',
+    items: [
+      { path: '/partecipante-favc', label: 'Area FAVC', icon: 'FT', end: false },
+    ],
+  },
+  {
+    title: 'Analisi / Admin',
     items: [
       { path: '/dashboard', label: 'Report / Analisi', icon: 'A', end: false },
-      { path: '/full-rules-v1', label: 'Full Rules V1', icon: 'V1', end: false },
       { path: '/scala', label: 'Analisi per Scala', icon: 'S', end: false },
       { path: '/modelli', label: 'Modelli Regolamento', icon: 'M', end: false },
       { path: '/sensibilita', label: 'Sensibilita', icon: 'SE', end: false },

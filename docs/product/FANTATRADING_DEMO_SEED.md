@@ -14,6 +14,7 @@ Questo seed popola un database locale con una demo backend completa per la pagin
 ```powershell
 npm.cmd run prisma:migrate:dev
 npm.cmd run backend:seed:demo
+npm.cmd run backend:seed:demo:2025-26
 npm.cmd run backend:dev
 npm.cmd run web:dev
 ```
@@ -22,9 +23,10 @@ Per riportare il team demo allo stato iniziale dopo prove di BUY/SELL reali dall
 
 ```powershell
 npm.cmd run backend:seed:demo:reset
+npm.cmd run backend:seed:demo:2025-26:reset
 ```
 
-Il reset cancella e ricrea solo la squadra demo `demo@fantatrading.local` per la stagione `2024/25`, insieme a posizioni, operazioni, settlement e ranking collegati. Non espone un comando in UI e non cancella il catalogo di player, quote o voti importati.
+Il reset cancella e ricrea solo la squadra demo `demo@fantatrading.local` per la stagione indicata, insieme a posizioni, operazioni, settlement e ranking collegati. Non espone un comando in UI e non cancella il catalogo di player, quote o voti importati.
 
 Poi apri:
 
@@ -78,7 +80,7 @@ Il seed usa solo dati gia presenti nel repository:
 - `data/real/processed/votes/fantacalcio_votes_history.json`
 - `data/real/processed/round-quotes/synthetic_round_quotes_history.json`
 
-La stagione demo preferita e `2024/25`. Vengono importati player reali, club reali, ruoli reali, quotazioni iniziali/finali e voti reali disponibili. La rosa demo ha 25 calciatori reali con composizione FAVC `3 GK / 8 DEF / 8 MID / 6 FWD`.
+La stagione principale per la creazione nuova squadra e `2025/26`, con status `IN_PROGRESS` se popolata dal seed `backend:seed:demo:2025-26`. La stagione `2024/25` resta disponibile come demo storica/backtest. Vengono importati player reali, club reali, ruoli reali, quotazioni iniziali/finali e voti reali disponibili. La rosa demo ha 25 calciatori reali con composizione FAVC `3 GK / 8 DEF / 8 MID / 6 FWD`.
 
 ## Cosa Aspettarsi Nella UI
 
@@ -110,7 +112,7 @@ Il flusso usa:
 - `POST /teams/create-with-roster` per confermare in modo atomico una rosa completa dalla UI.
 - `POST /market/buy` resta usato dalle operazioni mercato su team gia creato.
 
-Se il team demo esiste gia, la UI mostra la scelta tra continuare la squadra esistente oppure ricostruire/reset demo alla conferma finale. Il reset UI e limitato alla demo locale e non parte mai prima della conferma.
+La pagina carica come stagione principale `2025/26`. Se la stagione e `IN_PROGRESS`, mostra: `Stagione 2025/26 in corso - dati disponibili fino alla giornata importata`. Se il team demo 2025/26 esiste gia, la UI mostra la scelta tra continuare la squadra esistente oppure ricostruire/reset demo alla conferma finale. Il reset UI e limitato alla demo locale e non parte mai prima della conferma.
 
 La commissione acquisto e il 2%:
 

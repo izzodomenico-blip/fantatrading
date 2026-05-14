@@ -4,6 +4,7 @@ import { filterAndSortMarketPlayers } from '../../app/web/src/utils/marketFilter
 import { buildBuyConfirmation, buildSellConfirmation } from '../../app/web/src/utils/tradeConfirmation';
 import { buildRosterDraftSummary, canAddPlayerToDraft } from '../../app/web/src/utils/teamBuilder';
 import type { DemoMarketPlayer, DemoPosition } from '../../app/web/src/mock/favcDemoData';
+import { readFileSync } from 'fs';
 
 const position: DemoPosition = {
   id: 'pos-1',
@@ -37,6 +38,20 @@ const marketPlayer: DemoMarketPlayer = {
 };
 
 describe('FAVC UI utilities', () => {
+  it('has 2025/26 processed market, votes and synthetic trend data for the builder', () => {
+    const quotes = JSON.parse(readFileSync('data/real/processed/fantacalcio_quotes_history.json', 'utf8')).rows;
+    const votes = JSON.parse(readFileSync('data/real/processed/votes/fantacalcio_votes_history.json', 'utf8')).rows;
+    const synthetic = JSON.parse(readFileSync('data/real/processed/round-quotes/synthetic_round_quotes_history.json', 'utf8')).rows;
+    const votes2025 = votes.filter((row: { season: string }) => row.season === '2025/26');
+    const synthetic2025 = synthetic.filter((row: { season: string }) => row.season === '2025/26');
+
+    expect(quotes.filter((row: { season: string }) => row.season === '2025/26')).toHaveLength(531);
+    expect(votes2025.length).toBeGreaterThan(0);
+    expect(Math.max(...votes2025.map((row: { round: number }) => row.round))).toBe(36);
+    expect(synthetic2025.length).toBeGreaterThan(0);
+    expect(Math.max(...synthetic2025.map((row: { round: number }) => row.round))).toBe(36);
+  });
+
   it('builds team trend without mutating positions', () => {
     const before = JSON.stringify(position);
     const trend = buildTeamTrendFromPositions([position], {
@@ -81,6 +96,23 @@ describe('FAVC UI utilities', () => {
 
     expect(filtered).toHaveLength(1);
     expect(filtered[0].playerName).toBe('Retegui');
+  });
+
+  it('sorts market players by ascending and descending price', () => {
+    const cheap = { ...marketPlayer, id: 'cheap', playerId: 'cheap', quote: 4, playerName: 'Cheap' };
+    const expensive = { ...marketPlayer, id: 'expensive', playerId: 'expensive', quote: 20, playerName: 'Expensive' };
+    const baseFilters = {
+      search: '',
+      role: 'all' as const,
+      team: 'Tutte',
+      price: 'all' as const,
+      trend: 'all' as const,
+      onlyWithTrend: false,
+      sortBy: 'priceAsc' as const,
+    };
+
+    expect(filterAndSortMarketPlayers([expensive, cheap], baseFilters).map(player => player.id)).toEqual(['cheap', 'expensive']);
+    expect(filterAndSortMarketPlayers([cheap, expensive], { ...baseFilters, sortBy: 'priceDesc' }).map(player => player.id)).toEqual(['expensive', 'cheap']);
   });
 
   it('builds buy confirmation without mutating data and blocks a full roster', () => {

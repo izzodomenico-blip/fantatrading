@@ -13,6 +13,15 @@ export type BackendTeam = {
   availableBudget?: number;
   currentPortfolioValue?: number;
   currentRoi?: number;
+  season?: BackendSeason;
+};
+
+export type BackendSeason = {
+  id: string;
+  name: string;
+  footballSeason: string;
+  status: 'DRAFT' | 'OPEN' | 'LOCKED' | 'IN_PROGRESS' | 'COMPLETED' | 'ARCHIVED';
+  totalRounds?: number;
 };
 
 export type BackendPlayer = {
@@ -185,6 +194,10 @@ export class FantaTradingApi {
 
   login(email: string, password: string) {
     return this.post<LoginResponse>('/auth/login', { email, password });
+  }
+
+  getSeasons() {
+    return this.request<BackendSeason[]>('/seasons');
   }
 
   getMyTeams() {

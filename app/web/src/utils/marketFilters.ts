@@ -3,7 +3,7 @@ import { getTrendTone } from './playerTrend';
 
 export type MarketPriceFilter = 'all' | 'low' | 'mid' | 'high';
 export type MarketTrendFilter = 'all' | 'up' | 'stable' | 'down';
-export type MarketSortKey = 'price' | 'return' | 'name' | 'role' | 'quoteChange';
+export type MarketSortKey = 'price' | 'priceAsc' | 'priceDesc' | 'return' | 'name' | 'role' | 'quoteChange';
 
 export type MarketFilterState = {
   search: string;
@@ -30,7 +30,8 @@ export function filterAndSortMarketPlayers(players: DemoMarketPlayer[], filters:
       return true;
     })
     .sort((a, b) => {
-      if (filters.sortBy === 'price') return b.quote - a.quote;
+      if (filters.sortBy === 'price' || filters.sortBy === 'priceDesc') return b.quote - a.quote;
+      if (filters.sortBy === 'priceAsc') return a.quote - b.quote;
       if (filters.sortBy === 'return') return b.performancePct - a.performancePct;
       if (filters.sortBy === 'role') return a.role.localeCompare(b.role) || a.playerName.localeCompare(b.playerName);
       if (filters.sortBy === 'quoteChange') return b.trendPct - a.trendPct;

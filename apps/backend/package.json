@@ -11,6 +11,8 @@
     "start:prod": "node dist/main",
     "seed:demo": "ts-node -r tsconfig-paths/register src/seed/demo-seed.ts",
     "seed:demo:reset": "ts-node -r tsconfig-paths/register src/seed/demo-seed.ts --reset",
+    "seed:demo:2025-26": "ts-node -r tsconfig-paths/register src/seed/demo-seed.ts --2025-26",
+    "seed:demo:2025-26:reset": "ts-node -r tsconfig-paths/register src/seed/demo-seed.ts --2025-26 --reset",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",

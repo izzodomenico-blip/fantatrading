@@ -10,6 +10,7 @@ import {
   type BackendPlayer,
   type BackendPortfolio,
   type BackendQuote,
+  type BackendSeason,
   type BackendVote,
 } from '../api';
 import { EmptyState, MetricCard, Section, StatusBadges } from '../components';
@@ -88,6 +89,8 @@ const TABS: Array<{ id: ParticipantTab; label: string; path: string }> = [
   { id: 'operazioni', label: 'Operazioni', path: '/partecipante-favc/operazioni' },
   { id: 'settlement', label: 'Settlement', path: '/partecipante-favc/settlement' },
 ];
+
+const TEAM_BUILDER_SEASON = '2025/26';
 
 const syntheticQuoteModules = import.meta.glob<{ rows: RawSyntheticRoundQuote[] }>(
   '@data/real/processed/round-quotes/synthetic_round_quotes_history.json',
@@ -297,6 +300,10 @@ export default function ParticipantFavc() {
   const [positions, setPositions] = useState<DemoPosition[]>(() => demoPositions);
   const [marketPlayers, setMarketPlayers] = useState<DemoMarketPlayer[]>(() => demoMarketPlayers);
   const [builderPlayers, setBuilderPlayers] = useState<DemoMarketPlayer[]>(() => demoMarketPlayers);
+  const [builderSeason, setBuilderSeason] = useState<BackendSeason | null>(null);
+  const [builderExistingTeamId, setBuilderExistingTeamId] = useState<string | null>(null);
+  const [builderVotesMaxRound, setBuilderVotesMaxRound] = useState<number | null>(null);
+  const [builderTrendSource, setBuilderTrendSource] = useState<'official' | 'synthetic' | 'mock'>('mock');
   const [operations, setOperations] = useState<DemoOperation[]>(() => initialOperations);
   const [virtualCashBalance, setVirtualCashBalance] = useState(0);
   const [financialSnapshot, setFinancialSnapshot] = useState<FinancialSnapshot | null>(null);
@@ -354,12 +361,18 @@ export default function ParticipantFavc() {
       }
 
       let authedApi = createFantaTradingApi();
-      let teams = await authedApi.getMyTeams();
+      let [teams, seasons] = await Promise.all([
+        authedApi.getMyTeams(),
+        authedApi.getSeasons(),
+      ]);
       if (!teams.ok && import.meta.env.DEV && (teams.status === 401 || teams.status === 403)) {
         const refreshedToken = await getOrCreateDemoAccessToken(undefined, { forceRefresh: true });
         if (refreshedToken) {
           authedApi = createFantaTradingApi();
-          teams = await authedApi.getMyTeams();
+          [teams, seasons] = await Promise.all([
+            authedApi.getMyTeams(),
+            authedApi.getSeasons(),
+          ]);
         }
       }
       if (!mounted) return;
@@ -376,10 +389,20 @@ export default function ParticipantFavc() {
         return;
       }
 
-      const team = teams.data[0];
+      const targetBuilderSeason = seasons.ok
+        ? seasons.data.find(season => season.footballSeason === TEAM_BUILDER_SEASON) ?? null
+        : null;
+      setBuilderSeason(targetBuilderSeason);
+      const targetBuilderTeam = targetBuilderSeason
+        ? teams.data.find(item => item.seasonId === targetBuilderSeason.id) ?? null
+        : null;
+      setBuilderExistingTeamId(targetBuilderTeam?.id ?? null);
+
+      const team = targetBuilderTeam ?? teams.data[0];
       setTeamId(team.id);
       setSeasonId(team.seasonId);
-      const [portfolio, players, quotes, votes, settlement, operationsResult, syntheticRows] = await Promise.all([
+      const builderSeasonId = targetBuilderSeason?.id ?? team.seasonId;
+      const [portfolio, players, quotes, votes, settlement, operationsResult, syntheticRows, builderPlayersResult, builderQuotesResult, builderVotesResult] = await Promise.all([
         authedApi.getTeamPortfolio(team.id),
         authedApi.getPlayers({ seasonId: team.seasonId }),
         authedApi.getQuotes({ seasonId: team.seasonId }),
@@ -387,6 +410,9 @@ export default function ParticipantFavc() {
         authedApi.getTeamFinalSettlement(team.id),
         authedApi.getMarketOperations(team.id),
         loadSyntheticQuoteRows().catch(() => [] as RawSyntheticRoundQuote[]),
+        authedApi.getPlayers({ seasonId: builderSeasonId }),
+        authedApi.getQuotes({ seasonId: builderSeasonId }),
+        authedApi.getVotes({ seasonId: builderSeasonId }),
       ]);
 
       if (!mounted) return;
@@ -403,11 +429,18 @@ export default function ParticipantFavc() {
       const voteRows = votesToRows(backendVotes);
       const normalizedPositions = normalizePortfolioPositions(portfolio.data, backendPlayers, syntheticRows, voteRows);
       const normalizedMarket = normalizeMarketPlayers(backendPlayers, backendQuotes, normalizedPositions, syntheticRows, voteRows);
-      const normalizedBuilderMarket = normalizeMarketPlayers(backendPlayers, backendQuotes, [], syntheticRows, voteRows, 240);
+      const builderBackendPlayers = builderPlayersResult.ok ? builderPlayersResult.data : backendPlayers;
+      const builderBackendQuotes = builderQuotesResult.ok ? builderQuotesResult.data : backendQuotes;
+      const builderBackendVotes = builderVotesResult.ok ? builderVotesResult.data : backendVotes;
+      const builderVoteRows = votesToRows(builderBackendVotes);
+      const normalizedBuilderMarket = normalizeMarketPlayers(builderBackendPlayers, builderBackendQuotes, [], syntheticRows, builderVoteRows, 600);
+      const builderRounds = builderBackendVotes.map(vote => Number(vote.round)).filter(Number.isFinite);
 
       setPositions(normalizedPositions.length > 0 ? normalizedPositions : demoPositions);
       setMarketPlayers(normalizedMarket.length > 0 ? normalizedMarket : demoMarketPlayers);
       setBuilderPlayers(normalizedBuilderMarket.length > 0 ? normalizedBuilderMarket : demoMarketPlayers);
+      setBuilderVotesMaxRound(builderRounds.length > 0 ? Math.max(...builderRounds) : null);
+      setBuilderTrendSource(normalizedBuilderMarket.some(player => player.trend?.some(point => point.source === 'synthetic')) ? 'synthetic' : 'mock');
       setOperations(operationsResult.ok && operationsResult.data.length > 0 ? backendOperationsToDemo(operationsResult.data) : initialOperations);
       setVirtualCashBalance(Number(portfolio.data.summary.virtualCashBalance ?? 0));
       setFinancialSnapshot(buildFinancialSnapshot(portfolio.data, settlement.ok ? settlement.data : undefined));
@@ -676,8 +709,12 @@ export default function ParticipantFavc() {
       {tab === 'crea-squadra' && (
         <TeamBuilderPanel
           players={builderPlayers}
-          seasonId={seasonId}
-          existingTeamId={teamId}
+          seasonId={builderSeason?.id ?? seasonId}
+          seasonLabel={builderSeason?.footballSeason ?? TEAM_BUILDER_SEASON}
+          seasonStatus={builderSeason?.status ?? null}
+          votesMaxRound={builderVotesMaxRound}
+          trendSource={builderTrendSource}
+          existingTeamId={builderExistingTeamId}
           backendConnected={backendState.mode === 'connected' && dataSource === 'backend'}
           onContinueExisting={() => navigate('/partecipante-favc/rosa')}
           onCreated={() => {

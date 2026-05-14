@@ -16,6 +16,7 @@ import { SettlementService } from '../modules/settlement/settlement.service';
 import { TeamsService } from '../modules/teams/teams.service';
 
 export const DEMO_SEASON = '2024/25';
+export const DEMO_SEASON_2025_26 = '2025/26';
 export const DEMO_ADMIN_EMAIL = 'admin@fantatrading.local';
 export const DEMO_USER_EMAIL = 'demo@fantatrading.local';
 export const DEMO_PASSWORD = 'password';
@@ -181,15 +182,21 @@ export function countComposition(players: Array<{ mappedRole: PlayerRole }>) {
   };
 }
 
-async function seedDemo(options: { reset?: boolean } = {}) {
+type DemoSeedOptions = {
+  reset?: boolean;
+  season?: string;
+};
+
+async function seedDemo(options: DemoSeedOptions = {}) {
   loadEnvFiles();
+  const demoSeason = options.season ?? DEMO_SEASON;
 
   const prisma = new PrismaService();
   await prisma.$connect();
 
   try {
     if (options.reset) {
-      await resetDemoTeam(prisma);
+      await resetDemoTeam(prisma, demoSeason);
     }
 
     const marketService = new MarketService(prisma, new TeamsService(prisma));
@@ -198,9 +205,9 @@ async function seedDemo(options: { reset?: boolean } = {}) {
     const quotesFile = readProcessedJson<ProcessedQuoteSeedRow>(QUOTES_PATH);
     const votesFile = readProcessedJson<ProcessedVoteSeedRow>(VOTES_PATH);
     const syntheticFile = readProcessedJson<SyntheticQuoteSeedRow>(SYNTHETIC_QUOTES_PATH);
-    const quoteRows = quotesFile.rows.filter((row) => row.season === DEMO_SEASON);
-    const voteRows = votesFile.rows.filter((row) => row.season === DEMO_SEASON);
-    const roster = selectDemoRoster(quotesFile.rows, votesFile.rows, syntheticFile.rows, DEMO_SEASON);
+    const quoteRows = quotesFile.rows.filter((row) => row.season === demoSeason);
+    const voteRows = votesFile.rows.filter((row) => row.season === demoSeason);
+    const roster = selectDemoRoster(quotesFile.rows, votesFile.rows, syntheticFile.rows, demoSeason);
 
     const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 12);
     const admin = await upsertDemoUser(prisma, {
@@ -218,7 +225,7 @@ async function seedDemo(options: { reset?: boolean } = {}) {
       role: UserRole.PARTICIPANT,
     });
 
-    const season = await upsertDemoSeason(prisma, admin.id);
+    const season = await upsertDemoSeason(prisma, admin.id, demoSeason);
     const playerIdByExternalId = await importPlayersAndQuotes(prisma, season.id, quoteRows);
     const votesImported = await importVotes(prisma, season.id, voteRows, playerIdByExternalId);
     const team = await upsertDemoTeam(prisma, participant.id, season.id);
@@ -259,9 +266,9 @@ async function seedDemo(options: { reset?: boolean } = {}) {
   }
 }
 
-async function resetDemoTeam(prisma: PrismaClient) {
+async function resetDemoTeam(prisma: PrismaClient, demoSeason = DEMO_SEASON) {
   const participant = await prisma.user.findUnique({ where: { email: DEMO_USER_EMAIL } });
-  const season = await prisma.season.findFirst({ where: { footballSeason: DEMO_SEASON } });
+  const season = await prisma.season.findFirst({ where: { footballSeason: demoSeason } });
   if (!participant || !season) return;
 
   const team = await prisma.team.findUnique({
@@ -317,15 +324,16 @@ async function upsertDemoUser(
   });
 }
 
-async function upsertDemoSeason(prisma: PrismaClient, adminId: string) {
+async function upsertDemoSeason(prisma: PrismaClient, adminId: string, demoSeason = DEMO_SEASON) {
+  const isLiveDemo = demoSeason === DEMO_SEASON_2025_26;
   const data = {
-    name: `FantaTrading Demo ${DEMO_SEASON}`,
-    footballSeason: DEMO_SEASON,
-    status: SeasonStatus.COMPLETED,
-    registrationOpenAt: new Date('2024-07-01T00:00:00.000Z'),
-    registrationCloseAt: new Date('2024-08-16T23:59:59.000Z'),
-    startDate: new Date('2024-08-17T00:00:00.000Z'),
-    endDate: new Date('2025-05-25T23:59:59.000Z'),
+    name: isLiveDemo ? `FantaTrading Demo ${demoSeason} Live` : `FantaTrading Demo ${demoSeason}`,
+    footballSeason: demoSeason,
+    status: isLiveDemo ? SeasonStatus.IN_PROGRESS : SeasonStatus.COMPLETED,
+    registrationOpenAt: isLiveDemo ? new Date('2025-07-01T00:00:00.000Z') : new Date('2024-07-01T00:00:00.000Z'),
+    registrationCloseAt: isLiveDemo ? new Date('2025-08-16T23:59:59.000Z') : new Date('2024-08-16T23:59:59.000Z'),
+    startDate: isLiveDemo ? new Date('2025-08-17T00:00:00.000Z') : new Date('2024-08-17T00:00:00.000Z'),
+    endDate: isLiveDemo ? new Date('2026-05-25T23:59:59.000Z') : new Date('2025-05-25T23:59:59.000Z'),
     totalRounds: 38,
     initialBudget: 0,
     buyCommissionRate: 0.02,
@@ -337,7 +345,7 @@ async function upsertDemoSeason(prisma: PrismaClient, adminId: string) {
     createdById: adminId,
   };
 
-  const existing = await prisma.season.findFirst({ where: { footballSeason: DEMO_SEASON } });
+  const existing = await prisma.season.findFirst({ where: { footballSeason: demoSeason } });
   if (existing) {
     return prisma.season.update({
       where: { id: existing.id },
@@ -561,7 +569,10 @@ function loadEnvFiles() {
 }
 
 if (require.main === module) {
-  seedDemo({ reset: process.argv.includes('--reset') }).catch((error) => {
+  const seasonArg = process.argv.includes('--season=2025/26') || process.argv.includes('--2025-26')
+    ? DEMO_SEASON_2025_26
+    : DEMO_SEASON;
+  seedDemo({ reset: process.argv.includes('--reset'), season: seasonArg }).catch((error) => {
     process.stderr.write(`${error instanceof Error ? error.stack ?? error.message : String(error)}\n`);
     process.exit(1);
   });

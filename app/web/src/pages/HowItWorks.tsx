@@ -61,6 +61,68 @@ export default function HowItWorks() {
         </div>
       </Section>
 
+      <Section title="Come entrano i voti nel valore della tua rosa">
+        <div className="voting-flow">
+          <ol className="voting-flow-steps">
+            <li>
+              <span className="voting-flow-step">1</span>
+              <div>
+                <strong>La tua squadra gioca la giornata</strong>
+                <p>I 25 giocatori della tua rosa ricevono voto in pagella o vengono segnati come SV (senza voto).</p>
+              </div>
+            </li>
+            <li>
+              <span className="voting-flow-step">2</span>
+              <div>
+                <strong>Gli SV non entrano nella media squadra</strong>
+                <p>Policy PLAYER_ZERO_TEAM_EXCLUDE: chi non ha voto e' escluso sia dalla somma sia dal divisore.</p>
+              </div>
+            </li>
+            <li>
+              <span className="voting-flow-step">3</span>
+              <div>
+                <strong>La media squadra determina la fascia</strong>
+                <p>Fascia 0 = &lt; 5,00 · Fascia 1 = 5,00-5,49 · Fascia 2 = 5,50-5,99 · Fascia 3 = 6,00-6,49 · Fascia 4 = &gt;= 6,50.</p>
+              </div>
+            </li>
+            <li>
+              <span className="voting-flow-step">4</span>
+              <div>
+                <strong>Fascia + voto = bonus/malus FantaTrading</strong>
+                <p>La tabella ufficiale assegna a ogni combinazione un bonus/malus % sul valore individuale. Voto 6 e' neutro nelle Fasce 1-4. SV = 0%.</p>
+              </div>
+            </li>
+            <li>
+              <span className="voting-flow-step">5</span>
+              <div>
+                <strong>Il bonus modifica il valore del singolo giocatore</strong>
+                <p>Il valore del giocatore = quota × (1 + (Qa - Qi) × 5%) × (1 + bonusFT). Bonus positivo lo fa salire, negativo lo fa scendere.</p>
+              </div>
+            </li>
+            <li>
+              <span className="voting-flow-step">6</span>
+              <div>
+                <strong>Il valore complessivo della rosa cambia</strong>
+                <p>Il portafoglio si aggiorna giornata per giornata. Guadagno % = (valore finale + cash − capitale depositato) / capitale.</p>
+              </div>
+            </li>
+          </ol>
+
+          <div className="voting-flow-example card">
+            <span className="badge badge-blue">Esempio concreto</span>
+            <h3>Da media 6,18 a Fascia 3, voto 7 → bonus +1,50%</h3>
+            <ul>
+              <li><strong>Media squadra 6,18</strong> → Fascia 3 (range 6,00 - 6,49).</li>
+              <li><strong>Giocatore con voto 7</strong> in Fascia 3 → bonus FantaTrading <strong className="positive">+1,50%</strong>.</li>
+              <li><strong>Giocatore SV</strong> → escluso dalla media, bonus FT <strong>0%</strong>.</li>
+              <li><strong>Quota +1</strong> rispetto all'iniziale → effetto quota <strong className="positive">+5%</strong> sul valore.</li>
+              <li><strong>Valore finale</strong> giocatore = effetto quota × effetto voto. Esempio: quota 10 con quota +1 e bonus +1,50% → 10 × 1,05 × 1,015 = <strong>10,66</strong>.</li>
+            </ul>
+            <p className="table-note">Il capitale e' virtuale. Nessun pagamento reale, nessun payout reale.</p>
+          </div>
+        </div>
+      </Section>
+
       <Section title="Regole operative">
         <div className="rule-grid">
           {ruleSummary.map(([title, text]) => (

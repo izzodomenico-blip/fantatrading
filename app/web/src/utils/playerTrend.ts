@@ -9,6 +9,13 @@ export type PlayerTrendPoint = {
   played?: boolean;
   isSv?: boolean;
   fantasyBonusPct?: number;
+  goals?: number | null;
+  assists?: number | null;
+  yellowCards?: number | null;
+  redCards?: number | null;
+  ownGoals?: number | null;
+  penaltySaved?: number | null;
+  penaltyMissed?: number | null;
   source: 'synthetic' | 'official' | 'mock';
   sourceVote?: 'official' | 'missing';
 };

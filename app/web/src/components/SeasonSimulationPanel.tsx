@@ -59,6 +59,7 @@ import {
 import { SELL_COMMISSION_RATE, type DemoMarketPlayer } from '../mock/favcDemoData';
 import { buildTeamRoundSnapshot } from '../utils/teamRoundSimulation';
 import LocalRosterTradePanel from './LocalRosterTradePanel';
+import FantacalcioLivePanel from './FantacalcioLivePanel';
 
 type Props = {
   seasonId?: string | null;
@@ -984,55 +985,27 @@ export default function SeasonSimulationPanel({ seasonId, seasonLabel = '2025/26
             </Section>
           </div>
 
-          <Section title={`Voti e bonus - G${selectedRound}`}>
-            <div className="vote-summary-card card">
-              <div className="vote-summary-row">
-                <div>
-                  <span className="vote-summary-label">Media squadra</span>
-                  <strong className="vote-summary-value">{selectedSnapshot.teamVoteAverage === null ? 'n.d.' : selectedSnapshot.teamVoteAverage.toFixed(2)}</strong>
-                  <span className="badge badge-blue">{selectedSnapshot.teamBandLabel.replace('_', ' ')}</span>
-                </div>
-                <div>
-                  <span className="vote-summary-label">Somma voti</span>
-                  <strong className="vote-summary-value">{selectedSnapshot.teamVoteSum}</strong>
-                  <small>{selectedSnapshot.playersWithVote} con voto, {selectedSnapshot.svCount} SV</small>
-                </div>
-                <div>
-                  <span className="vote-summary-label">Bonus/malus medio</span>
-                  <strong className={`vote-summary-value ${valueTone(selectedSnapshot.teamBandBonusMalusPct)}`}>{formatSignedPercent(selectedSnapshot.teamBandBonusMalusPct)}</strong>
-                  <small>fascia applicata</small>
-                </div>
-                <div>
-                  <span className="vote-summary-label">Miglior contributo</span>
-                  <strong className="vote-summary-value positive">{selectedSnapshot.bestPlayer?.name ?? 'n.d.'}</strong>
-                  <small>{selectedSnapshot.bestPlayer ? formatSignedPercent(selectedSnapshot.bestPlayer.roiPct) : ''}</small>
-                </div>
-                <div>
-                  <span className="vote-summary-label">Peggior contributo</span>
-                  <strong className="vote-summary-value negative">{selectedSnapshot.worstPlayer?.name ?? 'n.d.'}</strong>
-                  <small>{selectedSnapshot.worstPlayer ? formatSignedPercent(selectedSnapshot.worstPlayer.roiPct) : ''}</small>
-                </div>
-              </div>
-              <p className="vote-summary-note">SV escluso dalla media squadra e dal bonus individuale. Tabella fasce ufficiale gia presente nel motore.</p>
-            </div>
+          <FantacalcioLivePanel
+            round={selectedRound}
+            maxRound={selectedTeam.maxRound}
+            snapshot={selectedSnapshot}
+            rosterName={selectedTeam.label}
+            onSelectPlayer={(player) => setSelectedPlayer(playerSnapshotToCard(player, selectedTeam.replay))}
+          />
+
+          <Section title="Andamento giocatori - trend rapido">
             <div className="card table-scroll">
               <table className="portfolio-table compact-table simulation-player-table">
                 <thead>
                   <tr>
-                    <th>Trend</th>
+                    <th>Trend G1-G{selectedRound}</th>
                     <th>Giocatore</th>
-                    <th>Club</th>
                     <th>Ruolo</th>
                     <th>Quota</th>
-                    <th>Delta quota</th>
-                    <th>Voto</th>
-                    <th>Fantavoto</th>
-                    <th>Bonus/malus</th>
-                    <th>Valore prima</th>
-                    <th>Valore dopo</th>
-                    <th>Differenza</th>
-                    <th>P/L</th>
-                    <th>Contributo</th>
+                    <th>Δ Quota</th>
+                    <th>Valore stim.</th>
+                    <th>Contributo €</th>
+                    <th>ROI %</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1045,17 +1018,11 @@ export default function SeasonSimulationPanel({ seasonId, seasonLabel = '2025/26
                     return (
                     <tr key={player.playerId} className={`clickable-row ${highlight}`} onClick={() => setSelectedPlayer(playerSnapshotToCard(player, selectedTeam.replay))}>
                       <td className="mini-trend-cell wide"><PlayerTrendChart data={player.trend.filter(point => point.round <= selectedRound)} mode="mini" /></td>
-                      <td><strong>{player.name}</strong></td>
-                      <td>{player.club}</td>
+                      <td><strong>{player.name}</strong><span className="table-subline">{player.club}</span></td>
                       <td><span className="role-badge">{player.role}</span></td>
                       <td>{formatCredits(player.quote)}</td>
                       <td className={valueTone(player.quoteChange)}>{formatSignedCredits(player.quoteChange)}</td>
-                      <td>{player.isSv ? <span className="badge badge-amber">SV</span> : player.vote}</td>
-                      <td>{player.fantasyVote ?? 'n.d.'}</td>
-                      <td className={valueTone(player.fantasyBonusPct)}>{formatSignedPercent(player.fantasyBonusPct)}</td>
-                      <td>{formatCredits(player.valueBefore)}</td>
                       <td>{formatCredits(player.estimatedValue)}</td>
-                      <td className={valueTone(player.valueDelta)}>{formatSignedCredits(player.valueDelta)}</td>
                       <td className={valueTone(player.profitLoss)}>{formatSignedCredits(player.profitLoss)}</td>
                       <td className={valueTone(player.roiPct)}>{formatSignedPercent(player.roiPct)}</td>
                     </tr>
@@ -1063,7 +1030,7 @@ export default function SeasonSimulationPanel({ seasonId, seasonLabel = '2025/26
                 </tbody>
               </table>
               <div className="table-note">
-                Click su un giocatore per vedere memoria storica completa G1-G{selectedTeam.maxRound}. Source quote: {selectedTeam.quoteSource}.
+                Sparkline G1-G{selectedRound} per ogni giocatore. Click sulla riga per la storia fantacalcistica completa. Source quote: {selectedTeam.quoteSource}.
               </div>
             </div>
           </Section>

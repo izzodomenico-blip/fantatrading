@@ -52,6 +52,7 @@ import {
   type MarketTrendFilter,
 } from '../utils/marketFilters';
 import { formatCredits, formatSignedCredits, formatSignedPercent, valueTone } from '../utils/format';
+import { computeRosterVoteStats, statusLabel } from '../utils/rosterVoteStats';
 
 type ParticipantTab = 'overview' | 'mercato' | 'rosa' | 'operazioni' | 'settlement' | 'crea-squadra' | 'simulazione-stagione';
 type DataSource = 'mock' | 'backend';
@@ -705,6 +706,54 @@ export default function ParticipantFavc() {
               </div>
             </Section>
           </div>
+
+          <Section title="Voti e rendimento - rosa attiva">
+            <div className="card table-scroll">
+              <div className="table-note" style={{ marginBottom: 10 }}>
+                Statistiche fantacalcistiche aggregate sull'intero trend G1-G36. SV escluso da media voto / fantavoto.
+                Stato: in forma = media ultime 5 &gt;= 6.5, in calo = &lt; 5.5, rischio SV = 3+ SV in 5 round.
+              </div>
+              <table className="compact-table roster-vote-table">
+                <thead>
+                  <tr>
+                    <th>Giocatore</th>
+                    <th>R</th>
+                    <th>Club</th>
+                    <th>Media voto</th>
+                    <th>Media fanta</th>
+                    <th>Presenze</th>
+                    <th>SV</th>
+                    <th>Top</th>
+                    <th>Worst</th>
+                    <th>Bonus FT</th>
+                    <th>Contributo €</th>
+                    <th>Stato</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {activePositions.map(player => {
+                    const stats = computeRosterVoteStats(player);
+                    return (
+                      <tr key={player.id} className="clickable-row" onClick={() => setSelectedPlayer(positionToCard(player))}>
+                        <td><strong>{player.playerName}</strong></td>
+                        <td><span className="role-badge">{player.role}</span></td>
+                        <td>{player.realTeam}</td>
+                        <td>{stats.avgVote === null ? 'n.d.' : stats.avgVote.toFixed(2).replace('.', ',')}</td>
+                        <td>{stats.avgFantasy === null ? 'n.d.' : stats.avgFantasy.toFixed(2).replace('.', ',')}</td>
+                        <td>{stats.presences}</td>
+                        <td>{stats.sv === 0 ? '0' : <span className="badge badge-amber">{stats.sv}</span>}</td>
+                        <td className="positive">{stats.bestVote === null ? '-' : stats.bestVote.toFixed(1).replace('.', ',')}</td>
+                        <td className="negative">{stats.worstVote === null ? '-' : stats.worstVote.toFixed(1).replace('.', ',')}</td>
+                        <td className={valueTone(stats.bonusAvg)}>{formatSignedPercent(stats.bonusAvg)}</td>
+                        <td className={valueTone(stats.contribution)}>{formatSignedCredits(stats.contribution)}</td>
+                        <td><span className={`status-pill status-${stats.status}`}>{statusLabel(stats.status)}</span></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </Section>
 
           {roleGroups.map(group => {
             const players = activePositions.filter(position => position.role === group.role);

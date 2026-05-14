@@ -1810,6 +1810,619 @@ tr:hover td { background: rgba(91,145,255,.045); }
   width: min(720px, 100%);
 }
 
+/* ========== Fantacalcio Live ========== */
+
+.fantalive {
+  display: grid;
+  gap: 18px;
+  margin: 6px 0 28px;
+}
+
+.fantalive-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 24px;
+  padding: 28px 32px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background:
+    radial-gradient(700px 320px at 0% 0%, rgba(91,145,255,.16), transparent 60%),
+    linear-gradient(135deg, rgba(21,26,35,.92), rgba(10,14,20,.96));
+  box-shadow: 0 24px 60px rgba(0,0,0,.30);
+  position: relative;
+  overflow: hidden;
+}
+
+.fantalive-hero::after {
+  content: '';
+  position: absolute;
+  right: -50px;
+  bottom: -90px;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(circle, currentColor 0%, transparent 70%);
+  opacity: .10;
+  pointer-events: none;
+}
+
+.fantalive-hero.fascia-tone-red { color: var(--red); border-color: rgba(255,93,102,.30); }
+.fantalive-hero.fascia-tone-amber { color: var(--amber); border-color: rgba(244,183,64,.30); }
+.fantalive-hero.fascia-tone-neutral { color: var(--text2); border-color: var(--border); }
+.fantalive-hero.fascia-tone-blue { color: var(--accent); border-color: rgba(91,145,255,.34); }
+.fantalive-hero.fascia-tone-green { color: var(--green); border-color: rgba(49,208,125,.32); }
+
+.fantalive-hero-content {
+  position: relative;
+  z-index: 1;
+  max-width: 720px;
+}
+
+.fantalive-hero-content h2 {
+  margin: 8px 0 12px;
+  font-size: clamp(26px, 3vw, 38px);
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: 0;
+  color: var(--text);
+}
+
+.fantalive-hero-content p {
+  color: var(--text2);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.fantalive-hero-content strong {
+  color: var(--text);
+  font-weight: 850;
+}
+
+.fantalive-hero-stat {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 5px;
+  padding: 18px 22px;
+  border: 1px solid currentColor;
+  border-radius: 10px;
+  background: rgba(255,255,255,.04);
+  min-width: 200px;
+  text-align: right;
+}
+
+.fantalive-hero-stat strong {
+  font-size: clamp(28px, 3vw, 36px);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.fantalive-hero-stat small {
+  color: var(--text3);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.fantalive-eyebrow {
+  display: block;
+  color: var(--text3);
+  font-size: 10.5px;
+  font-weight: 850;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.fantalive-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.fantalive-summary-card {
+  display: grid;
+  gap: 5px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,0)),
+    rgba(21,25,34,.94);
+  min-height: 100px;
+}
+
+.fantalive-summary-card strong {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--text);
+  letter-spacing: 0;
+}
+
+.fantalive-summary-card small {
+  color: var(--text3);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.fantalive-tone-green strong { color: var(--green); }
+.fantalive-tone-red strong { color: var(--red); }
+.fantalive-tone-amber strong { color: var(--amber); }
+.fantalive-tone-blue strong { color: var(--accent); }
+.fantalive-tone-purple strong { color: var(--purple); }
+
+/* Fascia ladder */
+
+.fascia-ladder {
+  display: grid;
+  gap: 10px;
+  padding: 18px 22px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(255,255,255,.025);
+}
+
+.fascia-ladder-header strong {
+  color: var(--text);
+  font-size: 14px;
+}
+
+.fascia-ladder-track {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.fascia-step {
+  display: grid;
+  gap: 4px;
+  padding: 12px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(255,255,255,.035);
+  text-align: center;
+  transition: transform .16s ease;
+}
+
+.fascia-step span {
+  color: var(--text2);
+  font-weight: 850;
+  font-size: 13px;
+}
+
+.fascia-step small {
+  color: var(--text3);
+  font-size: 11px;
+}
+
+.fascia-step-reached {
+  border-color: rgba(91,145,255,.32);
+  background: rgba(91,145,255,.08);
+}
+
+.fascia-step-reached span { color: var(--text); }
+
+.fascia-step-current {
+  border-color: var(--accent);
+  background: linear-gradient(135deg, rgba(91,145,255,.18), rgba(44,201,183,.10));
+  transform: translateY(-2px);
+  box-shadow: 0 12px 26px rgba(91,145,255,.18);
+}
+
+.fascia-step-current span { color: var(--accent); font-weight: 900; }
+
+/* Top/Flop highlight cards */
+
+.fantalive-grid-toplflop {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.fantalive-highlight {
+  padding: 18px 18px 12px;
+}
+
+.fantalive-highlight-green {
+  border-color: rgba(49,208,125,.30);
+  background:
+    linear-gradient(180deg, rgba(49,208,125,.05), rgba(255,255,255,0)),
+    rgba(21,25,34,.94);
+}
+
+.fantalive-highlight-red {
+  border-color: rgba(255,93,102,.30);
+  background:
+    linear-gradient(180deg, rgba(255,93,102,.05), rgba(255,255,255,0)),
+    rgba(21,25,34,.94);
+}
+
+.fantalive-highlight-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.fantalive-highlight-head h3 {
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.fantalive-highlight-list {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+}
+
+.fantalive-highlight-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.4fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  background: rgba(255,255,255,.03);
+  transition: transform .14s ease, background .14s ease;
+}
+
+.fantalive-highlight-item:hover {
+  background: rgba(255,255,255,.06);
+  transform: translateX(2px);
+}
+
+.fantalive-highlight-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.fantalive-highlight-main strong {
+  display: block;
+  color: var(--text);
+  font-size: 13.5px;
+  font-weight: 850;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  max-width: 180px;
+}
+
+.fantalive-highlight-main small {
+  display: block;
+  color: var(--text3);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.fantalive-highlight-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.fantalive-highlight-stats div {
+  display: grid;
+  gap: 2px;
+}
+
+.fantalive-highlight-stats strong {
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.fantalive-highlight-events {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: flex-end;
+  max-width: 220px;
+}
+
+.fantalive-highlight-reason {
+  display: block;
+  width: 100%;
+  text-align: right;
+  color: var(--text3);
+  font-size: 11px;
+  font-style: italic;
+  margin-top: 4px;
+}
+
+/* Event badges */
+
+.event-badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.event-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-size: 10.5px;
+  font-weight: 900;
+  letter-spacing: .03em;
+  line-height: 1.4;
+  border: 1px solid transparent;
+}
+
+.event-badge-green {
+  color: #c0f4d9;
+  background: rgba(49,208,125,.16);
+  border-color: rgba(49,208,125,.30);
+}
+
+.event-badge-blue {
+  color: #cfdfff;
+  background: rgba(91,145,255,.16);
+  border-color: rgba(91,145,255,.30);
+}
+
+.event-badge-amber {
+  color: #fbe0a6;
+  background: rgba(244,183,64,.16);
+  border-color: rgba(244,183,64,.30);
+}
+
+.event-badge-red {
+  color: #ffcfd3;
+  background: rgba(255,93,102,.16);
+  border-color: rgba(255,93,102,.30);
+}
+
+.event-badge-gray {
+  color: var(--text3);
+  background: rgba(255,255,255,.04);
+  border-color: var(--border-soft);
+}
+
+/* Fantalive table customization */
+
+.fantalive-table {
+  padding: 18px;
+}
+
+.fantalive-table-head {
+  margin-bottom: 12px;
+}
+
+.fantalive-table-head h3 {
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.fantalive-table-head p {
+  color: var(--text2);
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.fantalive-vote-table tbody tr.fantalive-row td {
+  vertical-align: middle;
+}
+
+/* Drawer tabs + history */
+
+.drawer-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.drawer-tabs button {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(255,255,255,.04);
+  color: var(--text2);
+  font-size: 12.5px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.drawer-tabs button.active,
+.drawer-tabs button:hover {
+  color: var(--text);
+  background: rgba(91,145,255,.16);
+  border-color: rgba(91,145,255,.42);
+}
+
+.player-history {
+  display: grid;
+  gap: 16px;
+}
+
+.player-history-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.player-history-toggle button {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(255,255,255,.04);
+  color: var(--text2);
+  font-size: 12px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.player-history-toggle button.active,
+.player-history-toggle button:hover {
+  color: var(--text);
+  border-color: rgba(91,145,255,.42);
+  background: rgba(91,145,255,.16);
+}
+
+.player-history-insights {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.insight-card {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(255,255,255,.035);
+  min-height: 88px;
+}
+
+.insight-card strong {
+  font-size: 17px;
+  font-weight: 900;
+  color: var(--text);
+}
+
+.insight-card small {
+  color: var(--text3);
+  font-size: 11.5px;
+  font-weight: 750;
+}
+
+.insight-label {
+  color: var(--text3);
+  font-size: 10.5px;
+  font-weight: 850;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.insight-tone-green strong { color: var(--green); }
+.insight-tone-red strong { color: var(--red); }
+.insight-tone-amber strong { color: var(--amber); }
+.insight-tone-blue strong { color: var(--accent); }
+.insight-tone-purple strong { color: var(--purple); }
+
+.player-history-charts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.player-history-charts .chart-card {
+  min-height: 270px;
+}
+
+/* Status pill in roster vote table */
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+}
+
+.status-in_forma { color: var(--green); background: rgba(49,208,125,.13); border-color: rgba(49,208,125,.32); }
+.status-in_calo { color: var(--red); background: rgba(255,93,102,.13); border-color: rgba(255,93,102,.30); }
+.status-rischio_sv { color: var(--amber); background: rgba(244,183,64,.13); border-color: rgba(244,183,64,.30); }
+.status-stabile { color: var(--text2); background: rgba(255,255,255,.04); border-color: var(--border); }
+
+.roster-vote-table tbody tr td {
+  vertical-align: middle;
+}
+
+/* Voting flow on How It Works */
+
+.voting-flow {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 1fr);
+  gap: 22px;
+}
+
+.voting-flow-steps {
+  display: grid;
+  gap: 12px;
+  list-style: none;
+}
+
+.voting-flow-steps li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(255,255,255,.025);
+}
+
+.voting-flow-steps strong {
+  display: block;
+  color: var(--text);
+  font-size: 14.5px;
+  font-weight: 900;
+  margin-bottom: 4px;
+}
+
+.voting-flow-steps p {
+  color: var(--text2);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+.voting-flow-step {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(91,145,255,.22), rgba(44,201,183,.10));
+  border: 1px solid rgba(91,145,255,.32);
+  color: #dce8ff;
+  font-weight: 900;
+  font-size: 14px;
+}
+
+.voting-flow-example {
+  align-self: start;
+}
+
+.voting-flow-example h3 {
+  margin: 10px 0 12px;
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 1.4;
+}
+
+.voting-flow-example ul {
+  display: grid;
+  gap: 6px;
+  list-style: none;
+  margin-bottom: 10px;
+}
+
+.voting-flow-example li {
+  color: var(--text2);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+.voting-flow-example li strong {
+  color: var(--text);
+  font-weight: 850;
+}
+
 /* Builder name field */
 .builder-name-field {
   display: grid;
@@ -2489,8 +3102,31 @@ tr:hover td { background: rgba(91,145,255,.045); }
   .kpi-primary-grid,
   .kpi-secondary-grid,
   .sim-info-grid,
-  .trade-round-grid {
+  .trade-round-grid,
+  .fantalive-summary,
+  .fantalive-grid-toplflop,
+  .player-history-insights,
+  .player-history-charts,
+  .voting-flow {
     grid-template-columns: 1fr;
+  }
+
+  .fascia-ladder-track {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .fantalive-highlight-item {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .fantalive-highlight-events {
+    justify-content: flex-start;
+    max-width: none;
+  }
+
+  .fantalive-highlight-reason {
+    text-align: left;
   }
 
   .trade-round-header,

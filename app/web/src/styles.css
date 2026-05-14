@@ -1810,6 +1810,240 @@ tr:hover td { background: rgba(91,145,255,.045); }
   width: min(720px, 100%);
 }
 
+/* Builder name field */
+.builder-name-field {
+  display: grid;
+  gap: 6px;
+  margin: 4px 0 14px;
+}
+
+.builder-name-field span {
+  color: var(--text2);
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.builder-name-field input {
+  min-height: 46px;
+  width: 100%;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #111721;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.builder-name-field input:focus {
+  border-color: rgba(91,145,255,.55);
+}
+
+.builder-name-field small {
+  color: var(--text3);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+/* Roster switcher (I miei team locali) */
+.roster-switcher {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.roster-switcher-eyebrow {
+  color: var(--text3);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.roster-switcher-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.roster-chip {
+  display: inline-grid;
+  gap: 3px;
+  min-width: 160px;
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(255,255,255,.04);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+}
+
+.roster-chip strong {
+  font-size: 13.5px;
+  font-weight: 850;
+}
+
+.roster-chip span {
+  color: var(--text3);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.roster-chip small {
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.roster-chip-active {
+  border-color: rgba(91,145,255,.55);
+  background: rgba(91,145,255,.16);
+  box-shadow: 0 8px 18px rgba(91,145,255,.18);
+}
+
+.roster-chip:hover:not(.roster-chip-active) {
+  border-color: rgba(91,145,255,.34);
+  background: rgba(91,145,255,.08);
+}
+
+/* Trade round panel */
+.trade-round-panel {
+  display: grid;
+  gap: 18px;
+  padding: 22px 22px 18px;
+}
+
+.trade-round-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.trade-round-header h3 {
+  margin: 4px 0 6px;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.trade-round-header p {
+  color: var(--text2);
+  font-size: 13.5px;
+  line-height: 1.55;
+  max-width: 540px;
+}
+
+.trade-round-cash {
+  display: grid;
+  gap: 4px;
+  padding: 12px 18px;
+  border: 1px solid rgba(49,208,125,.32);
+  border-radius: 8px;
+  background: rgba(49,208,125,.10);
+  text-align: right;
+  min-width: 160px;
+}
+
+.trade-round-cash strong {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--green);
+}
+
+.trade-round-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.trade-round-side {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(255,255,255,.02);
+}
+
+.trade-round-side h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+}
+
+.trade-round-side-sell h4 {
+  color: var(--amber);
+}
+
+.trade-round-side-buy h4 {
+  color: var(--accent);
+}
+
+.trade-round-side select {
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #111721;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.trade-round-preview {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  background: rgba(255,255,255,.03);
+}
+
+.trade-round-preview > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--text2);
+  font-size: 13px;
+}
+
+.trade-round-preview strong {
+  color: var(--text);
+  font-weight: 850;
+}
+
+.trade-round-confirm {
+  margin-top: 4px;
+}
+
+.trade-round-message {
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: grid;
+  gap: 4px;
+}
+
+.trade-round-log {
+  display: grid;
+  gap: 6px;
+}
+
+.trade-round-controls {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+/* Status info tone */
+.trade-status-info {
+  border: 1px solid rgba(79,140,255,.34);
+  background: rgba(79,140,255,.10);
+}
+
 /* Simulation Info Card */
 .sim-info-card {
   display: grid;
@@ -2254,8 +2488,14 @@ tr:hover td { background: rgba(91,145,255,.045); }
   .market-card-grid,
   .kpi-primary-grid,
   .kpi-secondary-grid,
-  .sim-info-grid {
+  .sim-info-grid,
+  .trade-round-grid {
     grid-template-columns: 1fr;
+  }
+
+  .trade-round-header,
+  .trade-round-cash {
+    width: 100%;
   }
 
   .sim-empty-cta {

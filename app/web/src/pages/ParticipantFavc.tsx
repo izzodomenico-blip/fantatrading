@@ -737,9 +737,13 @@ export default function ParticipantFavc() {
           existingTeamId={builderExistingTeamId}
           backendConnected={backendState.mode === 'connected' && dataSource === 'backend'}
           onContinueExisting={() => navigate('/partecipante-favc/rosa')}
-          onCreated={(createdTeamId, createdSeasonId) => {
+          onCreated={({ localRosterId, backendTeamId, seasonId: createdSeasonId }) => {
             setReloadNonce(value => value + 1);
-            navigate(`/partecipante-favc/simulazione-stagione?teamId=${createdTeamId}&seasonId=${createdSeasonId}`);
+            const params = new URLSearchParams();
+            params.set('rosterId', localRosterId);
+            if (backendTeamId) params.set('teamId', backendTeamId);
+            if (createdSeasonId) params.set('seasonId', createdSeasonId);
+            navigate(`/partecipante-favc/simulazione-stagione?${params.toString()}`);
           }}
         />
       )}
@@ -748,6 +752,7 @@ export default function ParticipantFavc() {
         <SeasonSimulationPanel
           seasonId={builderSeason?.id ?? seasonId}
           seasonLabel={builderSeason?.footballSeason ?? TEAM_BUILDER_SEASON}
+          marketPlayers={builderPlayers}
         />
       )}
 

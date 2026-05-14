@@ -44,10 +44,26 @@ import {
   setActiveSimulationTeam,
 } from '../utils/seasonReplay';
 import type { TeamTrendPoint } from '../utils/teamTrend';
+import {
+  buildLocalRosterStateAtRound,
+  computeBuyTrade,
+  computeSellTrade,
+  deleteLocalRoster,
+  getActiveLocalRosterId,
+  readLocalRosters,
+  setActiveLocalRosterId,
+  upsertLocalRoster,
+  type LocalRoster,
+  type LocalRosterTrade,
+} from '../utils/localRosters';
+import { SELL_COMMISSION_RATE, type DemoMarketPlayer } from '../mock/favcDemoData';
+import { buildTeamRoundSnapshot } from '../utils/teamRoundSimulation';
+import LocalRosterTradePanel from './LocalRosterTradePanel';
 
 type Props = {
   seasonId?: string | null;
   seasonLabel?: string;
+  marketPlayers?: DemoMarketPlayer[];
 };
 
 type DemoTeamConfig = {
@@ -67,6 +83,7 @@ type LoadedDemoTeam = DemoTeamConfig & {
   maxRound: number;
   quoteSource: 'official' | 'synthetic' | 'mock';
   voteMaxRound: number;
+  roster?: LocalRoster;
 };
 
 const DEMO_TEAMS: DemoTeamConfig[] = [
@@ -227,7 +244,136 @@ function playerSnapshotToCard(snapshot: PlayerRoundSnapshot, replay: TeamRoundSn
   };
 }
 
-export default function SeasonSimulationPanel({ seasonId, seasonLabel = '2025/26' }: Props) {
+function buildLocalRosterReplay(
+  roster: LocalRoster,
+  roundMemory: Map<string, PlayerRoundMemory>,
+  maxRound: number,
+): TeamRoundSnapshot[] {
+  return Array.from({ length: maxRound }, (_, idx) => {
+    const round = idx + 1;
+    const { positions: positionStates, financials } = buildLocalRosterStateAtRound(roster, round);
+    const replayPositions: ReplayPosition[] = positionStates.map(p => ({
+      id: p.playerId,
+      playerId: p.playerId,
+      backendPlayerId: p.backendPlayerId,
+      playerName: p.playerName,
+      realTeam: p.realTeam,
+      role: p.role,
+      initialQuote: p.initialQuote,
+      currentQuote: p.initialQuote,
+      fantasyMultiplier: 1,
+      status: p.status,
+    }));
+    const snapshot = buildTeamRoundSnapshot({
+      teamId: roster.id,
+      seasonId: roster.seasonId ?? '',
+      virtualCashBalance: financials.cashBalance,
+      totalCapitalDeposited: financials.totalCapitalDeposited,
+    }, replayPositions, roundMemory, round);
+
+    const netLiquidationValue = Number((snapshot.grossPositionsValue * (1 - SELL_COMMISSION_RATE)).toFixed(2));
+    const finalLiquidationValue = Number((netLiquidationValue + financials.cashBalance).toFixed(2));
+    const profitLoss = Number((finalLiquidationValue - financials.totalCapitalDeposited).toFixed(2));
+    const roiPct = financials.totalCapitalDeposited > 0
+      ? Number(((profitLoss / financials.totalCapitalDeposited) * 100).toFixed(2))
+      : 0;
+    const capitalAddedAtRound = round === 1
+      ? roster.capitalAddedAtCreation
+      : roster.trades.filter(trade => trade.round === round).reduce((sum, trade) => sum + trade.capitalAdded, 0);
+
+    return {
+      ...snapshot,
+      capitalAdded: capitalAddedAtRound,
+      totalSpentPlayers: financials.totalSpentPlayers,
+      buyCommissions: financials.totalBuyCommissions,
+      sellCommissions: financials.totalSellCommissions,
+      virtualCashBalance: financials.cashBalance,
+      totalCapitalDeposited: financials.totalCapitalDeposited,
+      netLiquidationValue,
+      finalLiquidationValue,
+      profitLoss,
+      roiPct,
+    };
+  });
+}
+
+function buildLocalLoadedTeam(
+  roster: LocalRoster,
+  syntheticRows: RawSyntheticRoundQuote[],
+  voteRows: RawVoteRow[],
+  votesMaxRound: number,
+  seasonLabel: string,
+): LoadedDemoTeam {
+  const maxRound = Math.min(TARGET_MAX_ROUND, votesMaxRound || TARGET_MAX_ROUND);
+  const memoryInputs = roster.initialPlayers.map(player => ({
+    playerId: player.playerId,
+    backendPlayerId: player.backendPlayerId,
+    externalId: player.playerId,
+    playerName: player.playerName,
+    role: player.role,
+    club: player.realTeam,
+    season: seasonLabel,
+    initialQuote: player.initialQuote,
+    currentQuote: player.initialQuote,
+    fantasyMultiplier: 1,
+  }));
+  // also include players acquired via BUY trades so their memory is built
+  for (const trade of roster.trades) {
+    if (trade.type === 'BUY' && !memoryInputs.some(item => item.playerId === trade.playerId)) {
+      memoryInputs.push({
+        playerId: trade.playerId,
+        backendPlayerId: trade.backendPlayerId,
+        externalId: trade.playerId,
+        playerName: trade.playerName,
+        role: trade.role,
+        club: trade.realTeam,
+        season: seasonLabel,
+        initialQuote: trade.quoteAtTrade,
+        currentQuote: trade.quoteAtTrade,
+        fantasyMultiplier: 1,
+      });
+    }
+  }
+  const roundMemory = buildPlayerRoundMemory(memoryInputs, voteRows, syntheticRows, {
+    season: seasonLabel,
+    maxRound,
+  });
+  const positions: ReplayPosition[] = roster.initialPlayers.map(player => ({
+    id: player.playerId,
+    playerId: player.playerId,
+    backendPlayerId: player.backendPlayerId,
+    playerName: player.playerName,
+    realTeam: player.realTeam,
+    role: player.role,
+    initialQuote: player.initialQuote,
+    currentQuote: player.initialQuote,
+    fantasyMultiplier: 1,
+    status: 'ACTIVE',
+  }));
+  const replay = buildLocalRosterReplay(roster, roundMemory, maxRound);
+  const quoteSource = Array.from(roundMemory.values()).some(memory => memory.rounds.some(point => point.sourceQuote === 'synthetic'))
+    ? 'synthetic'
+    : 'mock';
+
+  return {
+    key: `local-${roster.id}`,
+    label: roster.name,
+    shortLabel: roster.name,
+    email: '',
+    description: `Rosa locale${roster.backendTeamId ? ' + backend' : ''}`,
+    kind: 'active',
+    teamId: roster.backendTeamId ?? roster.id,
+    positions,
+    roundMemory,
+    replay,
+    maxRound,
+    quoteSource,
+    voteMaxRound: maxRound,
+    roster,
+  };
+}
+
+export default function SeasonSimulationPanel({ seasonId, seasonLabel = '2025/26', marketPlayers = [] }: Props) {
   const [teams, setTeams] = useState<LoadedDemoTeam[]>([]);
   const [selectedKey, setSelectedKey] = useState<string>(ACTIVE_TEAM_KEY);
   const [roundByTeam, setRoundByTeam] = useState<Record<string, number>>({});
@@ -235,14 +381,18 @@ export default function SeasonSimulationPanel({ seasonId, seasonLabel = '2025/26
   const [message, setMessage] = useState('Carico replay storico 2025/26...');
   const [graphRange, setGraphRange] = useState<'5' | '10' | 'all'>('all');
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerCardData | null>(null);
-  const [justCreatedBanner, setJustCreatedBanner] = useState<string | null>(() => {
+  const [justCreatedBanner, setJustCreatedBanner] = useState<{ name: string; rosterId: string; backendTeamId?: string } | null>(() => {
     if (typeof window === 'undefined') return null;
     try {
-      const teamId = window.sessionStorage.getItem('fantatrading.justCreatedTeamId');
-      if (teamId) {
+      const rosterId = window.sessionStorage.getItem('fantatrading.justCreatedLocalRosterId');
+      const name = window.sessionStorage.getItem('fantatrading.justCreatedRosterName');
+      const backendTeamId = window.sessionStorage.getItem('fantatrading.justCreatedTeamId');
+      if (rosterId) {
+        window.sessionStorage.removeItem('fantatrading.justCreatedLocalRosterId');
+        window.sessionStorage.removeItem('fantatrading.justCreatedRosterName');
         window.sessionStorage.removeItem('fantatrading.justCreatedTeamId');
         window.sessionStorage.removeItem('fantatrading.justCreatedAt');
-        return teamId;
+        return { rosterId, name: name ?? 'Rosa salvata', backendTeamId: backendTeamId ?? undefined };
       }
     } catch {
       // sessionStorage not available
@@ -264,15 +414,8 @@ export default function SeasonSimulationPanel({ seasonId, seasonLabel = '2025/26
     let mounted = true;
 
     async function loadTeams() {
-      if (!seasonId) {
-        setStatus('empty');
-        setMessage('Stagione 2025/26 non disponibile: esegui il seed demo 2025/26.');
-        return;
-      }
-      const replaySeasonId = seasonId;
-
       setStatus('loading');
-      setMessage('Carico squadre demo, voti reali e memoria round-by-round...');
+      setMessage('Carico rose locali, voti reali e memoria round-by-round...');
 
       const syntheticRows = await loadSyntheticQuoteRows().catch(() => [] as RawSyntheticRoundQuote[]);
       let sharedPlayers: BackendPlayer[] = [];
@@ -282,7 +425,50 @@ export default function SeasonSimulationPanel({ seasonId, seasonLabel = '2025/26
       const query = typeof window === 'undefined' ? new URLSearchParams() : new URLSearchParams(window.location.search);
       let activeTeamId: string | null = query.get('teamId') ?? activeFromStorage?.teamId ?? null;
 
-      if (!activeTeamId) {
+      // Always try to load votes (best effort) so local rosters can use real votes + fascia.
+      const replaySeasonId = seasonId;
+      if (replaySeasonId) {
+        try {
+          const votesResult = await createFantaTradingApi().getVotes({ seasonId: replaySeasonId });
+          if (votesResult.ok) sharedVotes = votesResult.data;
+        } catch {
+          // best-effort
+        }
+      }
+      const sharedVoteRows = votesToRows(sharedVotes);
+      const votesMaxRound = Math.max(0, ...sharedVotes.map(vote => Number(vote.round)).filter(Number.isFinite));
+
+      // Load local rosters first - they are the primary view.
+      const localRostersList = readLocalRosters();
+      for (const roster of localRostersList) {
+        const localTeam = buildLocalLoadedTeam(roster, syntheticRows, sharedVoteRows, votesMaxRound, seasonLabel);
+        loaded.push(localTeam);
+      }
+
+      if (!replaySeasonId) {
+        // No backend season available - local rosters are sufficient.
+        if (!mounted) return;
+        const stored = readReplayState(typeof window === 'undefined' ? undefined : window.localStorage, STORAGE_KEY);
+        setTeams(loaded);
+        setRoundByTeam(current => Object.fromEntries(loaded.map(team => [
+          team.key,
+          clampRound(current[team.key] ?? stored?.currentRoundByTeam?.[team.key] ?? team.roster?.currentRound ?? 1, team.maxRound),
+        ])));
+        if (loaded.length === 0) {
+          setStatus('empty');
+          setMessage('Nessuna rosa locale salvata e nessun backend disponibile. Crea una rosa per iniziare.');
+          return;
+        }
+        const activeLocalId = getActiveLocalRosterId();
+        const firstLocal = loaded.find(team => team.roster?.id === activeLocalId) ?? loaded.find(team => team.kind === 'active');
+        if (firstLocal) setSelectedKey(firstLocal.key);
+        setStatus('ready');
+        setMessage(`Replay locale pronto: ${loaded.length} rosa/e salvate. Quote sintetiche${sharedVoteRows.length > 0 ? ' + voti reali' : ''}.`);
+        return;
+      }
+
+      // Only fall back to backend "single team" if no local rosters are saved.
+      if (!activeTeamId && localRostersList.length === 0) {
         const fallbackTeams = await createFantaTradingApi().getMyTeams();
         if (fallbackTeams.ok) {
           const candidate = fallbackTeams.data.find(team => team.seasonId === replaySeasonId) ?? fallbackTeams.data[0];
@@ -293,11 +479,19 @@ export default function SeasonSimulationPanel({ seasonId, seasonLabel = '2025/26
         }
       }
 
+      // Skip backend single-team loading if a local roster already mirrors it.
+      const localBackendIds = new Set(localRostersList.map(roster => roster.backendTeamId).filter(Boolean) as string[]);
+      if (activeTeamId && localBackendIds.has(activeTeamId)) {
+        activeTeamId = null;
+      }
+
+      const seasonIdNonNull = replaySeasonId as string;
+
       async function buildLoadedTeam(config: DemoTeamConfig, api: FantaTradingApi, teamId: string) {
         if (sharedPlayers.length === 0) {
           const [playersResult, votesResult] = await Promise.all([
-            api.getPlayers({ seasonId: replaySeasonId }),
-            api.getVotes({ seasonId: replaySeasonId }),
+            api.getPlayers({ seasonId: seasonIdNonNull }),
+            api.getVotes({ seasonId: seasonIdNonNull }),
           ]);
           sharedPlayers = playersResult.ok ? playersResult.data : [];
           sharedVotes = votesResult.ok ? votesResult.data : [];
@@ -329,7 +523,7 @@ export default function SeasonSimulationPanel({ seasonId, seasonLabel = '2025/26
         });
         const replay = buildTeamReplay({
           teamId,
-          seasonId: replaySeasonId,
+          seasonId: seasonIdNonNull,
           virtualCashBalance,
           totalCapitalDeposited,
         }, positions, roundMemory, maxRound);
@@ -391,10 +585,21 @@ export default function SeasonSimulationPanel({ seasonId, seasonLabel = '2025/26
       }
 
       setStatus('ready');
-      if (loaded.some(team => team.key === ACTIVE_TEAM_KEY)) {
-        setSelectedKey(ACTIVE_TEAM_KEY);
+      const activeLocalId = getActiveLocalRosterId();
+      const queryRosterId = query.get('rosterId');
+      const preferredKey = queryRosterId
+        ? loaded.find(team => team.roster?.id === queryRosterId)?.key
+        : activeLocalId
+          ? loaded.find(team => team.roster?.id === activeLocalId)?.key
+          : loaded.find(team => team.key === ACTIVE_TEAM_KEY)?.key;
+      if (preferredKey) {
+        setSelectedKey(preferredKey);
+      } else {
+        const firstActive = loaded.find(team => team.kind === 'active');
+        if (firstActive) setSelectedKey(firstActive.key);
       }
-      setMessage(`Replay storico 2025/26 pronto: voti reali fino a G${loaded[0].voteMaxRound}, quote sintetiche operative se manca QuoteHistory ufficiale.`);
+      const localCount = loaded.filter(team => team.roster).length;
+      setMessage(`Replay 2025/26 pronto: ${localCount} rosa/e locali${localCount ? ' + ' : ''}${loaded.filter(t => t.kind === 'demo').length} demo. Voti reali fino a G${loaded[0]?.voteMaxRound ?? '?'}, quote sintetiche dove non c'e' QuoteHistory ufficiale.`);
     }
 
     loadTeams().catch((error) => {
@@ -416,11 +621,14 @@ export default function SeasonSimulationPanel({ seasonId, seasonLabel = '2025/26
     });
   }, [roundByTeam, selectedKey, teams]);
 
-  const activeTeam = teams.find(team => team.key === ACTIVE_TEAM_KEY);
-  const selectedTeam = activeTeam ?? null;
+  const activeTeams = useMemo(() => teams.filter(team => team.kind === 'active'), [teams]);
+  const selectedTeam = useMemo(() =>
+    activeTeams.find(team => team.key === selectedKey) ?? activeTeams[0] ?? null,
+  [activeTeams, selectedKey]);
   const maxRound = selectedTeam?.maxRound ?? TARGET_MAX_ROUND;
   const selectedRound = selectedTeam ? clampRound(roundByTeam[selectedTeam.key] ?? 1, selectedTeam.maxRound) : 1;
   const selectedSnapshot = selectedTeam ? snapshotAt(selectedTeam, selectedRound) : null;
+  const selectedRoster = selectedTeam?.roster ?? null;
   const demoTeams = teams.filter(team => team.kind !== 'active');
   const hasDemoComparison = demoTeams.length > 0;
   const ranking = useMemo(() => rankTeamsByRoi(
@@ -432,14 +640,34 @@ export default function SeasonSimulationPanel({ seasonId, seasonLabel = '2025/26
   const selectedCounts = selectedTeam ? countRoles(selectedTeam.positions) : { P: 0, D: 0, C: 0, A: 0 };
   const quoteSynthetic = selectedTeam?.quoteSource === 'synthetic';
 
+  function handleRosterUpdated(nextRoster: LocalRoster) {
+    upsertLocalRoster(nextRoster);
+    setActiveLocalRosterId(nextRoster.id);
+    setTeams(current => current.map(team => {
+      if (team.roster?.id !== nextRoster.id) return team;
+      const replay = buildLocalRosterReplay(nextRoster, team.roundMemory, team.maxRound);
+      return { ...team, roster: nextRoster, replay };
+    }));
+  }
+
+  function handleRosterDelete(rosterId: string) {
+    if (!window.confirm('Eliminare definitivamente questa rosa locale?')) return;
+    deleteLocalRoster(rosterId);
+    setTeams(current => current.filter(team => team.roster?.id !== rosterId));
+  }
+
   function updateSelectedRound(nextRound: number) {
     if (!selectedTeam) return;
+    const clamped = clampRound(nextRound, selectedTeam.maxRound);
     setRoundByTeam(current => ({
       ...current,
-      [selectedTeam.key]: clampRound(nextRound, selectedTeam.maxRound),
+      [selectedTeam.key]: clamped,
     }));
-    if (selectedTeam.key === ACTIVE_TEAM_KEY) {
-      setActiveSimulationTeam(typeof window === 'undefined' ? undefined : window.localStorage, selectedTeam.teamId, seasonId ?? '', clampRound(nextRound, selectedTeam.maxRound));
+    if (selectedTeam.roster) {
+      upsertLocalRoster({ ...selectedTeam.roster, currentRound: clamped });
+    }
+    if (selectedTeam.key === ACTIVE_TEAM_KEY || selectedTeam.roster?.backendTeamId) {
+      setActiveSimulationTeam(typeof window === 'undefined' ? undefined : window.localStorage, selectedTeam.teamId, seasonId ?? '', clamped);
     }
   }
 
@@ -466,10 +694,9 @@ export default function SeasonSimulationPanel({ seasonId, seasonLabel = '2025/26
     <>
       {justCreatedBanner && (
         <div className="backend-banner trade-status trade-status-success" role="status">
-          <strong>Rosa salvata correttamente</strong>
+          <strong>Rosa &quot;{justCreatedBanner.name}&quot; salvata correttamente</strong>
           <span>
-            La simulazione storica 2025/26 usa la tua nuova squadra dalla giornata 1.
-            Team ID <code>{justCreatedBanner.slice(0, 8)}...</code> salvato in localStorage come <code>fantatrading.activeTeamId</code>.
+            La simulazione 2025/26 parte da G1 con la tua nuova rosa. Salvata localmente come <code>fantatrading.localRosters.v1</code>{justCreatedBanner.backendTeamId ? ' + backend' : ' (solo locale)'}.
             <button type="button" className="favc-action muted" onClick={() => setJustCreatedBanner(null)} style={{ marginLeft: 12 }}>OK</button>
           </span>
         </div>
@@ -489,6 +716,31 @@ export default function SeasonSimulationPanel({ seasonId, seasonLabel = '2025/26
             'Ranking ROI%',
             'Nessun payout reale',
           ]} />
+          {activeTeams.length > 1 && (
+            <div className="roster-switcher">
+              <span className="roster-switcher-eyebrow">I miei team locali</span>
+              <div className="roster-switcher-list">
+                {activeTeams.map(team => {
+                  const teamRound = clampRound(roundByTeam[team.key] ?? team.roster?.currentRound ?? 1, team.maxRound);
+                  const snapshotPreview = snapshotAt(team, teamRound);
+                  const roi = snapshotPreview?.roiPct ?? 0;
+                  return (
+                    <button
+                      type="button"
+                      key={team.key}
+                      className={`roster-chip ${team.key === selectedTeam?.key ? 'roster-chip-active' : ''}`}
+                      onClick={() => setSelectedKey(team.key)}
+                    >
+                      <strong>{team.label}</strong>
+                      <span>G{teamRound}/G{team.maxRound}</span>
+                      <small className={roi >= 0 ? 'positive' : 'negative'}>{formatSignedPercent(roi, 1)}</small>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <div className="simulation-controls replay-controls">
             <button type="button" className="favc-action favc-action-primary" onClick={advanceSelected} disabled={!selectedTeam || selectedRound >= maxRound}>
               {selectedTeam ? `Avanza a G${Math.min(selectedRound + 1, maxRound)}` : 'Avanza giornata'}
@@ -531,7 +783,7 @@ export default function SeasonSimulationPanel({ seasonId, seasonLabel = '2025/26
             text="Il replay 2025/26 richiede backend acceso e dati 2025/26 caricati."
           />
         )}
-        {status === 'ready' && !activeTeam && (
+        {status === 'ready' && activeTeams.length === 0 && (
           <div className="sim-empty-cta card">
             <div>
               <span className="badge badge-amber">Squadra attiva mancante</span>
@@ -585,6 +837,21 @@ export default function SeasonSimulationPanel({ seasonId, seasonLabel = '2025/26
             <MetricCard label="Miglior giocatore" value={selectedSnapshot.bestPlayer?.name ?? 'n.d.'} sub={selectedSnapshot.bestPlayer ? formatSignedPercent(selectedSnapshot.bestPlayer.roiPct) : undefined} color="var(--green)" />
             <MetricCard label="Peggior giocatore" value={selectedSnapshot.worstPlayer?.name ?? 'n.d.'} sub={selectedSnapshot.worstPlayer ? formatSignedPercent(selectedSnapshot.worstPlayer.roiPct) : undefined} color="var(--red)" />
           </div>
+
+          {selectedRoster && (
+            <Section title={`Operazioni libere G${selectedRound}`}>
+              <LocalRosterTradePanel
+                roster={selectedRoster}
+                round={selectedRound}
+                marketPlayers={marketPlayers}
+                roundMemory={selectedTeam.roundMemory}
+                onUpdated={handleRosterUpdated}
+              />
+              <div className="trade-round-controls">
+                <button type="button" className="favc-action muted" onClick={() => handleRosterDelete(selectedRoster.id)}>Elimina questa rosa locale</button>
+              </div>
+            </Section>
+          )}
 
           {selectedSnapshot.playersWithVote === 0 && selectedSnapshot.playerSnapshots.every(player => player.quoteChange === 0) && (
             <div className="backend-banner backend-no-team">

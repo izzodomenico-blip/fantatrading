@@ -20,6 +20,13 @@ import { buildRosterDraftSummary, canAddPlayerToDraft } from '../utils/teamBuild
 import { createMockTrend } from '../utils/playerTrend';
 import { setActiveSimulationTeam } from '../utils/seasonReplay';
 import { formatCredits } from '../utils/format';
+import {
+  createLocalRoster,
+  readLocalRosters,
+  setActiveLocalRosterId,
+  upsertLocalRoster,
+  type LocalRosterPlayer,
+} from '../utils/localRosters';
 
 type TeamBuilderPanelProps = {
   players: DemoMarketPlayer[];
@@ -30,7 +37,7 @@ type TeamBuilderPanelProps = {
   trendSource?: 'official' | 'synthetic' | 'mock';
   existingTeamId?: string | null;
   backendConnected: boolean;
-  onCreated: (teamId: string, seasonId: string) => void;
+  onCreated: (info: { localRosterId: string; backendTeamId?: string; seasonId?: string }) => void;
   onContinueExisting: () => void;
 };
 
@@ -66,7 +73,9 @@ export default function TeamBuilderPanel({
   onCreated,
   onContinueExisting,
 }: TeamBuilderPanelProps) {
+  const existingLocalCount = useMemo(() => readLocalRosters().length, []);
   const [capital, setCapital] = useState(300);
+  const [rosterName, setRosterName] = useState(() => `Rosa ${existingLocalCount + 1}`);
   const [buildingStarted, setBuildingStarted] = useState(true);
   const [selected, setSelected] = useState<DemoMarketPlayer[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -106,48 +115,78 @@ export default function TeamBuilderPanel({
   }
 
   async function confirmRoster() {
-    if (!backendConnected || !seasonId) {
-      setMessage({ tone: 'error', text: 'Backend demo non collegato o stagione non disponibile: impossibile scrivere la squadra.' });
-      return;
-    }
     if (!summary.isValid) {
       setMessage({ tone: 'error', text: 'Completa la rosa con composizione 3/8/8/6 prima della conferma.' });
       return;
     }
-    if (existingTeamId && !resetExistingDemoTeam) {
-      setMessage({ tone: 'error', text: 'Esiste gia un team demo per questa stagione: scegli reset demo oppure continua la squadra esistente.' });
+    if (!rosterName.trim()) {
+      setMessage({ tone: 'error', text: 'Dai un nome alla tua rosa prima di salvare.' });
       return;
     }
 
     setSubmitting(true);
     setMessage(null);
-    const api = createFantaTradingApi();
-    const result = await api.createTeamWithRoster({
-      seasonId,
-      initialVirtualCapital: capital,
-      playerIds: selected.map(player => player.id),
-      teamName: 'Team costruito da UI',
-      resetExistingDemoTeam,
-    });
-    setSubmitting(false);
 
-    if (!result.ok) {
-      setMessage({ tone: 'error', text: result.status ? `${result.error} (${result.status})` : result.error });
-      return;
+    const localPlayers: LocalRosterPlayer[] = selected.map(player => ({
+      playerId: player.playerId ?? player.id,
+      backendPlayerId: player.id,
+      playerName: player.playerName,
+      realTeam: player.realTeam,
+      role: player.role,
+      initialQuote: player.quote,
+    }));
+
+    const localRoster = createLocalRoster({
+      name: rosterName.trim(),
+      seasonId: seasonId ?? undefined,
+      seasonLabel,
+      initialCapital: capital,
+      initialPlayers: localPlayers,
+    });
+
+    let backendTeamId: string | undefined;
+    let backendNotice = '';
+    if (backendConnected && seasonId) {
+      try {
+        const api = createFantaTradingApi();
+        const result = await api.createTeamWithRoster({
+          seasonId,
+          initialVirtualCapital: capital,
+          playerIds: selected.map(player => player.id),
+          teamName: rosterName.trim(),
+          resetExistingDemoTeam,
+        });
+        if (result.ok) {
+          backendTeamId = result.data.team.id;
+          localRoster.backendTeamId = backendTeamId;
+          setActiveSimulationTeam(typeof window === 'undefined' ? undefined : window.localStorage, backendTeamId, seasonId, 1);
+        } else {
+          backendNotice = ` Backend non scritto (${result.error}): rosa salvata solo lato client.`;
+        }
+      } catch (error) {
+        backendNotice = error instanceof Error ? ` Backend non scritto (${error.message}): rosa salvata solo lato client.` : ' Backend non scritto: rosa salvata solo lato client.';
+      }
+    } else {
+      backendNotice = ' Backend non collegato: rosa salvata solo lato client (replay locale completo).';
     }
 
-    const createdTeamId = result.data.team.id;
-    setActiveSimulationTeam(typeof window === 'undefined' ? undefined : window.localStorage, createdTeamId, seasonId, 1);
+    upsertLocalRoster(localRoster);
+    setActiveLocalRosterId(localRoster.id);
+
     if (typeof window !== 'undefined') {
       try {
-        window.sessionStorage.setItem('fantatrading.justCreatedTeamId', createdTeamId);
+        window.sessionStorage.setItem('fantatrading.justCreatedLocalRosterId', localRoster.id);
+        window.sessionStorage.setItem('fantatrading.justCreatedRosterName', localRoster.name);
         window.sessionStorage.setItem('fantatrading.justCreatedAt', String(Date.now()));
       } catch {
         // sessionStorage not available; non-blocking
       }
     }
-    setMessage({ tone: 'success', text: 'Rosa salvata. La simulazione usera questa squadra dalla giornata 1.' });
-    onCreated(createdTeamId, seasonId);
+
+    setSubmitting(false);
+    setMessage({ tone: 'success', text: `Rosa "${localRoster.name}" salvata. La simulazione partira da G1.${backendNotice}` });
+    setConfirmOpen(false);
+    onCreated({ localRosterId: localRoster.id, backendTeamId, seasonId: seasonId ?? undefined });
   }
 
   return (
@@ -297,16 +336,30 @@ export default function TeamBuilderPanel({
           </div>
 
           {confirmOpen && (
-            <div className="modal-backdrop" role="presentation" onMouseDown={() => setConfirmOpen(false)}>
+            <div className="modal-backdrop" role="presentation" onMouseDown={() => !submitting && setConfirmOpen(false)}>
               <section className="trade-confirm-modal builder-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="builder-confirm-title" onMouseDown={event => event.stopPropagation()}>
                 <header className="trade-confirm-header">
                   <div>
                     <span className="badge badge-blue">STEP 4 - Salvataggio finale</span>
                     <h2 id="builder-confirm-title">Salva rosa e avvia simulazione</h2>
                   </div>
-                  <button type="button" className="drawer-close" onClick={() => setConfirmOpen(false)}>x</button>
+                  <button type="button" className="drawer-close" onClick={() => !submitting && setConfirmOpen(false)} disabled={submitting}>x</button>
                 </header>
+                <label className="builder-name-field">
+                  <span>Nome della rosa</span>
+                  <input
+                    type="text"
+                    value={rosterName}
+                    onChange={event => setRosterName(event.target.value)}
+                    placeholder="es. Aggressivo, Difensivo, Mix value..."
+                    maxLength={48}
+                    autoFocus
+                    disabled={submitting}
+                  />
+                  <small>Scegli un nome riconoscibile: potrai salvare piu rose e confrontarle nella simulazione.</small>
+                </label>
                 <div className="settlement-formula compact-formula">
+                  <div><span>Stagione</span><strong>{seasonLabel}</strong></div>
                   <div><span>Totale quote</span><strong>{formatCredits(summary.playerCost)}</strong></div>
                   <div><span>Commissioni acquisto 2%</span><strong>{formatCredits(summary.buyCommissions)}</strong></div>
                   <div><span>Capitale virtuale iniziale</span><strong>{formatCredits(summary.initialCapital)}</strong></div>
@@ -320,10 +373,11 @@ export default function TeamBuilderPanel({
                     </tbody>
                   </table>
                 </div>
-                <p className="table-note">Nessun pagamento reale. Dopo la conferma questa rosa diventa la squadra attiva e il replay parte da G1.</p>
+                <p className="table-note">Nessun pagamento reale. La rosa viene sempre salvata in locale (multi-rosa supportato); se il backend e' attivo, viene scritta anche li.</p>
+                {message && message.tone === 'error' && <div className="trade-error">{message.text}</div>}
                 <footer className="trade-confirm-actions">
-                  <button type="button" className="button button-muted" onClick={() => setConfirmOpen(false)} disabled={submitting}>Annulla</button>
-                  <button type="button" className="button" onClick={confirmRoster} disabled={submitting}>{submitting ? 'Salvataggio...' : 'SALVA ROSA E AVVIA SIMULAZIONE'}</button>
+                  <button type="button" className="button button-ghost" onClick={() => setConfirmOpen(false)} disabled={submitting}>Annulla</button>
+                  <button type="button" className="button button-primary" onClick={confirmRoster} disabled={submitting || !rosterName.trim()}>{submitting ? 'Salvataggio...' : 'SALVA ROSA E AVVIA SIMULAZIONE'}</button>
                 </footer>
               </section>
             </div>

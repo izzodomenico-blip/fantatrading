@@ -50,7 +50,7 @@ export type HistoryPoint = {
 };
 
 export const BUY_COMMISSION_RATE = 0.02;
-export const SELL_COMMISSION_RATE = 0.02;
+export const SELL_COMMISSION_RATE = 0.0125;
 
 export const roleLimits: Record<FavcRole, number> = {
   P: 3,

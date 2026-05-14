@@ -970,8 +970,28 @@ button:disabled {
   font-weight: 850;
 }
 
+.sparkline-summary > span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sparkline-summary > span:last-child {
+  text-align: right;
+}
+
+.sparkline-summary small {
+  color: var(--text3);
+  font-size: 9.5px;
+  font-weight: 850;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
 .sparkline-summary strong {
   color: var(--text);
+  font-size: 13.5px;
 }
 
 .trend-range-toggle {
@@ -1048,6 +1068,19 @@ button:disabled {
   min-width: 132px;
   padding-top: 6px;
   padding-bottom: 6px;
+}
+
+.mini-trend-cell.wide {
+  width: 176px;
+  min-width: 176px;
+}
+
+.mini-trend-cell .trend-chart-mini {
+  min-height: 92px;
+  padding: 8px 9px 0;
+  border: 1px solid rgba(181,191,204,.10);
+  border-radius: 8px;
+  background: rgba(255,255,255,.025);
 }
 
 .clickable-row {
@@ -1210,6 +1243,71 @@ button:disabled {
   background: #111821;
   color: var(--text);
   padding: 0 12px;
+}
+
+.simulation-toolbar {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(91,145,255,.055), rgba(255,255,255,0)),
+    rgba(21,26,35,.70);
+}
+
+.simulation-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 10px;
+}
+
+.simulation-controls label {
+  display: grid;
+  gap: 7px;
+  min-width: 220px;
+  color: var(--text3);
+  font-size: 11px;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.simulation-controls select {
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #111821;
+  color: var(--text);
+}
+
+.favc-action.muted {
+  color: var(--text2);
+  border-color: rgba(181,191,204,.20);
+  background: rgba(255,255,255,.04);
+}
+
+.selected-row td {
+  background: rgba(91,145,255,.075);
+}
+
+.table-subline {
+  display: block;
+  margin-top: 3px;
+  color: var(--text3);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.composition-card {
+  display: grid;
+  gap: 14px;
+}
+
+.simulation-player-table .mini-trend-cell .trend-chart-mini {
+  min-height: 98px;
 }
 
 table {

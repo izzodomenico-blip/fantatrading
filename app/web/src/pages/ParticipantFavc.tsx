@@ -17,6 +17,7 @@ import { EmptyState, MetricCard, Section, StatusBadges } from '../components';
 import PlayerCard, { type PlayerCardData } from '../components/PlayerCard';
 import PlayerDetailDrawer from '../components/PlayerDetailDrawer';
 import PlayerTrendChart from '../components/PlayerTrendChart';
+import SeasonSimulationPanel from '../components/SeasonSimulationPanel';
 import TeamBuilderPanel from '../components/TeamBuilderPanel';
 import TeamTrendChart from '../components/TeamTrendChart';
 import TradeConfirmModal from '../components/TradeConfirmModal';
@@ -52,7 +53,7 @@ import {
 } from '../utils/marketFilters';
 import { formatCredits, formatSignedCredits, formatSignedPercent, valueTone } from '../utils/format';
 
-type ParticipantTab = 'overview' | 'mercato' | 'rosa' | 'operazioni' | 'settlement' | 'crea-squadra';
+type ParticipantTab = 'overview' | 'mercato' | 'rosa' | 'operazioni' | 'settlement' | 'crea-squadra' | 'simulazione-stagione';
 type DataSource = 'mock' | 'backend';
 
 type BackendUiState = {
@@ -86,6 +87,7 @@ const TABS: Array<{ id: ParticipantTab; label: string; path: string }> = [
   { id: 'mercato', label: 'Mercato', path: '/partecipante-favc/mercato' },
   { id: 'rosa', label: 'La mia rosa', path: '/partecipante-favc/rosa' },
   { id: 'crea-squadra', label: 'Crea squadra', path: '/partecipante-favc/crea-squadra' },
+  { id: 'simulazione-stagione', label: 'Simulazione stagione', path: '/partecipante-favc/simulazione-stagione' },
   { id: 'operazioni', label: 'Operazioni', path: '/partecipante-favc/operazioni' },
   { id: 'settlement', label: 'Settlement', path: '/partecipante-favc/settlement' },
 ];
@@ -721,6 +723,13 @@ export default function ParticipantFavc() {
             setReloadNonce(value => value + 1);
             navigate('/partecipante-favc/rosa');
           }}
+        />
+      )}
+
+      {tab === 'simulazione-stagione' && (
+        <SeasonSimulationPanel
+          seasonId={builderSeason?.id ?? seasonId}
+          seasonLabel={builderSeason?.footballSeason ?? TEAM_BUILDER_SEASON}
         />
       )}
 

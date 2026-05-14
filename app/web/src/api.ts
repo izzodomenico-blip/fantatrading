@@ -330,3 +330,11 @@ export async function getOrCreateDemoAccessToken(baseUrl?: string, options: { fo
   window.localStorage.setItem('fantatrading_access_token', login.data.accessToken);
   return login.data.accessToken;
 }
+
+export async function getDemoAccessTokenForEmail(email: string, baseUrl?: string) {
+  if (!import.meta.env.DEV) return null;
+
+  const api = new FantaTradingApi({ baseUrl });
+  const login = await api.login(email, 'password');
+  return login.ok ? login.data.accessToken : null;
+}

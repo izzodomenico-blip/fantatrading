@@ -21,6 +21,41 @@ export const DEMO_ADMIN_EMAIL = 'admin@fantatrading.local';
 export const DEMO_USER_EMAIL = 'demo@fantatrading.local';
 export const DEMO_PASSWORD = 'password';
 
+export const MULTI_DEMO_TEAMS_2025_26 = [
+  {
+    key: 'VALUE',
+    teamName: 'Team Demo VALUE',
+    email: 'demo-value@fantatrading.local',
+    firstName: 'Demo',
+    lastName: 'Value',
+    strategy: 'value',
+  },
+  {
+    key: 'LOW_COST',
+    teamName: 'Team Demo LOW COST',
+    email: 'demo-lowcost@fantatrading.local',
+    firstName: 'Demo',
+    lastName: 'Low Cost',
+    strategy: 'lowcost',
+  },
+  {
+    key: 'TOP_PLAYER',
+    teamName: 'Team Demo TOP PLAYER',
+    email: 'demo-top@fantatrading.local',
+    firstName: 'Demo',
+    lastName: 'Top Player',
+    strategy: 'top',
+  },
+  {
+    key: 'BALANCED',
+    teamName: 'Team Demo BALANCED',
+    email: 'demo-balanced@fantatrading.local',
+    firstName: 'Demo',
+    lastName: 'Balanced',
+    strategy: 'balanced',
+  },
+] as const;
+
 export const DEMO_ROSTER_LIMITS: Record<PlayerRole, number> = {
   [PlayerRole.GK]: 3,
   [PlayerRole.DEF]: 8,
@@ -72,6 +107,8 @@ type DemoRosterPlayer = ProcessedQuoteSeedRow & {
   voteCount: number;
   syntheticTrendCount: number;
 };
+
+export type DemoRosterStrategy = typeof MULTI_DEMO_TEAMS_2025_26[number]['strategy'] | 'default';
 
 type SeedSummary = {
   resetApplied?: boolean;
@@ -125,11 +162,32 @@ export function selectDemoRoster(
   syntheticQuotes: SyntheticQuoteSeedRow[],
   season = DEMO_SEASON,
 ) {
+  return selectDemoRosterByStrategy(quotes, votes, syntheticQuotes, season, 'default');
+}
+
+export function selectDemoRosterByStrategy(
+  quotes: ProcessedQuoteSeedRow[],
+  votes: ProcessedVoteSeedRow[],
+  syntheticQuotes: SyntheticQuoteSeedRow[],
+  season = DEMO_SEASON,
+  strategy: DemoRosterStrategy = 'default',
+) {
+  const candidates = buildDemoRosterCandidates(quotes, votes, syntheticQuotes, season)
+    .sort(getRosterStrategyComparator(strategy));
+  return selectByRosterLimits(candidates);
+}
+
+function buildDemoRosterCandidates(
+  quotes: ProcessedQuoteSeedRow[],
+  votes: ProcessedVoteSeedRow[],
+  syntheticQuotes: SyntheticQuoteSeedRow[],
+  season = DEMO_SEASON,
+) {
   const voteCounts = countRowsByPlayer(votes.filter((row) => row.season === season && row.played));
   const syntheticCounts = countRowsByPlayer(syntheticQuotes.filter((row) => row.season === season));
   const seen = new Set<string>();
 
-  const candidates = quotes
+  return quotes
     .filter((row) => row.season === season)
     .filter((row) => row.playerName && !row.playerName.toLowerCase().includes('demo'))
     .filter((row) => Number(row.initialQuote) > 0 && Number(row.currentOrFinalQuote) >= 0)
@@ -150,14 +208,10 @@ export function selectDemoRoster(
       if (seen.has(externalId)) return false;
       seen.add(externalId);
       return true;
-    })
-    .sort((a, b) => {
-      if (b.syntheticTrendCount !== a.syntheticTrendCount) return b.syntheticTrendCount - a.syntheticTrendCount;
-      if (b.voteCount !== a.voteCount) return b.voteCount - a.voteCount;
-      if (b.currentOrFinalQuote !== a.currentOrFinalQuote) return b.currentOrFinalQuote - a.currentOrFinalQuote;
-      return a.playerName.localeCompare(b.playerName);
     });
+}
 
+function selectByRosterLimits(candidates: DemoRosterPlayer[]) {
   const selected: DemoRosterPlayer[] = [];
   for (const role of Object.values(PlayerRole)) {
     selected.push(...candidates.filter((row) => row.mappedRole === role).slice(0, DEMO_ROSTER_LIMITS[role]));
@@ -171,6 +225,46 @@ export function selectDemoRoster(
   }
 
   return selected;
+}
+
+function getRosterStrategyComparator(strategy: DemoRosterStrategy) {
+  return (a: DemoRosterPlayer, b: DemoRosterPlayer) => {
+    const scoreA = rosterStrategyScore(a, strategy);
+    const scoreB = rosterStrategyScore(b, strategy);
+    if (scoreB !== scoreA) return scoreB - scoreA;
+    if (b.syntheticTrendCount !== a.syntheticTrendCount) return b.syntheticTrendCount - a.syntheticTrendCount;
+    if (b.voteCount !== a.voteCount) return b.voteCount - a.voteCount;
+    if (strategy === 'lowcost' && a.currentOrFinalQuote !== b.currentOrFinalQuote) {
+      return a.currentOrFinalQuote - b.currentOrFinalQuote;
+    }
+    if (b.currentOrFinalQuote !== a.currentOrFinalQuote) return b.currentOrFinalQuote - a.currentOrFinalQuote;
+    return a.playerName.localeCompare(b.playerName);
+  };
+}
+
+function rosterStrategyScore(player: DemoRosterPlayer, strategy: DemoRosterStrategy) {
+  const quote = Number(player.currentOrFinalQuote);
+  const trendPct = (Number(player.currentOrFinalQuote) - Number(player.initialQuote)) * 5;
+  const dataDepth = player.syntheticTrendCount * 0.15 + player.voteCount * 0.08;
+
+  if (strategy === 'value') {
+    return (trendPct + dataDepth + 10) / Math.max(quote, 1);
+  }
+
+  if (strategy === 'lowcost') {
+    return (1000 - quote * 50) + trendPct * 0.1 + dataDepth;
+  }
+
+  if (strategy === 'top') {
+    return quote * 3 + trendPct + dataDepth;
+  }
+
+  if (strategy === 'balanced') {
+    const targetQuote = player.mappedRole === PlayerRole.FWD ? 18 : player.mappedRole === PlayerRole.MID ? 13 : 10;
+    return 40 - Math.abs(quote - targetQuote) * 1.5 + trendPct + dataDepth;
+  }
+
+  return player.syntheticTrendCount * 2 + player.voteCount + quote;
 }
 
 export function countComposition(players: Array<{ mappedRole: PlayerRole }>) {
@@ -267,7 +361,11 @@ async function seedDemo(options: DemoSeedOptions = {}) {
 }
 
 async function resetDemoTeam(prisma: PrismaClient, demoSeason = DEMO_SEASON) {
-  const participant = await prisma.user.findUnique({ where: { email: DEMO_USER_EMAIL } });
+  await resetDemoTeamForEmail(prisma, DEMO_USER_EMAIL, demoSeason);
+}
+
+async function resetDemoTeamForEmail(prisma: PrismaClient, email: string, demoSeason = DEMO_SEASON) {
+  const participant = await prisma.user.findUnique({ where: { email } });
   const season = await prisma.season.findFirst({ where: { footballSeason: demoSeason } });
   if (!participant || !season) return;
 
@@ -477,6 +575,137 @@ async function upsertDemoTeam(prisma: PrismaClient, userId: string, seasonId: st
   });
 }
 
+async function upsertDemoTeamWithCapital(prisma: PrismaClient, userId: string, seasonId: string, initialCapital: number) {
+  const existing = await prisma.team.findUnique({
+    where: { userId_seasonId: { userId, seasonId } },
+  });
+  if (existing) {
+    return existing;
+  }
+
+  return prisma.team.create({
+    data: {
+      userId,
+      seasonId,
+      status: TeamStatus.ROSA_INCOMPLETA,
+      initialBudget: initialCapital,
+      availableBudget: initialCapital,
+      totalCommissionsPaid: 0,
+      currentPortfolioValue: 0,
+      currentRoi: 0,
+    },
+  });
+}
+
+function calculateInitialCapitalForRoster(roster: DemoRosterPlayer[], strategy: DemoRosterStrategy) {
+  const totalBuyCost = roster.reduce((sum, player) => sum + Number(player.currentOrFinalQuote) * 1.02, 0);
+  const bufferByStrategy: Record<DemoRosterStrategy, number> = {
+    default: 1.08,
+    value: 1.08,
+    lowcost: 1.04,
+    top: 1.16,
+    balanced: 1.12,
+  };
+  return Math.ceil(totalBuyCost * bufferByStrategy[strategy]);
+}
+
+async function seedMultiDemo2025(options: { reset?: boolean } = {}) {
+  loadEnvFiles();
+  const demoSeason = DEMO_SEASON_2025_26;
+
+  const prisma = new PrismaService();
+  await prisma.$connect();
+
+  try {
+    if (options.reset) {
+      for (const config of MULTI_DEMO_TEAMS_2025_26) {
+        await resetDemoTeamForEmail(prisma, config.email, demoSeason);
+      }
+    }
+
+    const marketService = new MarketService(prisma, new TeamsService(prisma));
+    const settlementService = new SettlementService(prisma);
+    const quotesFile = readProcessedJson<ProcessedQuoteSeedRow>(QUOTES_PATH);
+    const votesFile = readProcessedJson<ProcessedVoteSeedRow>(VOTES_PATH);
+    const syntheticFile = readProcessedJson<SyntheticQuoteSeedRow>(SYNTHETIC_QUOTES_PATH);
+    const quoteRows = quotesFile.rows.filter((row) => row.season === demoSeason);
+    const voteRows = votesFile.rows.filter((row) => row.season === demoSeason);
+
+    const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 12);
+    const admin = await upsertDemoUser(prisma, {
+      email: DEMO_ADMIN_EMAIL,
+      passwordHash,
+      firstName: 'Demo',
+      lastName: 'Admin',
+      role: UserRole.ADMIN,
+    });
+    const season = await upsertDemoSeason(prisma, admin.id, demoSeason);
+    const playerIdByExternalId = await importPlayersAndQuotes(prisma, season.id, quoteRows);
+    const votesImported = await importVotes(prisma, season.id, voteRows, playerIdByExternalId);
+
+    const teams: Array<SeedSummary & { teamName: string; demoEmail: string; strategy: string; initialCapital: number }> = [];
+
+    for (const config of MULTI_DEMO_TEAMS_2025_26) {
+      const participant = await upsertDemoUser(prisma, {
+        email: config.email,
+        passwordHash,
+        firstName: config.firstName,
+        lastName: config.lastName,
+        role: UserRole.PARTICIPANT,
+      });
+      const roster = selectDemoRosterByStrategy(quotesFile.rows, votesFile.rows, syntheticFile.rows, demoSeason, config.strategy);
+      const initialCapital = calculateInitialCapitalForRoster(roster, config.strategy);
+      const team = await upsertDemoTeamWithCapital(prisma, participant.id, season.id, initialCapital);
+      const buysBefore = await prisma.marketOperation.count({ where: { teamId: team.id, type: 'BUY' } });
+
+      for (const player of roster) {
+        const playerId = playerIdByExternalId.get(String(player.playerId));
+        if (!playerId) continue;
+        const active = await prisma.portfolioPosition.findFirst({
+          where: { teamId: team.id, playerId, status: 'ACTIVE' },
+        });
+        if (active) continue;
+
+        await marketService.buyPlayer(
+          { userId: participant.id, email: participant.email, role: UserRole.PARTICIPANT },
+          { teamId: team.id, playerId },
+        );
+      }
+
+      const buysAfter = await prisma.marketOperation.count({ where: { teamId: team.id, type: 'BUY' } });
+      const summary = await buildSummary(prisma, season.id, team.id, roster, playerIdByExternalId, {
+        resetApplied: Boolean(options.reset),
+        playersImported: playerIdByExternalId.size,
+        quotesImported: quoteRows.length,
+        votesImported,
+        marketBuyOperationsCreated: buysAfter - buysBefore,
+      });
+      teams.push({
+        ...summary,
+        teamName: config.teamName,
+        demoEmail: config.email,
+        strategy: config.strategy,
+        initialCapital,
+      });
+    }
+
+    await settlementService.calculateSeasonSettlement(season.id, {
+      userId: admin.id,
+      email: admin.email,
+      role: UserRole.ADMIN,
+    });
+
+    process.stdout.write(`${JSON.stringify({
+      resetApplied: Boolean(options.reset),
+      season: demoSeason,
+      seasonId: season.id,
+      teams,
+    }, null, 2)}\n`);
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
 async function buildSummary(
   prisma: PrismaClient,
   seasonId: string,
@@ -569,10 +798,14 @@ function loadEnvFiles() {
 }
 
 if (require.main === module) {
+  const multiDemo = process.argv.includes('--multi');
   const seasonArg = process.argv.includes('--season=2025/26') || process.argv.includes('--2025-26')
     ? DEMO_SEASON_2025_26
     : DEMO_SEASON;
-  seedDemo({ reset: process.argv.includes('--reset'), season: seasonArg }).catch((error) => {
+  const runner = multiDemo
+    ? seedMultiDemo2025({ reset: process.argv.includes('--reset') })
+    : seedDemo({ reset: process.argv.includes('--reset'), season: seasonArg });
+  runner.catch((error) => {
     process.stderr.write(`${error instanceof Error ? error.stack ?? error.message : String(error)}\n`);
     process.exit(1);
   });

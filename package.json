@@ -43,6 +43,8 @@
     "backend:seed:demo:reset": "npm run seed:demo:reset --prefix apps/backend",
     "backend:seed:demo:2025-26": "npm run seed:demo:2025-26 --prefix apps/backend",
     "backend:seed:demo:2025-26:reset": "npm run seed:demo:2025-26:reset --prefix apps/backend",
+    "backend:seed:demo:2025-26:multi": "npm run seed:demo:2025-26:multi --prefix apps/backend",
+    "backend:seed:demo:2025-26:multi:reset": "npm run seed:demo:2025-26:multi:reset --prefix apps/backend",
     "prisma:generate": "npx prisma generate --schema=prisma/schema.prisma",
     "prisma:migrate:dev": "npx prisma migrate dev --schema=prisma/schema.prisma",
     "prisma:studio": "npx prisma studio --schema=prisma/schema.prisma"

@@ -96,8 +96,14 @@ export default function PlayerTrendChart({ data, mode = 'full', valueKey = 'quot
     <div className={compact ? 'trend-chart-mini' : 'trend-chart-full'}>
       {compact && (
         <div className="sparkline-summary">
-          <strong>{formatCredits(lastValue, valueKey === 'quote' ? 2 : 0)}</strong>
-          <span className={valueTone(totalChange)}>{formatSignedCredits(totalChange)}</span>
+          <span>
+            <small>Ultima</small>
+            <strong>{formatCredits(lastValue, valueKey === 'quote' ? 2 : 0)}</strong>
+          </span>
+          <span className={valueTone(totalChange)}>
+            <small>Delta</small>
+            {formatSignedCredits(totalChange)}
+          </span>
         </div>
       )}
       {!compact && (

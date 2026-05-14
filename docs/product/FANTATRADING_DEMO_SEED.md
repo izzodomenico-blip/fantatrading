@@ -15,6 +15,7 @@ Questo seed popola un database locale con una demo backend completa per la pagin
 npm.cmd run prisma:migrate:dev
 npm.cmd run backend:seed:demo
 npm.cmd run backend:seed:demo:2025-26
+npm.cmd run backend:seed:demo:2025-26:multi
 npm.cmd run backend:dev
 npm.cmd run web:dev
 ```
@@ -24,9 +25,10 @@ Per riportare il team demo allo stato iniziale dopo prove di BUY/SELL reali dall
 ```powershell
 npm.cmd run backend:seed:demo:reset
 npm.cmd run backend:seed:demo:2025-26:reset
+npm.cmd run backend:seed:demo:2025-26:multi:reset
 ```
 
-Il reset cancella e ricrea solo la squadra demo `demo@fantatrading.local` per la stagione indicata, insieme a posizioni, operazioni, settlement e ranking collegati. Non espone un comando in UI e non cancella il catalogo di player, quote o voti importati.
+Il reset cancella e ricrea solo le squadre demo target per la stagione indicata, insieme a posizioni, operazioni, settlement e ranking collegati. Non espone un comando in UI e non cancella il catalogo di player, quote o voti importati.
 
 Poi apri:
 
@@ -70,6 +72,15 @@ Partecipante locale:
 demo@fantatrading.local / password
 ```
 
+Partecipanti multi-squadra 2025/26:
+
+```text
+demo-value@fantatrading.local / password
+demo-lowcost@fantatrading.local / password
+demo-top@fantatrading.local / password
+demo-balanced@fantatrading.local / password
+```
+
 Queste credenziali sono solo per sviluppo locale e demo, non per produzione.
 
 ## Dati Importati
@@ -81,6 +92,15 @@ Il seed usa solo dati gia presenti nel repository:
 - `data/real/processed/round-quotes/synthetic_round_quotes_history.json`
 
 La stagione principale per la creazione nuova squadra e `2025/26`, con status `IN_PROGRESS` se popolata dal seed `backend:seed:demo:2025-26`. La stagione `2024/25` resta disponibile come demo storica/backtest. Vengono importati player reali, club reali, ruoli reali, quotazioni iniziali/finali e voti reali disponibili. La rosa demo ha 25 calciatori reali con composizione FAVC `3 GK / 8 DEF / 8 MID / 6 FWD`.
+
+Il seed `backend:seed:demo:2025-26:multi` crea quattro utenti demo separati, ciascuno con una sola squadra sulla stagione 2025/26:
+
+- `Team Demo VALUE`: giocatori con buon rapporto trend/prezzo.
+- `Team Demo LOW COST`: rosa economica con capitale iniziale piu basso.
+- `Team Demo TOP PLAYER`: giocatori con quotazioni piu alte.
+- `Team Demo BALANCED`: rosa equilibrata per ruolo, prezzo e trend.
+
+La regola di base `un utente = una squadra per stagione` resta invariata: la multi-squadra e solo demo e usa utenti diversi. Ogni team riceve 25 giocatori reali, composizione `3 GK / 8 DEF / 8 MID / 6 FWD`, MarketOperation `BUY` iniziali e commissione acquisto 2%.
 
 ## Cosa Aspettarsi Nella UI
 
@@ -96,6 +116,7 @@ Con backend acceso e seed eseguito, `/partecipante-favc` mostra:
 - settlement finale virtuale, contabile, senza payout reale.
 - BUY/SELL reali demo backend solo dopo conferma esplicita nella UI.
 - creazione squadra da `/partecipante-favc/crea-squadra` con capitale virtuale iniziale libero e rosa completa 3/8/8/6.
+- simulazione multi-squadra da `/partecipante-favc/simulazione-stagione` con selettore VALUE / LOW COST / TOP PLAYER / BALANCED, classifica ROI% e avanzamento giornata locale.
 - se il backend non e disponibile, la UI resta su fallback mock/simulazione locale.
 
 ## Creazione Squadra Dalla UI
@@ -123,6 +144,18 @@ costo totale = quotazione + (quotazione * 0,02)
 Esempio: quota 34, commissione 0,68, costo totale 34,68. Se il cash virtuale iniziale non basta, la UI mostra il capitale virtuale extra che verra aggiunto solo dopo conferma.
 
 Se manca `QuoteHistory` ufficiale, il trend usa `synthetic_round_quotes_history.json` ed e mostrato come andamento stimato nel pilot, non quotazione ufficiale Fantacalcio round-by-round.
+
+## Simulazione Multi-Squadra 2025/26
+
+Apri:
+
+```text
+http://localhost:5173/partecipante-favc/simulazione-stagione
+```
+
+La pagina legge i quattro team demo tramite login dev dei quattro utenti dedicati. Il pulsante `Avanza giornata` aggiorna solo la simulazione locale della squadra selezionata; `Avanza tutte le squadre` avanza tutte le squadre per confrontare ROI% alla stessa giornata. Nessuno dei due pulsanti scrive sul database, crea MarketOperation o modifica roster/cash.
+
+La classifica e sempre ordinata per ROI%, non per valore assoluto. I grafici usano trend sintetici 2025/26 se mancano quote ufficiali round-by-round.
 
 ## Autenticazione Demo
 

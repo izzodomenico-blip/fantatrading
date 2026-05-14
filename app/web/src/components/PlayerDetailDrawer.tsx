@@ -59,6 +59,7 @@ export default function PlayerDetailDrawer({ player, onClose }: Props) {
                 <th>Quote change</th>
                 <th>FT return</th>
                 <th>Vote</th>
+                <th>SV</th>
                 <th>Bonus/malus</th>
                 <th>Estimated value</th>
               </tr>
@@ -70,7 +71,8 @@ export default function PlayerDetailDrawer({ player, onClose }: Props) {
                   <td>{formatCredits(point.quote)}</td>
                   <td className={valueTone(point.quoteChange)}>{formatSignedCredits(point.quoteChange)}</td>
                   <td className={valueTone(point.fantaTradingReturnPct)}>{formatSignedPercent(point.fantaTradingReturnPct)}</td>
-                  <td>{point.vote ?? 'n.d.'}</td>
+                  <td>{point.isSv ? 'SV' : point.vote ?? 'n.d.'}</td>
+                  <td>{point.isSv ? <span className="badge badge-amber">SV</span> : '-'}</td>
                   <td className={valueTone(point.fantasyBonusPct ?? 0)}>{formatSignedPercent(point.fantasyBonusPct ?? 0)}</td>
                   <td>{formatCredits(point.estimatedValue)}</td>
                 </tr>

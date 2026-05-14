@@ -18,6 +18,7 @@ import {
 } from '../utils/marketFilters';
 import { buildRosterDraftSummary, canAddPlayerToDraft } from '../utils/teamBuilder';
 import { createMockTrend } from '../utils/playerTrend';
+import { setActiveSimulationTeam } from '../utils/seasonReplay';
 import { formatCredits } from '../utils/format';
 
 type TeamBuilderPanelProps = {
@@ -29,7 +30,7 @@ type TeamBuilderPanelProps = {
   trendSource?: 'official' | 'synthetic' | 'mock';
   existingTeamId?: string | null;
   backendConnected: boolean;
-  onCreated: () => void;
+  onCreated: (teamId: string, seasonId: string) => void;
   onContinueExisting: () => void;
 };
 
@@ -66,7 +67,7 @@ export default function TeamBuilderPanel({
   onContinueExisting,
 }: TeamBuilderPanelProps) {
   const [capital, setCapital] = useState(300);
-  const [buildingStarted, setBuildingStarted] = useState(false);
+  const [buildingStarted, setBuildingStarted] = useState(true);
   const [selected, setSelected] = useState<DemoMarketPlayer[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -135,14 +136,22 @@ export default function TeamBuilderPanel({
       return;
     }
 
-    setMessage({ tone: 'success', text: 'Squadra creata nella demo backend. Portafoglio e operazioni aggiornati.' });
-    onCreated();
+    const createdTeamId = result.data.team.id;
+    setActiveSimulationTeam(typeof window === 'undefined' ? undefined : window.localStorage, createdTeamId, seasonId, 1);
+    setMessage({ tone: 'success', text: 'Rosa salvata. La simulazione usera questa squadra dalla giornata 1.' });
+    onCreated(createdTeamId, seasonId);
   }
 
   return (
     <>
       <Section title="Crea squadra FAVC">
         <StatusBadges items={['Capitale virtuale', 'Nessun denaro reale', 'Commissione acquisto 2%', backendConnected ? 'Demo backend' : 'Fallback mock']} />
+        <div className="builder-flow-steps">
+          <span>1. Capitale iniziale</span>
+          <span>2. Scelta giocatori</span>
+          <span>3. Riepilogo rosa</span>
+          <span>4. Salva e simula</span>
+        </div>
         <div className="backend-banner backend-no-team">
           <strong>{inProgressNotice}</strong>
           <span>
@@ -164,14 +173,16 @@ export default function TeamBuilderPanel({
         )}
 
         <div className="team-builder-step">
-          <h3>Step 1 - Capitale iniziale</h3>
+          <h3>STEP 1 - Capitale iniziale</h3>
           <p>Imposta solo capitale virtuale. Non e un pagamento reale e non genera payout reale.</p>
           <div className="capital-picker">
             {PRESETS.map(value => (
               <button key={value} className={capital === value ? 'active' : ''} type="button" onClick={() => setCapital(value)}>{value}</button>
             ))}
             <input type="number" min="0" value={capital} onChange={event => setCapital(Number(event.target.value) || 0)} />
-            <button className="button" type="button" onClick={() => setBuildingStarted(true)}>Inizia costruzione rosa</button>
+            <button className="button" type="button" onClick={() => setBuildingStarted(true)} disabled={buildingStarted}>
+              {buildingStarted ? 'Costruzione rosa attiva' : 'Inizia costruzione rosa'}
+            </button>
           </div>
         </div>
       </Section>
@@ -193,7 +204,7 @@ export default function TeamBuilderPanel({
 
           <div className="team-builder-layout">
             <div className="builder-market-column">
-              <Section title="Step 2 - Mercato giocatori reali">
+              <Section title="STEP 2 - Scelta giocatori">
                 <div className="builder-suggestions">
                   <button type="button" onClick={() => setFilters({ ...filters, sortBy: 'return', trend: 'up', onlyWithTrend: true })}>Migliori per trend</button>
                   <button type="button" onClick={() => setFilters({ ...filters, sortBy: 'priceAsc', price: 'low' })}>Low cost</button>
@@ -221,7 +232,7 @@ export default function TeamBuilderPanel({
             </div>
 
             <aside className="builder-roster-column">
-              <Section title="Step 3 - Rosa in costruzione">
+              <Section title="STEP 3 - Riepilogo rosa">
                 <div className="builder-summary-card card">
                   <div><span>Stagione</span><strong>{seasonLabel}</strong></div>
                   <div><span>Capitale iniziale</span><strong>{formatCredits(summary.initialCapital)}</strong></div>
@@ -262,8 +273,13 @@ export default function TeamBuilderPanel({
                 })}
 
                 {message && <div className={message.tone === 'error' ? 'trade-error' : message.tone === 'success' ? 'verdict' : 'trade-warning'}>{message.text}</div>}
-                <button className="button" type="button" disabled={!summary.isValid || submitting || !backendConnected || !seasonId} onClick={() => setConfirmOpen(true)}>
-                  {existingTeamId ? 'Riepilogo e ricostruisci demo' : 'Riepilogo e conferma squadra'}
+                <div className="builder-save-panel">
+                  <span>STEP 4 - Salvataggio</span>
+                  <strong>{summary.isValid ? 'Rosa pronta per salvataggio' : 'Completa 25 giocatori con composizione 3/8/8/6'}</strong>
+                  <p>Il team salvato diventa la squadra attiva della simulazione 2025/26.</p>
+                </div>
+                <button className="button builder-primary-save" type="button" disabled={!summary.isValid || submitting || !backendConnected || !seasonId} onClick={() => setConfirmOpen(true)}>
+                  SALVA ROSA E AVVIA SIMULAZIONE
                 </button>
               </Section>
             </aside>
@@ -274,8 +290,8 @@ export default function TeamBuilderPanel({
               <section className="trade-confirm-modal builder-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="builder-confirm-title" onMouseDown={event => event.stopPropagation()}>
                 <header className="trade-confirm-header">
                   <div>
-                    <span className="badge badge-blue">Conferma squadra {seasonLabel}</span>
-                    <h2 id="builder-confirm-title">Riepilogo finale</h2>
+                    <span className="badge badge-blue">STEP 4 - Salvataggio finale</span>
+                    <h2 id="builder-confirm-title">Salva rosa e avvia simulazione</h2>
                   </div>
                   <button type="button" className="drawer-close" onClick={() => setConfirmOpen(false)}>x</button>
                 </header>
@@ -293,10 +309,10 @@ export default function TeamBuilderPanel({
                     </tbody>
                   </table>
                 </div>
-                <p className="table-note">Nessun pagamento reale. La rosa viene scritta sul backend solo dopo questo click finale.</p>
+                <p className="table-note">Nessun pagamento reale. Dopo la conferma questa rosa diventa la squadra attiva e il replay parte da G1.</p>
                 <footer className="trade-confirm-actions">
                   <button type="button" className="button button-muted" onClick={() => setConfirmOpen(false)} disabled={submitting}>Annulla</button>
-                  <button type="button" className="button" onClick={confirmRoster} disabled={submitting}>{submitting ? 'Creazione...' : 'Conferma e scrivi backend'}</button>
+                  <button type="button" className="button" onClick={confirmRoster} disabled={submitting}>{submitting ? 'Salvataggio...' : 'SALVA ROSA E AVVIA SIMULAZIONE'}</button>
                 </footer>
               </section>
             </div>

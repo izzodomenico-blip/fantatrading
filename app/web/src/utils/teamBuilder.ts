@@ -18,7 +18,7 @@ export type RosterDraftSummary = {
   exceededRoles: FavcRole[];
   isComplete: boolean;
   isValid: boolean;
-  status: 'incompleta' | 'completa' | 'ruolo eccedente' | 'duplicato';
+  status: 'incompleta' | 'completa' | 'ruolo eccedente' | 'duplicato' | 'pronta per salvataggio';
 };
 
 export function buildRosterDraftSummary(players: DemoMarketPlayer[], initialCapital: number): RosterDraftSummary {
@@ -56,8 +56,8 @@ export function buildRosterDraftSummary(players: DemoMarketPlayer[], initialCapi
     ? 'duplicato'
     : exceededRoles.length > 0
       ? 'ruolo eccedente'
-      : isComplete
-        ? 'completa'
+      : isValid
+        ? 'pronta per salvataggio'
         : 'incompleta';
 
   return {

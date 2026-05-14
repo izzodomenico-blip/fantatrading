@@ -1283,6 +1283,37 @@ button:disabled {
   color: var(--text);
 }
 
+.round-slider-label {
+  flex: 1 1 240px;
+}
+
+.round-slider-label input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.standalone-toggle {
+  margin: 0 0 14px;
+}
+
+.replay-metric-grid .metric-card {
+  min-height: 122px;
+}
+
+.replay-chart-grid {
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
+.replay-log {
+  display: grid;
+  gap: 6px;
+}
+
+.replay-log p {
+  color: var(--text2);
+  font-size: 13px;
+}
+
 .favc-action.muted {
   color: var(--text2);
   border-color: rgba(181,191,204,.20);
@@ -1308,6 +1339,91 @@ button:disabled {
 
 .simulation-player-table .mini-trend-cell .trend-chart-mini {
   min-height: 98px;
+}
+
+.active-team-card {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px;
+}
+
+.active-team-card div,
+.builder-save-panel {
+  display: grid;
+  gap: 5px;
+  padding: 13px;
+  border: 1px solid rgba(181,191,204,.10);
+  border-radius: 8px;
+  background: rgba(255,255,255,.035);
+}
+
+.active-team-card span,
+.builder-save-panel span {
+  color: var(--text3);
+  font-size: 10px;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.builder-flow-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.builder-flow-steps span {
+  min-height: 42px;
+  display: grid;
+  place-items: center;
+  padding: 8px;
+  border: 1px solid rgba(91,145,255,.24);
+  border-radius: 8px;
+  background: rgba(91,145,255,.07);
+  color: var(--text2);
+  font-size: 12px;
+  font-weight: 850;
+  text-align: center;
+}
+
+.builder-save-panel {
+  margin: 14px 0;
+  border-color: rgba(49,208,125,.24);
+  background: rgba(49,208,125,.07);
+}
+
+.builder-save-panel p {
+  color: var(--text2);
+  font-size: 13px;
+}
+
+.builder-primary-save {
+  width: 100%;
+  min-height: 52px;
+  font-size: 14px;
+}
+
+.top-player-row td {
+  background: rgba(49,208,125,.055);
+}
+
+.bottom-player-row td {
+  background: rgba(255,102,115,.055);
+}
+
+.sv-player-row td {
+  background: rgba(242,184,75,.045);
+}
+
+.economic-progress-table td,
+.economic-progress-table th {
+  text-align: right;
+}
+
+.economic-progress-table td:first-child,
+.economic-progress-table th:first-child {
+  text-align: left;
 }
 
 table {

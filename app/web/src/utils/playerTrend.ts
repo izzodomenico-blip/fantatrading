@@ -5,8 +5,12 @@ export type PlayerTrendPoint = {
   fantaTradingReturnPct: number;
   estimatedValue: number;
   vote?: number | null;
+  fantasyVote?: number | null;
+  played?: boolean;
+  isSv?: boolean;
   fantasyBonusPct?: number;
   source: 'synthetic' | 'official' | 'mock';
+  sourceVote?: 'official' | 'missing';
 };
 
 export type RawSyntheticRoundQuote = {
@@ -28,6 +32,14 @@ export type RawVoteRow = {
   playerId: number | string;
   vote?: number | null;
   fantasyVote?: number | null;
+  played?: boolean;
+  goals?: number | null;
+  assists?: number | null;
+  yellowCards?: number | null;
+  redCards?: number | null;
+  ownGoals?: number | null;
+  penaltySaved?: number | null;
+  penaltyMissed?: number | null;
 };
 
 export function calculateFantaTradingReturnPct(initialQuote: number, currentQuote: number) {

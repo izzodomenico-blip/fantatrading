@@ -578,9 +578,9 @@ export default function ParticipantFavc() {
           </p>
         </div>
         <div className="participant-hero-panel">
-          <span>ROI live</span>
-          <strong>{formatSignedPercent(roiPct, 2)}</strong>
-          <small>{financialSnapshot?.rankByRoi ? `Ranking #${financialSnapshot.rankByRoi}` : 'Ranking ROI demo'}</small>
+          <span>{tab === 'simulazione-stagione' ? 'Replay storico' : 'ROI live'}</span>
+          <strong>{tab === 'simulazione-stagione' ? 'G1-G36' : formatSignedPercent(roiPct, 2)}</strong>
+          <small>{tab === 'simulazione-stagione' ? 'Guadagno % aggiornato nella pagina' : financialSnapshot?.rankByRoi ? `Ranking #${financialSnapshot.rankByRoi}` : 'Ranking ROI demo'}</small>
         </div>
       </div>
 
@@ -719,9 +719,9 @@ export default function ParticipantFavc() {
           existingTeamId={builderExistingTeamId}
           backendConnected={backendState.mode === 'connected' && dataSource === 'backend'}
           onContinueExisting={() => navigate('/partecipante-favc/rosa')}
-          onCreated={() => {
+          onCreated={(createdTeamId, createdSeasonId) => {
             setReloadNonce(value => value + 1);
-            navigate('/partecipante-favc/rosa');
+            navigate(`/partecipante-favc/simulazione-stagione?teamId=${createdTeamId}&seasonId=${createdSeasonId}`);
           }}
         />
       )}

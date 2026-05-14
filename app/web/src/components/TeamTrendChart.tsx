@@ -13,7 +13,7 @@ import { formatCredits, formatSignedPercent } from '../utils/format';
 
 type Props = {
   data: TeamTrendPoint[];
-  valueKey?: 'totalValue' | 'portfolioValue' | 'roiPct';
+  valueKey?: 'totalValue' | 'portfolioValue' | 'roiPct' | 'teamVoteAverage';
   height?: number;
 };
 
@@ -23,7 +23,8 @@ export default function TeamTrendChart({ data, valueKey = 'totalValue', height =
   }
 
   const isRoi = valueKey === 'roiPct';
-  const label = isRoi ? 'ROI squadra' : valueKey === 'portfolioValue' ? 'Valore rosa' : 'Valore squadra';
+  const isAverage = valueKey === 'teamVoteAverage';
+  const label = isRoi ? 'ROI squadra' : isAverage ? 'Media squadra' : valueKey === 'portfolioValue' ? 'Valore rosa' : 'Valore squadra';
 
   return (
     <div className="team-trend-chart">
@@ -32,19 +33,19 @@ export default function TeamTrendChart({ data, valueKey = 'totalValue', height =
           <CartesianGrid {...GRID_STYLE} />
           <XAxis dataKey="round" tickFormatter={(value: number) => `G${value}`} {...AXIS_STYLE} />
           <YAxis
-            tickFormatter={(value: number) => isRoi ? `${value}%` : formatCredits(value, 0)}
+            tickFormatter={(value: number) => isRoi ? `${value}%` : isAverage ? value.toFixed(1) : formatCredits(value, 0)}
             {...AXIS_STYLE}
           />
           <Tooltip
             {...TOOLTIP_STYLE}
-            formatter={(value: number) => isRoi ? formatSignedPercent(value) : formatCredits(value)}
+            formatter={(value: number) => isRoi ? formatSignedPercent(value) : isAverage ? value.toFixed(2) : formatCredits(value)}
             labelFormatter={(label) => `Giornata ${label}`}
           />
           <Line
             type="monotone"
             dataKey={valueKey}
             name={label}
-            stroke={isRoi ? COLORS.green : COLORS.blue}
+            stroke={isRoi ? COLORS.green : isAverage ? COLORS.amber : COLORS.blue}
             strokeWidth={2.5}
             dot={false}
             activeDot={{ r: 5 }}

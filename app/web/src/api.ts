@@ -53,6 +53,13 @@ export type BackendVote = {
   vote?: number | null;
   fantasyVote?: number | null;
   played?: boolean;
+  goals?: number | null;
+  assists?: number | null;
+  yellowCards?: number | null;
+  redCards?: number | null;
+  ownGoals?: number | null;
+  penaltySaved?: number | null;
+  penaltyMissed?: number | null;
 };
 
 export type BackendPlayerTrendPoint = {

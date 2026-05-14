@@ -160,7 +160,7 @@ describe('FAVC UI utilities', () => {
     expect(summary.buyCommissions).toBeCloseTo(5);
     expect(summary.extraCapitalAdded).toBeCloseTo(55);
     expect(summary.residualCash).toBe(0);
-    expect(summary.status).toBe('completa');
+    expect(summary.status).toBe('pronta per salvataggio');
   });
 
   it('blocks duplicate and role-exceeding additions in draft builder', () => {

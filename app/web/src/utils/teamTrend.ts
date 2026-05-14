@@ -5,6 +5,7 @@ export type TeamTrendPoint = {
   portfolioValue: number;
   totalValue: number;
   roiPct: number;
+  teamVoteAverage?: number | null;
 };
 
 export function buildTeamTrendFromPositions(

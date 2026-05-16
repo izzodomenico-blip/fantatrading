@@ -26,7 +26,8 @@
       "Bash(Get-ChildItem *)",
       "Bash(New-Item -ItemType Directory -Force -Path apps/backend/src/health, apps/backend/src/config, apps/backend/src/common/filters, apps/backend/src/common/interceptors, apps/backend/src/modules/seasons, apps/backend/src/modules/players, apps/backend/src/modules/teams, apps/backend/src/modules/market, apps/backend/src/modules/calculations, apps/backend/src/modules/admin, apps/backend/src/modules/reports, apps/backend/test, prisma)",
       "Bash(Write-Host \"dirs ok\")",
-      "PowerShell(Stop-Process *)"
+      "PowerShell(Stop-Process *)",
+      "Bash(Select-Object FullName, PSIsContainer)"
     ]
   }
 }
